@@ -397,7 +397,21 @@ Milestones:
 /timeline - View health history
 /report   - Report symptoms
 /help     - Show all commands
+/cancel   - Cancel in-progress registration and return to Home
 ```
+
+### Telegram Dashboard
+
+The bot presents a simple Home dashboard with four buttons arranged vertically:
+
+- Health Reports — View uploaded reports and AI analyses.
+- Switch Profiles — Switch between linked mother profiles.
+- Upload Documents — Send new medical documents for analysis.
+- Register Another Mother — Start registration for an additional profile.
+
+Notes:
+- The Refresh button has been removed; messages update automatically.
+- If a registration is active, other actions may be temporarily paused. Completing or cancelling registration immediately restores normal access.
 
 **Natural Language Queries:**
 - "What should I eat to increase hemoglobin?"
