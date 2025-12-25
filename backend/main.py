@@ -363,6 +363,15 @@ except ImportError:
     logger.warning("⚠️  Enhanced API router not available")
     app = FastAPI(title="MatruRaksha AI Backend", lifespan=lifespan)
 
+# Mount Vapi AI Calling routes
+try:
+    from routes.vapi_routes import router as vapi_router
+    app.include_router(vapi_router)
+    logger.info("✅ Vapi AI Calling routes loaded")
+except ImportError as e:
+    logger.warning(f"⚠️  Vapi routes not available: {e}")
+
+
 # Mount authentication router
 auth_router = None
 try:
