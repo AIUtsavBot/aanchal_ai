@@ -1010,7 +1010,7 @@ async def upload_report(
         
         # Upload to Supabase Storage
         try:
-            storage_result = supabase.storage.from_("documents").upload(
+            storage_result = supabase.storage.from_("medical-reports").upload(
                 path=storage_path,
                 file=file_contents,
                 file_options={"content-type": content_type}
@@ -1024,7 +1024,7 @@ async def upload_report(
             logger.info("📦 Using base64 fallback for file storage")
         else:
             # Get public URL
-            file_url = supabase.storage.from_("documents").get_public_url(storage_path)
+            file_url = supabase.storage.from_("medical-reports").get_public_url(storage_path)
         
         # Insert record into medical_reports table
         # Valid columns: id, mother_id, telegram_chat_id, file_name, file_type, file_url, file_path,
