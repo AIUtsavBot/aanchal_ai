@@ -946,6 +946,120 @@ async def analyze_report(request: DocumentAnalysisRequest, background_tasks: Bac
         )
 
 
+# ==================== DOCUMENT UPLOAD ENDPOINT ====================
+
+@app.post("/reports/upload")
+async def upload_report(
+    file: UploadFile = File(...),
+    mother_id: str = Form(...),
+    uploader_id: Optional[str] = Form(None),
+    uploader_role: Optional[str] = Form(None),
+    uploader_name: Optional[str] = Form(None)
+):
+    """
+    Upload a medical document/report for a mother.
+    Stores file in Supabase Storage and creates a record in medical_reports.
+    Tracks who uploaded the document.
+    """
+    try:
+        if not supabase:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Supabase not connected"
+            )
+        
+        logger.info(f"📤 Uploading report for mother {mother_id} by {uploader_role}: {uploader_name}")
+        
+        # Read file contents
+        file_contents = await file.read()
+        file_size = len(file_contents)
+        
+        # Validate file size (max 10MB)
+        if file_size > 10 * 1024 * 1024:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="File size must be less than 10MB"
+            )
+        
+        # Get file extension and content type
+        original_filename = file.filename or "document"
+        file_extension = original_filename.split(".")[-1].lower() if "." in original_filename else "bin"
+        content_type = file.content_type or "application/octet-stream"
+        
+        # Validate file type
+        allowed_types = ["application/pdf", "image/jpeg", "image/png", "image/webp"]
+        if content_type not in allowed_types:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"File type {content_type} not allowed. Allowed: PDF, JPG, PNG, WebP"
+            )
+        
+        # Generate unique filename for storage
+        import uuid
+        unique_id = str(uuid.uuid4())
+        storage_path = f"reports/{mother_id}/{unique_id}.{file_extension}"
+        
+        # Upload to Supabase Storage
+        try:
+            storage_result = supabase.storage.from_("documents").upload(
+                path=storage_path,
+                file=file_contents,
+                file_options={"content-type": content_type}
+            )
+            logger.info(f"✅ File uploaded to storage: {storage_path}")
+        except Exception as storage_error:
+            # If bucket doesn't exist, try creating it or use a fallback
+            logger.warning(f"⚠️  Storage upload failed: {storage_error}")
+            # Store as base64 in database as fallback
+            file_url = f"data:{content_type};base64,{base64.b64encode(file_contents).decode()}"
+            logger.info("📦 Using base64 fallback for file storage")
+        else:
+            # Get public URL
+            file_url = supabase.storage.from_("documents").get_public_url(storage_path)
+        
+        # Insert record into medical_reports table
+        # Valid columns: id, mother_id, telegram_chat_id, file_name, file_type, file_url, file_path,
+        #                uploaded_at, analysis_status, analysis_result, extracted_metrics, analyzed_at,
+        #                error_message, created_at, updated_at
+        report_data = {
+            "mother_id": mother_id,
+            "file_name": original_filename,
+            "file_url": file_url,
+            "file_path": storage_path,
+            "file_type": content_type,
+            "uploaded_at": datetime.now().isoformat(),
+            "analysis_status": "pending",
+        }
+        
+        result = supabase.table("medical_reports").insert(report_data).execute()
+        
+        if not result.data:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to save report record"
+            )
+        
+        report_id = result.data[0]["id"]
+        logger.info(f"✅ Report record created: {report_id}")
+        
+        return {
+            "success": True,
+            "message": "Document uploaded successfully",
+            "report_id": report_id,
+            "file_url": file_url,
+            "filename": original_filename
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error uploading report: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Upload failed: {str(e)}"
+        )
+
+
 @app.get("/reports/{mother_id}")
 def get_mother_reports(mother_id: str):  # Changed from int to str
     """Get all reports for a specific mother"""

@@ -724,6 +724,9 @@ export default function DoctorDashboard() {
                   <DocumentManager
                     motherId={selected.id}
                     motherName={selected.name}
+                    uploaderId={doctorId?.toString()}
+                    uploaderRole="DOCTOR"
+                    uploaderName={doctorInfo?.name || "Doctor"}
                   />
                 ) : activeTab === "chat" ? (
                   <>

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "../services/auth.js";
 import { useAuth } from "../contexts/AuthContext";
 import PatientChatHistory from "../components/PatientChatHistory.jsx";
+import DocumentManager from "../components/DocumentManager.jsx";
 import MotherRegistrationForm from "../components/MotherRegistrationForm.jsx";
 import {
   Users,
@@ -639,6 +640,16 @@ export default function ASHAInterface() {
                     📊 Assessments ({motherAssessments.length})
                   </button>
                   <button
+                    onClick={() => setMotherViewTab("documents")}
+                    className={`px-3 py-1 rounded-lg text-sm font-semibold ${
+                      motherViewTab === "documents"
+                        ? "bg-white/20"
+                        : "opacity-70 hover:opacity-100"
+                    }`}
+                  >
+                    📄 Documents
+                  </button>
+                  <button
                     onClick={() => setMotherViewTab("chat")}
                     className={`px-3 py-1 rounded-lg text-sm font-semibold ${
                       motherViewTab === "chat"
@@ -729,6 +740,14 @@ export default function ASHAInterface() {
                       </div>
                     )}
                   </div>
+                ) : motherViewTab === "documents" ? (
+                  <DocumentManager
+                    motherId={selected.id}
+                    motherName={selected.name}
+                    uploaderId={ashaWorkerId?.toString()}
+                    uploaderRole="ASHA"
+                    uploaderName="ASHA Worker"
+                  />
                 ) : (
                   <div className="flex-1 overflow-hidden">
                     <PatientChatHistory
