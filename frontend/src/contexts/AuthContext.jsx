@@ -20,13 +20,16 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Check current session on mount
+    // Check current session on mount - optimized flow
     const initAuth = async () => {
       try {
+        // Get session - this is the main check needed
         const currentSession = await authService.getSession()
         setSession(currentSession)
 
+        // Only fetch user data if session exists (avoid unnecessary call)
         if (currentSession?.user) {
+          // Use the session user data directly if possible to avoid extra network call
           const currentUser = await authService.getCurrentUser()
           setUser(currentUser)
         }

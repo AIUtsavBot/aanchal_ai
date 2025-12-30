@@ -157,20 +157,32 @@ export default function DoctorDashboard() {
       const moms = data || [];
       setMothers(moms);
 
-      // Load risk levels
-      const risks = {};
-      await Promise.all(
-        moms.map(async (m) => {
-          const { data: ra } = await supabase
-            .from("risk_assessments")
-            .select("risk_level, created_at")
-            .eq("mother_id", m.id)
-            .order("created_at", { ascending: false })
-            .limit(1);
-          risks[m.id] = ra && ra[0] ? ra[0].risk_level : "LOW";
-        })
-      );
-      setRiskMap(risks);
+      // Load risk levels in a single batch query
+      if (moms.length > 0) {
+        const motherIds = moms.map(m => m.id);
+        const { data: allAssessments } = await supabase
+          .from("risk_assessments")
+          .select("mother_id, risk_level, created_at")
+          .in("mother_id", motherIds)
+          .order("created_at", { ascending: false });
+
+        // Group by mother_id and get the latest for each
+        const risks = {};
+        (allAssessments || []).forEach(ra => {
+          if (!risks[ra.mother_id]) {
+            risks[ra.mother_id] = ra.risk_level;
+          }
+        });
+
+        // Set default LOW for mothers without assessments
+        moms.forEach(m => {
+          if (!risks[m.id]) {
+            risks[m.id] = "LOW";
+          }
+        });
+
+        setRiskMap(risks);
+      }
     } finally {
       setLoading(false);
     }
@@ -360,11 +372,10 @@ export default function DoctorDashboard() {
               setMainView("patients");
               setSelected(null);
             }}
-            className={`flex-1 py-3 text-xs font-semibold flex flex-col items-center gap-1 ${
-              mainView === "patients"
+            className={`flex-1 py-3 text-xs font-semibold flex flex-col items-center gap-1 ${mainView === "patients"
                 ? "text-blue-600 bg-blue-50"
                 : "text-gray-500"
-            }`}
+              }`}
           >
             <Stethoscope className="w-4 h-4" />
             Patients
@@ -374,11 +385,10 @@ export default function DoctorDashboard() {
               setMainView("register");
               setSelected(null);
             }}
-            className={`flex-1 py-3 text-xs font-semibold flex flex-col items-center gap-1 ${
-              mainView === "register"
+            className={`flex-1 py-3 text-xs font-semibold flex flex-col items-center gap-1 ${mainView === "register"
                 ? "text-pink-600 bg-pink-50"
                 : "text-gray-500"
-            }`}
+              }`}
           >
             <UserPlus className="w-4 h-4" />
             Register
@@ -424,11 +434,10 @@ export default function DoctorDashboard() {
                   <div
                     key={m.id}
                     onClick={() => setSelected(m)}
-                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all transform hover:scale-102 ${
-                      selected?.id === m.id
+                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all transform hover:scale-102 ${selected?.id === m.id
                         ? "border-blue-600 bg-blue-50 shadow-md"
                         : `border-gray-200 ${getRiskColor(risk)}`
-                    }`}
+                      }`}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -444,13 +453,12 @@ export default function DoctorDashboard() {
                     </div>
                     <div className="mt-3 pt-3 border-t border-gray-200 flex items-center justify-between text-xs">
                       <span
-                        className={`px-2 py-1 rounded-full font-semibold ${
-                          risk === "HIGH"
+                        className={`px-2 py-1 rounded-full font-semibold ${risk === "HIGH"
                             ? "bg-red-100 text-red-700"
                             : risk === "MODERATE"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : "bg-green-100 text-green-700"
-                        }`}
+                              ? "bg-yellow-100 text-yellow-700"
+                              : "bg-green-100 text-green-700"
+                          }`}
                       >
                         {risk}
                       </span>
@@ -489,13 +497,12 @@ export default function DoctorDashboard() {
                   </p>
                 </div>
                 <div
-                  className={`px-5 py-3 rounded-lg font-semibold flex items-center gap-2 ${
-                    riskMap[selected.id] === "HIGH"
+                  className={`px-5 py-3 rounded-lg font-semibold flex items-center gap-2 ${riskMap[selected.id] === "HIGH"
                       ? "bg-red-100 text-red-700"
                       : riskMap[selected.id] === "MODERATE"
-                      ? "bg-yellow-100 text-yellow-700"
-                      : "bg-green-100 text-green-700"
-                  }`}
+                        ? "bg-yellow-100 text-yellow-700"
+                        : "bg-green-100 text-green-700"
+                    }`}
                 >
                   <span className="text-xl">
                     {getRiskEmoji(riskMap[selected.id])}
@@ -508,41 +515,37 @@ export default function DoctorDashboard() {
               <div className="flex gap-3 mt-4 flex-wrap">
                 <button
                   onClick={() => setActiveTab("history")}
-                  className={`px-4 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 ${
-                    activeTab === "history"
+                  className={`px-4 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 ${activeTab === "history"
                       ? "bg-blue-600 text-white"
                       : "bg-gray-100 text-gray-700"
-                  }`}
+                    }`}
                 >
                   <FileText className="w-4 h-4" /> Assessment History
                 </button>
                 <button
                   onClick={() => setActiveTab("documents")}
-                  className={`px-4 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 ${
-                    activeTab === "documents"
+                  className={`px-4 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 ${activeTab === "documents"
                       ? "bg-indigo-600 text-white"
                       : "bg-gray-100 text-gray-700"
-                  }`}
+                    }`}
                 >
                   <Upload className="w-4 h-4" /> Documents
                 </button>
                 <button
                   onClick={() => setActiveTab("chat")}
-                  className={`px-4 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 ${
-                    activeTab === "chat"
+                  className={`px-4 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 ${activeTab === "chat"
                       ? "bg-green-600 text-white"
                       : "bg-gray-100 text-gray-700"
-                  }`}
+                    }`}
                 >
                   <MessageCircle className="w-4 h-4" /> Chat History
                 </button>
                 <button
                   onClick={() => setActiveTab("consultation")}
-                  className={`px-4 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 ${
-                    activeTab === "consultation"
+                  className={`px-4 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 ${activeTab === "consultation"
                       ? "bg-purple-600 text-white"
                       : "bg-gray-100 text-gray-700"
-                  }`}
+                    }`}
                 >
                   <ClipboardList className="w-4 h-4" /> Consultation Details
                 </button>
@@ -633,13 +636,12 @@ export default function DoctorDashboard() {
                           {assessments.map((a, idx) => (
                             <div
                               key={a.id || idx}
-                              className={`p-4 rounded-lg border-2 ${
-                                a.risk_level === "HIGH"
+                              className={`p-4 rounded-lg border-2 ${a.risk_level === "HIGH"
                                   ? "bg-red-50 border-red-200"
                                   : a.risk_level === "MODERATE"
-                                  ? "bg-yellow-50 border-yellow-200"
-                                  : "bg-green-50 border-green-200"
-                              }`}
+                                    ? "bg-yellow-50 border-yellow-200"
+                                    : "bg-green-50 border-green-200"
+                                }`}
                             >
                               <div className="flex justify-between items-start mb-3">
                                 <div>
@@ -649,13 +651,12 @@ export default function DoctorDashboard() {
                                   </p>
                                 </div>
                                 <div
-                                  className={`px-3 py-1 rounded-full text-sm font-bold ${
-                                    a.risk_level === "HIGH"
+                                  className={`px-3 py-1 rounded-full text-sm font-bold ${a.risk_level === "HIGH"
                                       ? "bg-red-200 text-red-800"
                                       : a.risk_level === "MODERATE"
-                                      ? "bg-yellow-200 text-yellow-800"
-                                      : "bg-green-200 text-green-800"
-                                  }`}
+                                        ? "bg-yellow-200 text-yellow-800"
+                                        : "bg-green-200 text-green-800"
+                                    }`}
                                 >
                                   {getRiskEmoji(a.risk_level)} {a.risk_level} (
                                   {(a.risk_score * 100).toFixed(0)}%)

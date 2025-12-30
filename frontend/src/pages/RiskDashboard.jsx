@@ -132,17 +132,13 @@ export default function RiskDashboard() {
       const mothersRes = await apiCall('GET', '/mothers')
       const mothersData = mothersRes.data || []
 
-      // Fetch all assessments
+      // Fetch all assessments in a single request
       let allAssessments = []
-      for (const mother of mothersData) {
-        try {
-          const res = await apiCall('GET', `/risk/mother/${mother.id}`)
-          if (res.data) {
-            allAssessments = [...allAssessments, ...res.data]
-          }
-        } catch (err) {
-          console.log(`Could not fetch assessments for mother ${mother.id}`)
-        }
+      try {
+        const allRes = await apiCall('GET', '/risk/all')
+        allAssessments = allRes.data || []
+      } catch (err) {
+        console.log('Could not fetch all assessments:', err.message)
       }
 
       // Age Distribution
@@ -260,29 +256,34 @@ export default function RiskDashboard() {
       const response = await apiCall('GET', '/mothers')
       const mothersData = response.data || []
 
-      // Fetch assessments for each mother
-      const mothersWithAssessments = await Promise.all(
-        mothersData.map(async (mother) => {
-          try {
-            const assessResponse = await apiCall('GET', `/risk/mother/${mother.id}`)
-            const assessments = assessResponse.data || []
+      // Fetch all assessments in a single request
+      let allAssessments = []
+      try {
+        const allRes = await apiCall('GET', '/risk/all')
+        allAssessments = allRes.data || []
+      } catch (e) {
+        console.log('Could not fetch assessments')
+      }
 
-            const latestAssessment = assessments.length > 0 ? assessments[0] : null
+      // Group assessments by mother_id
+      const assessmentsByMother = {}
+      allAssessments.forEach(assessment => {
+        if (!assessmentsByMother[assessment.mother_id]) {
+          assessmentsByMother[assessment.mother_id] = []
+        }
+        assessmentsByMother[assessment.mother_id].push(assessment)
+      })
 
-            return {
-              ...mother,
-              assessments: assessments,
-              latestRisk: latestAssessment
-            }
-          } catch (e) {
-            return {
-              ...mother,
-              assessments: [],
-              latestRisk: null
-            }
-          }
-        })
-      )
+      // Attach assessments to each mother
+      const mothersWithAssessments = mothersData.map(mother => {
+        const assessments = assessmentsByMother[mother.id] || []
+        return {
+          ...mother,
+          assessments: assessments,
+          latestRisk: assessments.length > 0 ? assessments[0] : null
+        }
+      })
+
       setMothers(mothersWithAssessments)
     } catch (error) {
       showMessage('Failed to load mothers: ' + error.message, 'error')

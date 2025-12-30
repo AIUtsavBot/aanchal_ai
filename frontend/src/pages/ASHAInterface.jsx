@@ -173,20 +173,32 @@ export default function ASHAInterface() {
       if (err) throw err;
       setMothers(data || []);
 
-      // Load risk assessments
-      const risks = {};
-      await Promise.all(
-        (data || []).map(async (m) => {
-          const { data: ra } = await supabase
-            .from("risk_assessments")
-            .select("risk_level, created_at")
-            .eq("mother_id", m.id)
-            .order("created_at", { ascending: false })
-            .limit(1);
-          risks[m.id] = ra && ra[0] ? ra[0].risk_level : "LOW";
-        })
-      );
-      setRiskMap(risks);
+      // Load risk assessments in a single batch query
+      if (data && data.length > 0) {
+        const motherIds = data.map(m => m.id);
+        const { data: allAssessments } = await supabase
+          .from("risk_assessments")
+          .select("mother_id, risk_level, created_at")
+          .in("mother_id", motherIds)
+          .order("created_at", { ascending: false });
+
+        // Group by mother_id and get the latest for each
+        const risks = {};
+        (allAssessments || []).forEach(ra => {
+          if (!risks[ra.mother_id]) {
+            risks[ra.mother_id] = ra.risk_level;
+          }
+        });
+
+        // Set default LOW for mothers without assessments
+        data.forEach(m => {
+          if (!risks[m.id]) {
+            risks[m.id] = "LOW";
+          }
+        });
+
+        setRiskMap(risks);
+      }
 
       // Load analytics
       await loadAnalytics();
@@ -329,10 +341,10 @@ export default function ASHAInterface() {
 
   const riskDistData = analytics
     ? [
-        { name: "High", value: analytics.high_risk_count || 0 },
-        { name: "Moderate", value: analytics.moderate_risk_count || 0 },
-        { name: "Low", value: analytics.low_risk_count || 0 },
-      ]
+      { name: "High", value: analytics.high_risk_count || 0 },
+      { name: "Moderate", value: analytics.moderate_risk_count || 0 },
+      { name: "Low", value: analytics.low_risk_count || 0 },
+    ]
     : [];
 
   // If still loading profile, show loading
@@ -413,11 +425,10 @@ export default function ASHAInterface() {
               setSelected(null);
               setMainView("register");
             }}
-            className={`flex-1 py-3 text-xs font-semibold flex flex-col items-center gap-1 ${
-              mainView === "register"
+            className={`flex-1 py-3 text-xs font-semibold flex flex-col items-center gap-1 ${mainView === "register"
                 ? "text-pink-600 bg-pink-50"
                 : "text-gray-500"
-            }`}
+              }`}
           >
             <UserPlus className="w-4 h-4" />
             Register
@@ -427,11 +438,10 @@ export default function ASHAInterface() {
               setSelected(null);
               setMainView("assess");
             }}
-            className={`flex-1 py-3 text-xs font-semibold flex flex-col items-center gap-1 ${
-              mainView === "assess"
+            className={`flex-1 py-3 text-xs font-semibold flex flex-col items-center gap-1 ${mainView === "assess"
                 ? "text-green-600 bg-green-50"
                 : "text-gray-500"
-            }`}
+              }`}
           >
             <ClipboardCheck className="w-4 h-4" />
             Assess
@@ -441,11 +451,10 @@ export default function ASHAInterface() {
               setSelected(null);
               setMainView("stats");
             }}
-            className={`flex-1 py-3 text-xs font-semibold flex flex-col items-center gap-1 ${
-              mainView === "stats"
+            className={`flex-1 py-3 text-xs font-semibold flex flex-col items-center gap-1 ${mainView === "stats"
                 ? "text-green-600 bg-green-50"
                 : "text-gray-500"
-            }`}
+              }`}
           >
             <BarChart2 className="w-4 h-4" />
             My Stats
@@ -513,11 +522,10 @@ export default function ASHAInterface() {
                     setSelected(m);
                     setMainView("mother");
                   }}
-                  className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                    selected?.id === m.id
+                  className={`p-3 rounded-lg border cursor-pointer transition-all ${selected?.id === m.id
                       ? "border-green-500 bg-green-50"
                       : "border-gray-200 hover:border-green-300"
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="text-sm font-semibold text-gray-900">
@@ -559,13 +567,12 @@ export default function ASHAInterface() {
                   </p>
                 </div>
                 <div
-                  className={`px-4 py-2 rounded-lg font-semibold flex items-center gap-2 ${
-                    riskMap[selected.id] === "HIGH"
+                  className={`px-4 py-2 rounded-lg font-semibold flex items-center gap-2 ${riskMap[selected.id] === "HIGH"
                       ? "bg-red-100 text-red-700"
                       : riskMap[selected.id] === "MODERATE"
-                      ? "bg-yellow-100 text-yellow-700"
-                      : "bg-green-100 text-green-700"
-                  }`}
+                        ? "bg-yellow-100 text-yellow-700"
+                        : "bg-green-100 text-green-700"
+                    }`}
                 >
                   <span className="text-xl">
                     {getRiskIcon(riskMap[selected.id])}
@@ -631,31 +638,28 @@ export default function ASHAInterface() {
                 <div className="bg-gradient-to-r from-green-600 to-green-700 text-white px-5 py-3 flex items-center gap-4">
                   <button
                     onClick={() => setMotherViewTab("history")}
-                    className={`px-3 py-1 rounded-lg text-sm font-semibold ${
-                      motherViewTab === "history"
+                    className={`px-3 py-1 rounded-lg text-sm font-semibold ${motherViewTab === "history"
                         ? "bg-white/20"
                         : "opacity-70 hover:opacity-100"
-                    }`}
+                      }`}
                   >
                     📊 Assessments ({motherAssessments.length})
                   </button>
                   <button
                     onClick={() => setMotherViewTab("documents")}
-                    className={`px-3 py-1 rounded-lg text-sm font-semibold ${
-                      motherViewTab === "documents"
+                    className={`px-3 py-1 rounded-lg text-sm font-semibold ${motherViewTab === "documents"
                         ? "bg-white/20"
                         : "opacity-70 hover:opacity-100"
-                    }`}
+                      }`}
                   >
                     📄 Documents
                   </button>
                   <button
                     onClick={() => setMotherViewTab("chat")}
-                    className={`px-3 py-1 rounded-lg text-sm font-semibold ${
-                      motherViewTab === "chat"
+                    className={`px-3 py-1 rounded-lg text-sm font-semibold ${motherViewTab === "chat"
                         ? "bg-white/20"
                         : "opacity-70 hover:opacity-100"
-                    }`}
+                      }`}
                   >
                     💬 Chat History
                   </button>
@@ -673,26 +677,24 @@ export default function ASHAInterface() {
                         {motherAssessments.map((a, idx) => (
                           <div
                             key={a.id || idx}
-                            className={`p-4 rounded-lg border-2 ${
-                              a.risk_level === "HIGH"
+                            className={`p-4 rounded-lg border-2 ${a.risk_level === "HIGH"
                                 ? "bg-red-50 border-red-200"
                                 : a.risk_level === "MODERATE"
-                                ? "bg-yellow-50 border-yellow-200"
-                                : "bg-green-50 border-green-200"
-                            }`}
+                                  ? "bg-yellow-50 border-yellow-200"
+                                  : "bg-green-50 border-green-200"
+                              }`}
                           >
                             <div className="flex justify-between items-start mb-2">
                               <p className="text-xs text-gray-600">
                                 📅 {new Date(a.created_at).toLocaleString()}
                               </p>
                               <span
-                                className={`px-2 py-1 rounded-full text-xs font-bold ${
-                                  a.risk_level === "HIGH"
+                                className={`px-2 py-1 rounded-full text-xs font-bold ${a.risk_level === "HIGH"
                                     ? "bg-red-200 text-red-800"
                                     : a.risk_level === "MODERATE"
-                                    ? "bg-yellow-200 text-yellow-800"
-                                    : "bg-green-200 text-green-800"
-                                }`}
+                                      ? "bg-yellow-200 text-yellow-800"
+                                      : "bg-green-200 text-green-800"
+                                  }`}
                               >
                                 {getRiskIcon(a.risk_level)} {a.risk_level} (
                                 {(a.risk_score * 100).toFixed(0)}%)
@@ -932,13 +934,12 @@ export default function ASHAInterface() {
 
                 {riskResult && (
                   <div
-                    className={`mt-6 p-5 rounded-lg border-2 ${
-                      riskResult.risk_level === "HIGH"
+                    className={`mt-6 p-5 rounded-lg border-2 ${riskResult.risk_level === "HIGH"
                         ? "bg-red-50 border-red-300"
                         : riskResult.risk_level === "MODERATE"
-                        ? "bg-yellow-50 border-yellow-300"
-                        : "bg-green-50 border-green-300"
-                    }`}
+                          ? "bg-yellow-50 border-yellow-300"
+                          : "bg-green-50 border-green-300"
+                      }`}
                   >
                     <div className="flex items-center gap-3 mb-3">
                       <span className="text-3xl">
@@ -1069,13 +1070,12 @@ export default function ASHAInterface() {
                                 </p>
                               </div>
                               <span
-                                className={`px-3 py-1 rounded-full text-xs font-bold ${
-                                  a.risk_level === "HIGH"
+                                className={`px-3 py-1 rounded-full text-xs font-bold ${a.risk_level === "HIGH"
                                     ? "bg-red-100 text-red-700"
                                     : a.risk_level === "MODERATE"
-                                    ? "bg-yellow-100 text-yellow-700"
-                                    : "bg-green-100 text-green-700"
-                                }`}
+                                      ? "bg-yellow-100 text-yellow-700"
+                                      : "bg-green-100 text-green-700"
+                                  }`}
                               >
                                 {getRiskIcon(a.risk_level)} {a.risk_level}
                               </span>
@@ -1128,13 +1128,12 @@ export default function ASHAInterface() {
                 </div>
 
                 <div
-                  className={`p-4 rounded-lg mb-6 ${
-                    selectedAssessment.risk_level === "HIGH"
+                  className={`p-4 rounded-lg mb-6 ${selectedAssessment.risk_level === "HIGH"
                       ? "bg-red-50"
                       : selectedAssessment.risk_level === "MODERATE"
-                      ? "bg-yellow-50"
-                      : "bg-green-50"
-                  }`}
+                        ? "bg-yellow-50"
+                        : "bg-green-50"
+                    }`}
                 >
                   <div className="flex justify-between items-center">
                     <div>

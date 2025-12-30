@@ -1387,6 +1387,31 @@ def get_mother_risk(mother_id: str):
         )
 
 
+@app.get("/risk/all")
+def get_all_risk_assessments():
+    """Get all risk assessments - optimized for dashboard loading"""
+    try:
+        if not supabase:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Supabase not connected"
+            )
+        
+        result = supabase.table("risk_assessments").select("*").order("created_at", desc=True).execute()
+        
+        return {
+            "status": "success",
+            "count": len(result.data),
+            "data": result.data
+        }
+    except Exception as e:
+        logger.error(f"❌ Error fetching all risk assessments: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error fetching risk assessments: {str(e)}"
+        )
+
+
 # ==================== ANALYTICS ENDPOINTS ====================
 
 @app.get("/analytics/dashboard")
