@@ -92,6 +92,22 @@ except ImportError as e:
     AGENTS_AVAILABLE = False
     orchestrator = None
 
+# ==================== CACHE SERVICE IMPORT ====================
+try:
+    try:
+        from backend.services.cache_service import cache, invalidate_dashboard_cache, invalidate_mothers_cache, invalidate_risk_cache
+    except ImportError:
+        from services.cache_service import cache, invalidate_dashboard_cache, invalidate_mothers_cache, invalidate_risk_cache
+    CACHE_AVAILABLE = True
+    logger.info("✅ In-memory cache initialized")
+except ImportError as e:
+    logger.warning(f"⚠️  Cache service not available: {e}")
+    CACHE_AVAILABLE = False
+    cache = None
+    def invalidate_dashboard_cache(): pass
+    def invalidate_mothers_cache(): pass
+    def invalidate_risk_cache(): pass
+
 
 # ==================== PYDANTIC MODELS ====================
 class Mother(BaseModel):
@@ -781,6 +797,9 @@ async def register_mother(mother: Mother, background_tasks: BackgroundTasks):
         mother_id = result.data[0]["id"]
         logger.info(f"✅ Mother registered successfully: {mother_id}")
         
+        # Invalidate dashboard cache after new registration
+        invalidate_mothers_cache()
+        
         return {
             "status": "success",
             "message": "Mother registered successfully",
@@ -1345,6 +1364,9 @@ async def assess_risk(assessment: RiskAssessment, background_tasks: BackgroundTa
             except Exception as telegram_error:
                 logger.error(f"⚠️  Telegram alert failed: {telegram_error}")
         
+        # Invalidate risk-related cache after new assessment
+        invalidate_risk_cache()
+        
         return {
             "status": "success",
             "message": f"Risk assessment completed - {risk_calculation['risk_level']} RISK",
@@ -1412,12 +1434,19 @@ def get_all_risk_assessments():
         )
 
 
-# ==================== ANALYTICS ENDPOINTS ====================
+# ==================== ANALYTICS ENDPOINTS (OPTIMIZED) ====================
 
 @app.get("/analytics/dashboard")
 def get_dashboard_analytics():
-    """Get dashboard analytics"""
+    """Get dashboard analytics - OPTIMIZED with caching and efficient queries"""
     try:
+        # Check cache first
+        if CACHE_AVAILABLE and cache:
+            cached_data = cache.get("analytics:dashboard")
+            if cached_data:
+                logger.debug("📊 Dashboard analytics served from cache")
+                return cached_data
+        
         if not supabase:
             return {
                 "status": "success",
@@ -1430,33 +1459,43 @@ def get_dashboard_analytics():
                 "timestamp": datetime.now().isoformat()
             }
         
-        # Get all mothers
-        mothers_result = supabase.table("mothers").select("*").execute()
-        total_mothers = len(mothers_result.data) if mothers_result.data else 0
+        # OPTIMIZED: Use COUNT queries instead of fetching all data
+        # Get mothers count (only fetch id for counting)
+        mothers_result = supabase.table("mothers").select("id", count="exact").execute()
+        total_mothers = mothers_result.count if mothers_result.count else 0
         
-        # Get all risk assessments
-        assessments_result = supabase.table("risk_assessments").select("*").execute()
+        # Get risk level counts efficiently - only fetch risk_level column
+        assessments_result = supabase.table("risk_assessments").select("risk_level", count="exact").execute()
         assessments = assessments_result.data if assessments_result.data else []
+        total_assessments = assessments_result.count if assessments_result.count else 0
         
-        # Get all reports
-        reports_result = supabase.table("medical_reports").select("*").execute()
-        total_reports = len(reports_result.data) if reports_result.data else 0
+        # Get reports count
+        reports_result = supabase.table("medical_reports").select("id", count="exact").execute()
+        total_reports = reports_result.count if reports_result.count else 0
         
-        # Count risk levels
+        # Count risk levels from minimal data
         high_risk = sum(1 for a in assessments if a.get("risk_level") == "HIGH")
         moderate_risk = sum(1 for a in assessments if a.get("risk_level") == "MODERATE")
         low_risk = sum(1 for a in assessments if a.get("risk_level") == "LOW")
         
-        return {
+        result = {
             "status": "success",
             "total_mothers": total_mothers,
             "high_risk_count": high_risk,
             "moderate_risk_count": moderate_risk,
             "low_risk_count": low_risk,
-            "total_assessments": len(assessments),
+            "total_assessments": total_assessments,
             "total_reports": total_reports,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
+            "cached": False
         }
+        
+        # Cache for 30 seconds
+        if CACHE_AVAILABLE and cache:
+            cache.set("analytics:dashboard", result, ttl_seconds=30)
+            logger.debug("📊 Dashboard analytics cached for 30s")
+        
+        return result
         
     except Exception as e:
         logger.error(f"❌ Error fetching analytics: {str(e)}", exc_info=True)
@@ -1464,6 +1503,199 @@ def get_dashboard_analytics():
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error fetching analytics: {str(e)}"
         )
+
+
+@app.get("/dashboard/full")
+def get_full_dashboard():
+    """
+    COMBINED DASHBOARD ENDPOINT - Returns all dashboard data in a single request
+    Reduces frontend from 3 API calls to 1
+    """
+    try:
+        # Check cache first
+        if CACHE_AVAILABLE and cache:
+            cached_data = cache.get("dashboard:full")
+            if cached_data:
+                logger.debug("📊 Full dashboard served from cache")
+                cached_data["cached"] = True
+                return cached_data
+        
+        if not supabase:
+            return {
+                "status": "success",
+                "analytics": {
+                    "total_mothers": 0,
+                    "high_risk_count": 0,
+                    "moderate_risk_count": 0,
+                    "low_risk_count": 0,
+                    "total_assessments": 0,
+                    "total_reports": 0
+                },
+                "mothers": [],
+                "risk_assessments": [],
+                "risk_trend": [],
+                "age_distribution": [],
+                "timestamp": datetime.now().isoformat()
+            }
+        
+        # Fetch all required data in optimized way
+        # 1. Get all mothers (needed for age distribution)
+        mothers_result = supabase.table("mothers").select("id,name,phone,age,location,created_at").execute()
+        mothers = mothers_result.data if mothers_result.data else []
+        
+        # 2. Get all risk assessments (needed for trend and risk counts)
+        assessments_result = supabase.table("risk_assessments").select(
+            "id,mother_id,risk_level,risk_score,systolic_bp,diastolic_bp,heart_rate,blood_glucose,hemoglobin,created_at"
+        ).order("created_at", desc=True).execute()
+        assessments = assessments_result.data if assessments_result.data else []
+        
+        # 3. Get reports count only
+        reports_result = supabase.table("medical_reports").select("id", count="exact").execute()
+        total_reports = reports_result.count if reports_result.count else 0
+        
+        # Calculate analytics
+        high_risk = sum(1 for a in assessments if a.get("risk_level") == "HIGH")
+        moderate_risk = sum(1 for a in assessments if a.get("risk_level") == "MODERATE")
+        low_risk = sum(1 for a in assessments if a.get("risk_level") == "LOW")
+        
+        # Calculate age distribution
+        age_groups = {"15-20": 0, "20-25": 0, "25-30": 0, "30-35": 0, "35-40": 0, "40+": 0}
+        for m in mothers:
+            age = m.get("age", 0)
+            if 15 <= age < 20:
+                age_groups["15-20"] += 1
+            elif 20 <= age < 25:
+                age_groups["20-25"] += 1
+            elif 25 <= age < 30:
+                age_groups["25-30"] += 1
+            elif 30 <= age < 35:
+                age_groups["30-35"] += 1
+            elif 35 <= age < 40:
+                age_groups["35-40"] += 1
+            else:
+                age_groups["40+"] += 1
+        
+        age_distribution = [{"name": k, "value": v} for k, v in age_groups.items()]
+        
+        # Calculate risk trend (last 7 days)
+        daily_risk = {}
+        for assessment in assessments:
+            try:
+                created_at = assessment.get("created_at", "")
+                if created_at:
+                    date_str = created_at[:10]  # Get YYYY-MM-DD
+                    if date_str not in daily_risk:
+                        daily_risk[date_str] = {"date": date_str, "HIGH": 0, "MODERATE": 0, "LOW": 0}
+                    risk_level = assessment.get("risk_level", "LOW")
+                    if risk_level in daily_risk[date_str]:
+                        daily_risk[date_str][risk_level] += 1
+            except Exception:
+                pass
+        
+        # Sort by date and take last 7
+        risk_trend = sorted(daily_risk.values(), key=lambda x: x["date"])[-7:]
+        
+        # Calculate vital stats averages
+        vital_stats = {
+            "avg_systolic": 0, "avg_diastolic": 0, "avg_heart_rate": 0,
+            "avg_glucose": 0, "avg_hemoglobin": 0
+        }
+        counts = {"systolic": 0, "diastolic": 0, "heart_rate": 0, "glucose": 0, "hemoglobin": 0}
+        
+        for a in assessments:
+            if a.get("systolic_bp"):
+                vital_stats["avg_systolic"] += a["systolic_bp"]
+                counts["systolic"] += 1
+            if a.get("diastolic_bp"):
+                vital_stats["avg_diastolic"] += a["diastolic_bp"]
+                counts["diastolic"] += 1
+            if a.get("heart_rate"):
+                vital_stats["avg_heart_rate"] += a["heart_rate"]
+                counts["heart_rate"] += 1
+            if a.get("blood_glucose"):
+                vital_stats["avg_glucose"] += a["blood_glucose"]
+                counts["glucose"] += 1
+            if a.get("hemoglobin"):
+                vital_stats["avg_hemoglobin"] += a["hemoglobin"]
+                counts["hemoglobin"] += 1
+        
+        # Calculate averages
+        if counts["systolic"] > 0:
+            vital_stats["avg_systolic"] = round(vital_stats["avg_systolic"] / counts["systolic"])
+        if counts["diastolic"] > 0:
+            vital_stats["avg_diastolic"] = round(vital_stats["avg_diastolic"] / counts["diastolic"])
+        if counts["heart_rate"] > 0:
+            vital_stats["avg_heart_rate"] = round(vital_stats["avg_heart_rate"] / counts["heart_rate"])
+        if counts["glucose"] > 0:
+            vital_stats["avg_glucose"] = round(vital_stats["avg_glucose"] / counts["glucose"])
+        if counts["hemoglobin"] > 0:
+            vital_stats["avg_hemoglobin"] = round(vital_stats["avg_hemoglobin"] / counts["hemoglobin"], 1)
+        
+        vital_stats_list = [
+            {"name": "Systolic BP", "value": vital_stats["avg_systolic"], "normal": 120},
+            {"name": "Diastolic BP", "value": vital_stats["avg_diastolic"], "normal": 80},
+            {"name": "Heart Rate", "value": vital_stats["avg_heart_rate"], "normal": 75},
+            {"name": "Glucose", "value": vital_stats["avg_glucose"], "normal": 100},
+            {"name": "Hemoglobin", "value": vital_stats["avg_hemoglobin"], "normal": 12}
+        ]
+        
+        result = {
+            "status": "success",
+            "analytics": {
+                "total_mothers": len(mothers),
+                "high_risk_count": high_risk,
+                "moderate_risk_count": moderate_risk,
+                "low_risk_count": low_risk,
+                "total_assessments": len(assessments),
+                "total_reports": total_reports
+            },
+            "mothers": mothers,
+            "risk_assessments": assessments[:50],  # Limit to latest 50 for performance
+            "risk_trend": risk_trend,
+            "age_distribution": age_distribution,
+            "vital_stats": vital_stats_list,
+            "timestamp": datetime.now().isoformat(),
+            "cached": False
+        }
+        
+        # Cache for 30 seconds
+        if CACHE_AVAILABLE and cache:
+            cache.set("dashboard:full", result, ttl_seconds=30)
+            logger.info("📊 Full dashboard data cached for 30s")
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"❌ Error fetching full dashboard: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error fetching dashboard: {str(e)}"
+        )
+
+
+@app.get("/cache/stats")
+def get_cache_stats():
+    """Get cache statistics (for debugging)"""
+    if CACHE_AVAILABLE and cache:
+        return {
+            "status": "success",
+            "cache_enabled": True,
+            "stats": cache.stats()
+        }
+    return {
+        "status": "success",
+        "cache_enabled": False,
+        "message": "Cache not available"
+    }
+
+
+@app.post("/cache/invalidate")
+def invalidate_cache():
+    """Manually invalidate all caches"""
+    if CACHE_AVAILABLE and cache:
+        cache.clear()
+        return {"status": "success", "message": "Cache invalidated"}
+    return {"status": "success", "message": "Cache not available"}
 
 
 # ==================== ROOT ENDPOINT ====================

@@ -372,8 +372,15 @@ export const adminAPI = {
   getStats: async () => {
     const res = await api.get('/admin/stats')
     return res
+  },
+
+  // Get all admin data in one call (OPTIMIZED)
+  getFull: async () => {
+    const res = await api.get('/admin/full')
+    return res
   }
 }
+
 
 export default api
 

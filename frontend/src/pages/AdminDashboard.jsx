@@ -27,6 +27,24 @@ export default function AdminDashboard() {
       setLoading(true)
       setError('')
 
+      // OPTIMIZED: Try combined endpoint first (1 API call instead of 4)
+      try {
+        const fullRes = await adminAPI.getFull()
+        if (fullRes.data?.data) {
+          console.log('Admin full data loaded:', fullRes.data.cached ? '(cached)' : '(fresh)')
+          const fullData = fullRes.data.data
+          setStats(fullData.stats || {})
+          setDoctors(fullData.doctors || [])
+          setAshaWorkers(fullData.asha_workers || [])
+          setMothers(fullData.mothers || [])
+          setPendingChanges({})
+          return
+        }
+      } catch (combinedError) {
+        console.log('Combined endpoint not available, falling back to parallel calls:', combinedError.message)
+      }
+
+      // FALLBACK: Parallel fetch (still better than sequential)
       const [statsRes, doctorsRes, ashaRes, mothersRes] = await Promise.all([
         adminAPI.getStats().catch(() => ({ data: { stats: {} } })),
         adminAPI.getDoctors().catch(() => ({ data: { doctors: [] } })),
@@ -45,6 +63,7 @@ export default function AdminDashboard() {
       setLoading(false)
     }
   }, [])
+
 
   useEffect(() => { loadData() }, [loadData])
 

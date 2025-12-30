@@ -107,18 +107,57 @@ export default function RiskDashboard() {
   const fetchAnalyticsData = async () => {
     try {
       setChartsLoading(true)
-      const response = await apiCall('GET', '/analytics/dashboard')
-      console.log('Analytics response:', response)
+
+      // OPTIMIZED: Try combined endpoint first (1 API call instead of 3)
+      try {
+        const fullData = await apiCall('GET', '/dashboard/full')
+        console.log('Full dashboard response:', fullData, fullData.cached ? '(cached)' : '(fresh)')
+
+        // Set analytics from combined response
+        setAnalytics({
+          totalMothers: fullData.analytics?.total_mothers || 0,
+          highRiskCount: fullData.analytics?.high_risk_count || 0,
+          moderateRiskCount: fullData.analytics?.moderate_risk_count || 0,
+          lowRiskCount: fullData.analytics?.low_risk_count || 0,
+          totalAssessments: fullData.analytics?.total_assessments || 0
+        })
+
+        // Set chart data directly from combined response
+        if (fullData.age_distribution) {
+          setAgeDistribution(fullData.age_distribution)
+        }
+        if (fullData.risk_trend) {
+          setRiskTrend(fullData.risk_trend)
+        }
+        if (fullData.vital_stats) {
+          setVitalStats(fullData.vital_stats)
+        }
+
+        return // Success with combined endpoint
+      } catch (combinedError) {
+        console.log('Combined endpoint not available, falling back to separate calls:', combinedError.message)
+      }
+
+      // FALLBACK: Use parallel fetching with Promise.all (still faster than sequential)
+      const [analyticsRes, mothersRes, risksRes] = await Promise.all([
+        apiCall('GET', '/analytics/dashboard'),
+        apiCall('GET', '/mothers'),
+        apiCall('GET', '/risk/all').catch(() => ({ data: [] }))
+      ])
+
+      console.log('Analytics response (parallel fetch):', analyticsRes)
+
       setAnalytics({
-        totalMothers: response.total_mothers || 0,
-        highRiskCount: response.high_risk_count || 0,
-        moderateRiskCount: response.moderate_risk_count || 0,
-        lowRiskCount: response.low_risk_count || 0,
-        totalAssessments: response.total_assessments || 0
+        totalMothers: analyticsRes.total_mothers || 0,
+        highRiskCount: analyticsRes.high_risk_count || 0,
+        moderateRiskCount: analyticsRes.moderate_risk_count || 0,
+        lowRiskCount: analyticsRes.low_risk_count || 0,
+        totalAssessments: analyticsRes.total_assessments || 0
       })
 
-      // Fetch detailed analytics for charts
-      await fetchDetailedAnalytics()
+      // Process chart data from parallel results
+      processChartData(mothersRes.data || [], risksRes.data || [])
+
     } catch (error) {
       console.error('Failed to load analytics:', error.message)
       showMessage('Failed to refresh analytics', 'error')
@@ -127,128 +166,114 @@ export default function RiskDashboard() {
     }
   }
 
-  const fetchDetailedAnalytics = async () => {
-    try {
-      const mothersRes = await apiCall('GET', '/mothers')
-      const mothersData = mothersRes.data || []
-
-      // Fetch all assessments in a single request
-      let allAssessments = []
-      try {
-        const allRes = await apiCall('GET', '/risk/all')
-        allAssessments = allRes.data || []
-      } catch (err) {
-        console.log('Could not fetch all assessments:', err.message)
-      }
-
-      // Age Distribution
-      const ageGroups = {
-        '15-20': 0,
-        '20-25': 0,
-        '25-30': 0,
-        '30-35': 0,
-        '35-40': 0,
-        '40+': 0
-      }
-
-      mothersData.forEach(m => {
-        if (m.age >= 15 && m.age < 20) ageGroups['15-20']++
-        else if (m.age >= 20 && m.age < 25) ageGroups['20-25']++
-        else if (m.age >= 25 && m.age < 30) ageGroups['25-30']++
-        else if (m.age >= 30 && m.age < 35) ageGroups['30-35']++
-        else if (m.age >= 35 && m.age < 40) ageGroups['35-40']++
-        else ageGroups['40+']++
-      })
-
-      const ageData = Object.entries(ageGroups).map(([age, count]) => ({
-        name: age,
-        value: count
-      }))
-      setAgeDistribution(ageData)
-
-      // Risk Trend (last 7 days)
-      const sortedAssessments = allAssessments.sort((a, b) =>
-        new Date(a.created_at) - new Date(b.created_at)
-      )
-
-      const dailyRisk = {}
-      sortedAssessments.forEach(assessment => {
-        const date = new Date(assessment.created_at).toLocaleDateString()
-        if (!dailyRisk[date]) {
-          dailyRisk[date] = { date, HIGH: 0, MODERATE: 0, LOW: 0 }
-        }
-        dailyRisk[date][assessment.risk_level]++
-      })
-
-      const riskData = Object.values(dailyRisk).slice(-7)
-      setRiskTrend(riskData)
-
-      // Vital Stats
-      const vitals = {
-        avgSystolic: 0,
-        avgDiastolic: 0,
-        avgHeartRate: 0,
-        avgGlucose: 0,
-        avgHemoglobin: 0
-      }
-
-      let systolicCount = 0, diastolicCount = 0, hrCount = 0, glucoseCount = 0, hbCount = 0
-
-      allAssessments.forEach(assessment => {
-        if (assessment.systolic_bp) {
-          vitals.avgSystolic += assessment.systolic_bp
-          systolicCount++
-        }
-        if (assessment.diastolic_bp) {
-          vitals.avgDiastolic += assessment.diastolic_bp
-          diastolicCount++
-        }
-        if (assessment.heart_rate) {
-          vitals.avgHeartRate += assessment.heart_rate
-          hrCount++
-        }
-        if (assessment.blood_glucose) {
-          vitals.avgGlucose += assessment.blood_glucose
-          glucoseCount++
-        }
-        if (assessment.hemoglobin) {
-          vitals.avgHemoglobin += assessment.hemoglobin
-          hbCount++
-        }
-      })
-
-      const vitalData = [
-        {
-          name: 'Systolic BP',
-          value: systolicCount > 0 ? Math.round(vitals.avgSystolic / systolicCount) : 0,
-          normal: 120
-        },
-        {
-          name: 'Diastolic BP',
-          value: diastolicCount > 0 ? Math.round(vitals.avgDiastolic / diastolicCount) : 0,
-          normal: 80
-        },
-        {
-          name: 'Heart Rate',
-          value: hrCount > 0 ? Math.round(vitals.avgHeartRate / hrCount) : 0,
-          normal: 75
-        },
-        {
-          name: 'Glucose',
-          value: glucoseCount > 0 ? Math.round(vitals.avgGlucose / glucoseCount) : 0,
-          normal: 100
-        },
-        {
-          name: 'Hemoglobin',
-          value: hbCount > 0 ? (vitals.avgHemoglobin / hbCount).toFixed(1) : 0,
-          normal: 12
-        }
-      ]
-      setVitalStats(vitalData)
-    } catch (err) {
-      console.error('Error fetching detailed analytics:', err)
+  // Helper function to process chart data (used as fallback)
+  const processChartData = (mothersData, allAssessments) => {
+    // Age Distribution
+    const ageGroups = {
+      '15-20': 0,
+      '20-25': 0,
+      '25-30': 0,
+      '30-35': 0,
+      '35-40': 0,
+      '40+': 0
     }
+
+    mothersData.forEach(m => {
+      if (m.age >= 15 && m.age < 20) ageGroups['15-20']++
+      else if (m.age >= 20 && m.age < 25) ageGroups['20-25']++
+      else if (m.age >= 25 && m.age < 30) ageGroups['25-30']++
+      else if (m.age >= 30 && m.age < 35) ageGroups['30-35']++
+      else if (m.age >= 35 && m.age < 40) ageGroups['35-40']++
+      else ageGroups['40+']++
+    })
+
+    const ageData = Object.entries(ageGroups).map(([age, count]) => ({
+      name: age,
+      value: count
+    }))
+    setAgeDistribution(ageData)
+
+    // Risk Trend (last 7 days)
+    const sortedAssessments = allAssessments.sort((a, b) =>
+      new Date(a.created_at) - new Date(b.created_at)
+    )
+
+    const dailyRisk = {}
+    sortedAssessments.forEach(assessment => {
+      const date = new Date(assessment.created_at).toLocaleDateString()
+      if (!dailyRisk[date]) {
+        dailyRisk[date] = { date, HIGH: 0, MODERATE: 0, LOW: 0 }
+      }
+      dailyRisk[date][assessment.risk_level]++
+    })
+
+    const riskData = Object.values(dailyRisk).slice(-7)
+    setRiskTrend(riskData)
+
+    // Vital Stats
+    const vitals = {
+      avgSystolic: 0,
+      avgDiastolic: 0,
+      avgHeartRate: 0,
+      avgGlucose: 0,
+      avgHemoglobin: 0
+    }
+
+    let systolicCount = 0, diastolicCount = 0, hrCount = 0, glucoseCount = 0, hbCount = 0
+
+    allAssessments.forEach(assessment => {
+      if (assessment.systolic_bp) {
+        vitals.avgSystolic += assessment.systolic_bp
+        systolicCount++
+      }
+      if (assessment.diastolic_bp) {
+        vitals.avgDiastolic += assessment.diastolic_bp
+        diastolicCount++
+      }
+      if (assessment.heart_rate) {
+        vitals.avgHeartRate += assessment.heart_rate
+        hrCount++
+      }
+      if (assessment.blood_glucose) {
+        vitals.avgGlucose += assessment.blood_glucose
+        glucoseCount++
+      }
+      if (assessment.hemoglobin) {
+        vitals.avgHemoglobin += assessment.hemoglobin
+        hbCount++
+      }
+    })
+
+    const vitalData = [
+      {
+        name: 'Systolic BP',
+        value: systolicCount > 0 ? Math.round(vitals.avgSystolic / systolicCount) : 0,
+        normal: 120
+      },
+      {
+        name: 'Diastolic BP',
+        value: diastolicCount > 0 ? Math.round(vitals.avgDiastolic / diastolicCount) : 0,
+        normal: 80
+      },
+      {
+        name: 'Heart Rate',
+        value: hrCount > 0 ? Math.round(vitals.avgHeartRate / hrCount) : 0,
+        normal: 75
+      },
+      {
+        name: 'Glucose',
+        value: glucoseCount > 0 ? Math.round(vitals.avgGlucose / glucoseCount) : 0,
+        normal: 100
+      },
+      {
+        name: 'Hemoglobin',
+        value: hbCount > 0 ? (vitals.avgHemoglobin / hbCount).toFixed(1) : 0,
+        normal: 12
+      }
+    ]
+    setVitalStats(vitalData)
   }
+
 
   const fetchMothers = async () => {
     try {

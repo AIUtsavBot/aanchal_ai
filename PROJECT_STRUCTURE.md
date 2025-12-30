@@ -44,15 +44,23 @@ backend/
 │  ├─ database.py
 │  └─ schemas.py             # Pydantic/ORM schemas
 ├─ services/
+│  ├─ auth_service.py        # Authentication and user management
+│  ├─ cache_service.py       # In-memory caching with TTL (NEW in v2.3.0)
 │  ├─ document_analyzer.py
+│  ├─ email_service.py       # Resend email integration
 │  ├─ memory_service.py
 │  ├─ notification_service.py
 │  ├─ supabase_service.py
 │  ├─ telegram_service.py
 │  └─ voice_service.py
+├─ routes/
+│  ├─ admin_routes.py        # Admin dashboard endpoints
+│  ├─ auth_routes.py         # Authentication endpoints
+│  └─ vapi_routes.py         # Voice API endpoints
 └─ utils/
    ├─ helpers.py
    └─ validators.py
+
 
 ```
 

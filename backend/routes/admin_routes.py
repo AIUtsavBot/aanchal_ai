@@ -12,8 +12,18 @@ from services.auth_service import supabase_admin
 from routes.auth_routes import get_current_user, require_admin
 from services.email_service import send_alert_email
 
+# Import cache service
+try:
+    from services.cache_service import cache, invalidate_dashboard_cache
+    CACHE_AVAILABLE = True
+except ImportError:
+    CACHE_AVAILABLE = False
+    cache = None
+    def invalidate_dashboard_cache(): pass
+
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/admin", tags=["admin"])
+
 
 
 # ==================== Pydantic Models ====================
@@ -44,15 +54,22 @@ class AssignDoctorRequest(BaseModel):
 
 @router.get("/stats")
 async def get_admin_stats(current_user: dict = Depends(require_admin)):
-    """Get dashboard statistics"""
+    """Get dashboard statistics - OPTIMIZED with caching"""
     try:
-        # Get counts
+        # Check cache first
+        if CACHE_AVAILABLE and cache:
+            cached_data = cache.get("admin:stats")
+            if cached_data:
+                logger.debug("📊 Admin stats served from cache")
+                return cached_data
+        
+        # Get counts efficiently
         mothers = supabase_admin.table("mothers").select("id", count="exact").execute()
         doctors = supabase_admin.table("doctors").select("id", count="exact").execute()
         asha_workers = supabase_admin.table("asha_workers").select("id", count="exact").execute()
         pending_users = supabase_admin.table("user_profiles").select("id", count="exact").is_("role", "null").execute()
         
-        return {
+        result = {
             "success": True,
             "stats": {
                 "total_mothers": mothers.count or 0,
@@ -61,8 +78,90 @@ async def get_admin_stats(current_user: dict = Depends(require_admin)):
                 "pending_approvals": pending_users.count or 0
             }
         }
+        
+        # Cache for 30 seconds
+        if CACHE_AVAILABLE and cache:
+            cache.set("admin:stats", result, ttl_seconds=30)
+        
+        return result
     except Exception as e:
         logger.error(f"❌ Get admin stats error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/full")
+async def get_admin_full_data(current_user: dict = Depends(require_admin)):
+    """
+    COMBINED ADMIN ENDPOINT - Returns all admin data in a single request
+    Reduces frontend from 4 API calls to 1
+    """
+    try:
+        # Check cache first
+        if CACHE_AVAILABLE and cache:
+            cached_data = cache.get("admin:full")
+            if cached_data:
+                logger.debug("📊 Admin full data served from cache")
+                cached_data["cached"] = True
+                return cached_data
+        
+        # Fetch all data in parallel (all queries at once)
+        mothers_result = supabase_admin.table("mothers").select("id,name,phone,age,location,doctor_id,asha_worker_id").order("name").execute()
+        doctors_result = supabase_admin.table("doctors").select("*").order("name").execute()
+        asha_result = supabase_admin.table("asha_workers").select("*").order("name").execute()
+        pending_users = supabase_admin.table("user_profiles").select("id", count="exact").is_("role", "null").execute()
+        
+        mothers = mothers_result.data or []
+        doctors = doctors_result.data or []
+        asha_workers = asha_result.data or []
+        
+        # Create lookup maps for names
+        doctors_map = {d["id"]: d for d in doctors}
+        asha_map = {a["id"]: a for a in asha_workers}
+        
+        # Count mothers per doctor/asha in memory (avoiding N+1)
+        doctor_counts = {}
+        asha_counts = {}
+        for mother in mothers:
+            if mother.get("doctor_id"):
+                doctor_counts[mother["doctor_id"]] = doctor_counts.get(mother["doctor_id"], 0) + 1
+            if mother.get("asha_worker_id"):
+                asha_counts[mother["asha_worker_id"]] = asha_counts.get(mother["asha_worker_id"], 0) + 1
+        
+        # Add counts to doctors/asha workers
+        for doc in doctors:
+            doc["mothers_count"] = doctor_counts.get(doc["id"], 0)
+        for asha in asha_workers:
+            asha["mothers_count"] = asha_counts.get(asha["id"], 0)
+        
+        # Add names to mothers
+        for mother in mothers:
+            mother["doctor_name"] = doctors_map.get(mother.get("doctor_id"), {}).get("name", "Unassigned")
+            mother["asha_worker_name"] = asha_map.get(mother.get("asha_worker_id"), {}).get("name", "Unassigned")
+        
+        result = {
+            "success": True,
+            "data": {
+                "stats": {
+                    "total_mothers": len(mothers),
+                    "total_doctors": len(doctors),
+                    "total_asha_workers": len(asha_workers),
+                    "pending_approvals": pending_users.count or 0
+                },
+                "doctors": doctors,
+                "asha_workers": asha_workers,
+                "mothers": mothers
+            },
+            "cached": False
+        }
+        
+        # Cache for 30 seconds
+        if CACHE_AVAILABLE and cache:
+            cache.set("admin:full", result, ttl_seconds=30)
+            logger.info("📊 Admin full data cached for 30s")
+        
+        return result
+    except Exception as e:
+        logger.error(f"❌ Get admin full data error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -70,21 +169,43 @@ async def get_admin_stats(current_user: dict = Depends(require_admin)):
 
 @router.get("/doctors")
 async def list_doctors(current_user: dict = Depends(require_admin)):
-    """List all doctors with assigned mothers count"""
+    """List all doctors with assigned mothers count - OPTIMIZED"""
     try:
+        # Check cache first
+        if CACHE_AVAILABLE and cache:
+            cached_data = cache.get("admin:doctors")
+            if cached_data:
+                return cached_data
+        
         # Get all doctors
         doctors_result = supabase_admin.table("doctors").select("*").order("name").execute()
         doctors = doctors_result.data or []
         
-        # Get mothers count per doctor
-        for doc in doctors:
-            mothers = supabase_admin.table("mothers").select("id", count="exact").eq("doctor_id", doc["id"]).execute()
-            doc["mothers_count"] = mothers.count or 0
+        # Get ALL mothers with doctor_id in ONE query (avoid N+1)
+        mothers_result = supabase_admin.table("mothers").select("doctor_id").execute()
         
-        return {"success": True, "doctors": doctors}
+        # Count in memory
+        doctor_counts = {}
+        for m in (mothers_result.data or []):
+            did = m.get("doctor_id")
+            if did:
+                doctor_counts[did] = doctor_counts.get(did, 0) + 1
+        
+        # Add counts to doctors
+        for doc in doctors:
+            doc["mothers_count"] = doctor_counts.get(doc["id"], 0)
+        
+        result = {"success": True, "doctors": doctors}
+        
+        # Cache for 30 seconds
+        if CACHE_AVAILABLE and cache:
+            cache.set("admin:doctors", result, ttl_seconds=30)
+        
+        return result
     except Exception as e:
         logger.error(f"❌ List doctors error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 @router.get("/doctors/{doctor_id}")
@@ -156,21 +277,43 @@ async def delete_doctor(doctor_id: int, current_user: dict = Depends(require_adm
 
 @router.get("/asha-workers")
 async def list_asha_workers(current_user: dict = Depends(require_admin)):
-    """List all ASHA workers with assigned mothers count"""
+    """List all ASHA workers with assigned mothers count - OPTIMIZED"""
     try:
+        # Check cache first
+        if CACHE_AVAILABLE and cache:
+            cached_data = cache.get("admin:asha_workers")
+            if cached_data:
+                return cached_data
+        
         # Get all ASHA workers
         asha_result = supabase_admin.table("asha_workers").select("*").order("name").execute()
         asha_workers = asha_result.data or []
         
-        # Get mothers count per ASHA worker
-        for asha in asha_workers:
-            mothers = supabase_admin.table("mothers").select("id", count="exact").eq("asha_worker_id", asha["id"]).execute()
-            asha["mothers_count"] = mothers.count or 0
+        # Get ALL mothers with asha_worker_id in ONE query (avoid N+1)
+        mothers_result = supabase_admin.table("mothers").select("asha_worker_id").execute()
         
-        return {"success": True, "asha_workers": asha_workers}
+        # Count in memory
+        asha_counts = {}
+        for m in (mothers_result.data or []):
+            aid = m.get("asha_worker_id")
+            if aid:
+                asha_counts[aid] = asha_counts.get(aid, 0) + 1
+        
+        # Add counts
+        for asha in asha_workers:
+            asha["mothers_count"] = asha_counts.get(asha["id"], 0)
+        
+        result = {"success": True, "asha_workers": asha_workers}
+        
+        # Cache for 30 seconds
+        if CACHE_AVAILABLE and cache:
+            cache.set("admin:asha_workers", result, ttl_seconds=30)
+        
+        return result
     except Exception as e:
         logger.error(f"❌ List ASHA workers error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 @router.get("/asha-workers/{asha_id}")
@@ -242,8 +385,14 @@ async def delete_asha_worker(asha_id: int, current_user: dict = Depends(require_
 
 @router.get("/mothers")
 async def list_mothers(current_user: dict = Depends(require_admin)):
-    """List all mothers with their assignments"""
+    """List all mothers with their assignments - OPTIMIZED"""
     try:
+        # Check cache first
+        if CACHE_AVAILABLE and cache:
+            cached_data = cache.get("admin:mothers")
+            if cached_data:
+                return cached_data
+        
         # Get all mothers with doctor and ASHA worker info
         mothers_result = supabase_admin.table("mothers").select("*").order("name").execute()
         mothers = mothers_result.data or []
@@ -256,10 +405,17 @@ async def list_mothers(current_user: dict = Depends(require_admin)):
             mother["doctor_name"] = doctors.get(mother.get("doctor_id"), {}).get("name", "Unassigned")
             mother["asha_worker_name"] = asha_workers.get(mother.get("asha_worker_id"), {}).get("name", "Unassigned")
         
-        return {"success": True, "mothers": mothers}
+        result = {"success": True, "mothers": mothers}
+        
+        # Cache for 30 seconds
+        if CACHE_AVAILABLE and cache:
+            cache.set("admin:mothers", result, ttl_seconds=30)
+        
+        return result
     except Exception as e:
         logger.error(f"❌ List mothers error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 @router.post("/mothers/{mother_id}/assign-asha")
