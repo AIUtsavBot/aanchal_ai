@@ -478,6 +478,99 @@ async def deactivate_user(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to deactivate user"
         )
+
+
+# ==================== ALIAS ENDPOINTS (for frontend compatibility) ====================
+
+@router.get("/pending-users")
+async def get_pending_users(current_user: dict = Depends(require_admin)):
+    """
+    Get users with null role (pending approval) - Alias for frontend compatibility
+    """
+    try:
+        result = supabase_admin.table("user_profiles").select("*").is_("role", "null").execute()
+        return {
+            "success": True,
+            "count": len(result.data) if result.data else 0,
+            "users": result.data or []
+        }
+    except Exception as e:
+        logger.error(f"❌ Get pending users error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/pending-users/{user_id}/assign-role")
+async def assign_role_to_pending_user(user_id: str, role: str, current_user: dict = Depends(require_admin)):
+    """Assign a role to a pending user"""
+    try:
+        if role not in ["ADMIN", "DOCTOR", "ASHA_WORKER"]:
+            raise HTTPException(status_code=400, detail="Invalid role")
+        
+        result = supabase_admin.table("user_profiles").update({"role": role}).eq("id", user_id).execute()
+        
+        if not result.data:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        return {"success": True, "message": f"Role {role} assigned", "user": result.data[0]}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Assign role error: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.delete("/pending-users/{user_id}")
+async def delete_pending_user(user_id: str, current_user: dict = Depends(require_admin)):
+    """Delete a pending user"""
+    try:
+        result = supabase_admin.table("user_profiles").delete().eq("id", user_id).execute()
+        
+        if not result.data:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        return {"success": True, "message": "User deleted"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Delete pending user error: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/role-requests")
+async def get_role_requests(current_user: dict = Depends(require_admin)):
+    """
+    Get registration requests - Alias for /register-requests
+    """
+    try:
+        requests = await auth_service.list_registration_requests(status_filter="PENDING")
+        return {"success": True, "requests": requests}
+    except Exception as e:
+        logger.error(f"❌ Get role requests error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/role-requests/{request_id}/approve")
+async def approve_role_request(request_id: int, current_user: dict = Depends(require_admin)):
+    """Approve a registration request"""
+    try:
+        result = await auth_service.approve_registration_request(request_id, reviewer_id=current_user["id"])
+        return {"success": True, "message": "Request approved", "user": result}
+    except Exception as e:
+        logger.error(f"❌ Approve role request error: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/role-requests/{request_id}/reject")
+async def reject_role_request(request_id: int, reason: str = None, current_user: dict = Depends(require_admin)):
+    """Reject a registration request"""
+    try:
+        await auth_service.reject_registration_request(request_id, reviewer_id=current_user["id"], note=reason)
+        return {"success": True, "message": "Request rejected"}
+    except Exception as e:
+        logger.error(f"❌ Reject role request error: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 # ==================== File Upload (Doctor Certification) ====================
 
 @router.post("/upload-cert")
