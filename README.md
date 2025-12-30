@@ -114,151 +114,174 @@ See [CHANGELOG.md](CHANGELOG.md) for full version history.
 ### System Overview
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#E8F5E9', 'primaryTextColor': '#1B5E20', 'primaryBorderColor': '#43A047', 'lineColor': '#66BB6A', 'secondaryColor': '#FFF3E0', 'tertiaryColor': '#E3F2FD'}}}%%
 flowchart TB
-    subgraph Users["👥 Users"]
-        Mother["🤰 Pregnant Mother"]
-        ASHA["👩‍⚕️ ASHA Worker"]
-        Doctor["👨‍⚕️ Doctor"]
-        Admin["👨‍💼 Admin"]
+    subgraph USERS[" Users "]
+        direction LR
+        Mother[/"Pregnant Mother"\]
+        ASHA[/"ASHA Worker"\]
+        Doctor[/"Doctor"\]
+        Admin[/"Admin"\]
     end
 
-    subgraph Frontend["🌐 Frontend (React + Vite)"]
-        WebApp["Web Dashboard<br/>:5173"]
+    subgraph FRONTEND[" Frontend - React + Vite "]
+        WebApp[["Web Dashboard\n:5173"]]
         RiskDash["Risk Dashboard"]
         DoctorDash["Doctor Dashboard"]
-        ASHAInterface["ASHA Interface"]
+        ASHAPanel["ASHA Interface"]
         AdminDash["Admin Dashboard"]
     end
 
-    subgraph Backend["⚙️ Backend (FastAPI)"]
-        API["REST API<br/>:8000"]
-        Auth["Auth Service"]
-        Cache["In-Memory Cache<br/>(30s TTL)"]
-        Agents["AI Agents"]
-        Scheduler["Task Scheduler"]
+    subgraph BACKEND[" Backend - FastAPI "]
+        API{{"REST API\n:8000"}}
+        AuthSvc["Auth Service"]
+        CacheSvc[("In-Memory Cache\n30s TTL")]
+        AgentsSvc["AI Agents"]
+        Scheduler["Scheduler"]
     end
 
-    subgraph External["🔗 External Services"]
-        Telegram["Telegram Bot"]
+    subgraph EXTERNAL[" External Services "]
+        TG["Telegram Bot"]
         Gemini["Google Gemini AI"]
-        Resend["Resend Email"]
+        Email["Resend Email"]
     end
 
-    subgraph Database["🗄️ Supabase"]
-        PostgreSQL["PostgreSQL"]
+    subgraph DATABASE[" Supabase "]
+        PG[("PostgreSQL")]
         SupaAuth["Supabase Auth"]
-        Storage["File Storage"]
+        Storage[("File Storage")]
     end
 
-    Mother --> Telegram
+    Mother -.-> TG
     Mother --> WebApp
-    ASHA --> ASHAInterface
+    ASHA --> ASHAPanel
     Doctor --> DoctorDash
     Admin --> AdminDash
 
     WebApp --> API
-    Telegram --> API
-    API --> Cache
-    Cache --> PostgreSQL
-    API --> Auth
-    Auth --> SupaAuth
-    API --> Agents
-    Agents --> Gemini
-    API --> Resend
+    TG --> API
+    API <--> CacheSvc
+    CacheSvc <--> PG
+    API --> AuthSvc
+    AuthSvc <--> SupaAuth
+    API --> AgentsSvc
+    AgentsSvc --> Gemini
+    API --> Email
     Scheduler --> API
+
+    style USERS fill:#E8F5E9,stroke:#43A047,stroke-width:2px
+    style FRONTEND fill:#E3F2FD,stroke:#1976D2,stroke-width:2px
+    style BACKEND fill:#FFF3E0,stroke:#FB8C00,stroke-width:2px
+    style EXTERNAL fill:#F3E5F5,stroke:#8E24AA,stroke-width:2px
+    style DATABASE fill:#FFEBEE,stroke:#E53935,stroke-width:2px
 ```
 
 ### Frontend Architecture
 
 ```mermaid
-flowchart LR
-    subgraph Pages["📄 Pages"]
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#E3F2FD', 'primaryTextColor': '#0D47A1', 'primaryBorderColor': '#1976D2'}}}%%
+flowchart TB
+    subgraph PAGES[" Pages "]
+        direction TB
         Home["Home"]
-        Login["Login/Signup"]
-        RiskDash["RiskDashboard"]
-        DoctorDash["DoctorDashboard"]
-        ASHAInt["ASHAInterface"]
-        AdminDash["AdminDashboard"]
-        AdminApproval["AdminApprovals"]
+        Auth["Login / Signup"]
+        RiskPage["RiskDashboard"]
+        DocPage["DoctorDashboard"]
+        ASHAPage["ASHAInterface"]
+        AdminPage["AdminDashboard"]
+        Approvals["AdminApprovals"]
     end
 
-    subgraph Components["🧩 Components"]
-        Navbar["Navbar"]
-        PatientCard["PatientCard"]
-        RiskChart["RiskChart"]
-        CaseChat["CaseChat"]
-        ProtectedRoute["ProtectedRoute"]
+    subgraph COMPONENTS[" Reusable Components "]
+        direction TB
+        Nav["Navbar"]
+        Cards["PatientCard"]
+        Charts["RiskChart"]
+        Chat["CaseChat"]
+        Protected["ProtectedRoute"]
     end
 
-    subgraph Services["🔌 Services"]
-        API["api.js<br/>(Axios)"]
-        AuthService["auth.js<br/>(Supabase)"]
+    subgraph SERVICES[" API Services "]
+        direction TB
+        ApiSvc["api.js - Axios HTTP Client"]
+        AuthJsSvc["auth.js - Supabase Auth"]
     end
 
-    subgraph Context["📦 Context"]
-        AuthContext["AuthContext<br/>(User State)"]
+    subgraph STATE[" State Management "]
+        AuthCtx[("AuthContext\nUser State")]
     end
 
-    Pages --> Components
-    Pages --> Services
-    Components --> Services
-    Services --> AuthContext
-    ProtectedRoute --> AuthContext
+    PAGES --> COMPONENTS
+    PAGES --> SERVICES
+    COMPONENTS --> SERVICES
+    SERVICES --> AuthCtx
+    Protected --> AuthCtx
+
+    style PAGES fill:#E3F2FD,stroke:#1976D2,stroke-width:2px
+    style COMPONENTS fill:#E8F5E9,stroke:#43A047,stroke-width:2px
+    style SERVICES fill:#FFF3E0,stroke:#FB8C00,stroke-width:2px
+    style STATE fill:#F3E5F5,stroke:#8E24AA,stroke-width:2px
 ```
 
 ### Backend Architecture
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#FFF3E0', 'primaryTextColor': '#E65100', 'primaryBorderColor': '#FB8C00'}}}%%
 flowchart TB
-    subgraph Entrypoints["🚀 Entrypoints"]
-        MainPy["main.py<br/>(FastAPI App)"]
-        TelegramBot["telegram_bot.py"]
-        SchedulerPy["scheduler.py"]
+    subgraph ENTRY[" Entry Points "]
+        Main["main.py\nFastAPI App"]
+        Bot["telegram_bot.py"]
+        Sched["scheduler.py"]
     end
 
-    subgraph Routes["🛣️ API Routes"]
-        AuthRoutes["/auth/*<br/>Authentication"]
-        AdminRoutes["/admin/*<br/>Admin Management"]
-        MotherRoutes["/mothers/*<br/>Mother CRUD"]
-        RiskRoutes["/risk/*<br/>Risk Assessment"]
-        AnalyticsRoutes["/analytics/*<br/>Dashboard Data"]
-        CombinedRoutes["/dashboard/full<br/>/admin/full<br/>(Optimized)"]
+    subgraph ROUTES[" API Routes "]
+        R1["/auth - Authentication"]
+        R2["/admin - Admin Management"]
+        R3["/mothers - Mother CRUD"]
+        R4["/risk - Risk Assessment"]
+        R5["/analytics - Dashboard"]
+        R6["/dashboard/full - Combined API"]
     end
 
-    subgraph Services["⚡ Services"]
-        AuthService["auth_service.py"]
-        CacheService["cache_service.py<br/>(In-Memory TTL)"]
-        EmailService["email_service.py<br/>(Resend)"]
-        DocAnalyzer["document_analyzer.py<br/>(Gemini AI)"]
-        TelegramService["telegram_service.py"]
+    subgraph MIDDLEWARE[" Security Layer "]
+        JWT["JWT Verification"]
+        RBAC["Role-Based Access"]
     end
 
-    subgraph Agents["🤖 AI Agents"]
-        Orchestrator["Orchestrator"]
-        RiskAgent["Risk Agent"]
-        CareAgent["Care Agent"]
-        NutritionAgent["Nutrition Agent"]
-        MedicationAgent["Medication Agent"]
-        EmergencyAgent["Emergency Agent"]
-        ASHAAgent["ASHA Agent"]
+    subgraph SVCS[" Core Services "]
+        AuthS["auth_service.py"]
+        CacheS[("cache_service.py\n30s TTL")]
+        EmailS["email_service.py"]
+        DocS["document_analyzer.py"]
+        TgS["telegram_service.py"]
     end
 
-    subgraph Middleware["🔒 Middleware"]
-        AuthMiddleware["JWT Verification"]
-        RoleCheck["Role-Based Access"]
+    subgraph AGENTS[" AI Agent System "]
+        Orch{{"Orchestrator"}}
+        A1["Risk Agent"]
+        A2["Care Agent"]
+        A3["Nutrition Agent"]
+        A4["Medication Agent"]
+        A5["Emergency Agent"]
+        A6["ASHA Agent"]
     end
 
-    MainPy --> Routes
-    Routes --> Middleware
-    Middleware --> Services
-    Services --> Agents
-    Orchestrator --> RiskAgent
-    Orchestrator --> CareAgent
-    Orchestrator --> NutritionAgent
-    Orchestrator --> MedicationAgent
-    Orchestrator --> EmergencyAgent
-    Orchestrator --> ASHAAgent
+    Main --> ROUTES
+    Bot --> Main
+    Sched --> Main
+    ROUTES --> MIDDLEWARE
+    MIDDLEWARE --> SVCS
+    SVCS --> Orch
+    Orch --> A1 & A2 & A3
+    Orch --> A4 & A5 & A6
+
+    style ENTRY fill:#FFEBEE,stroke:#E53935,stroke-width:2px
+    style ROUTES fill:#E3F2FD,stroke:#1976D2,stroke-width:2px
+    style MIDDLEWARE fill:#FFF9C4,stroke:#F9A825,stroke-width:2px
+    style SVCS fill:#FFF3E0,stroke:#FB8C00,stroke-width:2px
+    style AGENTS fill:#E8F5E9,stroke:#43A047,stroke-width:2px
 ```
+
 
 ### Database Schema
 
@@ -408,56 +431,72 @@ sequenceDiagram
 ### Performance Optimization Flow
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#FFEBEE', 'secondaryColor': '#E8F5E9'}}}%%
 flowchart LR
-    subgraph Before["❌ Before (Slow)"]
-        B1["Frontend"] --> B2["API Call 1"]
-        B1 --> B3["API Call 2"]
-        B1 --> B4["API Call 3"]
-        B1 --> B5["API Call 4"]
-        B2 --> B6["DB Query"]
-        B3 --> B7["DB Query"]
-        B4 --> B8["DB Query"]
-        B5 --> B9["DB Query"]
+    subgraph BEFORE[" Before - Slow "]
+        B1["Frontend"]
+        B2["API Call 1"]
+        B3["API Call 2"]
+        B4["API Call 3"]
+        B5["API Call 4"]
+        B6[("DB")]
+        B7[("DB")]
+        B8[("DB")]
+        B9[("DB")]
+        B1 --> B2 --> B6
+        B1 --> B3 --> B7
+        B1 --> B4 --> B8
+        B1 --> B5 --> B9
     end
 
-    subgraph After["✅ After (3x Faster)"]
-        A1["Frontend"] --> A2["Combined API Call<br/>/dashboard/full"]
-        A2 --> A3["Check Cache"]
-        A3 -->|Hit| A4["Return Cached Data<br/>(Instant)"]
-        A3 -->|Miss| A5["Single Optimized Query"]
-        A5 --> A6["Cache for 30s"]
-        A6 --> A4
+    subgraph AFTER[" After - 3x Faster "]
+        A1["Frontend"]
+        A2{{"Combined API\n/dashboard/full"}}
+        A3[("Cache")]
+        A4["Instant Response"]
+        A5["Optimized Query"]
+        A6[("DB")]
+        A1 --> A2
+        A2 --> A3
+        A3 -->|HIT| A4
+        A3 -->|MISS| A5
+        A5 --> A6
+        A6 --> A3
     end
+
+    style BEFORE fill:#FFEBEE,stroke:#E53935,stroke-width:2px
+    style AFTER fill:#E8F5E9,stroke:#43A047,stroke-width:2px
 ```
 
 ### AI Agent Orchestration
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#E3F2FD'}}}%%
 flowchart TB
-    Input["User Query / Health Data"]
+    Input(["User Query or Health Data"])
     
-    subgraph Orchestrator["🎯 Agent Orchestrator"]
-        Classify["Intent Classification<br/>(Gemini AI)"]
+    subgraph ORCH[" Agent Orchestrator "]
+        Classify{{"Intent Classification\nGemini AI"}}
     end
     
-    subgraph Agents["🤖 Specialized Agents"]
-        Risk["Risk Agent<br/>• BP Analysis<br/>• Risk Scoring<br/>• Recommendations"]
-        Care["Care Agent<br/>• Daily Tasks<br/>• Exercise Plans<br/>• Checkup Schedule"]
-        Nutrition["Nutrition Agent<br/>• Meal Plans<br/>• Supplements<br/>• Anemia Care"]
-        Medication["Medication Agent<br/>• Reminders<br/>• Interactions<br/>• Compliance"]
-        Emergency["Emergency Agent<br/>• Protocol Activation<br/>• Alert System<br/>• Immediate Actions"]
-        ASHA["ASHA Agent<br/>• Visit Scheduling<br/>• Checklists<br/>• Coordination"]
+    subgraph AGENTS[" Specialized AI Agents "]
+        Risk["RISK AGENT\n- BP Analysis\n- Risk Scoring\n- Recommendations"]
+        Care["CARE AGENT\n- Daily Tasks\n- Exercise Plans\n- Checkup Schedule"]
+        Nutrition["NUTRITION AGENT\n- Meal Plans\n- Supplements\n- Anemia Care"]
+        Medication["MEDICATION AGENT\n- Reminders\n- Interactions\n- Compliance"]
+        Emergency["EMERGENCY AGENT\n- Protocol Activation\n- Alert System\n- Immediate Actions"]
+        ASHA["ASHA AGENT\n- Visit Scheduling\n- Checklists\n- Coordination"]
     end
     
-    Output["Response to User"]
+    Output(["Response to User"])
     
     Input --> Classify
-    Classify -->|Health Query| Risk
-    Classify -->|Care Question| Care
-    Classify -->|Food/Diet| Nutrition
-    Classify -->|Medicine| Medication
-    Classify -->|Emergency| Emergency
-    Classify -->|Appointment| ASHA
+    Classify -->|"Health Query"| Risk
+    Classify -->|"Care Question"| Care
+    Classify -->|"Food/Diet"| Nutrition
+    Classify -->|"Medicine"| Medication
+    Classify -->|"Emergency"| Emergency
+    Classify -->|"Appointment"| ASHA
     
     Risk --> Output
     Care --> Output
@@ -465,7 +504,13 @@ flowchart TB
     Medication --> Output
     Emergency --> Output
     ASHA --> Output
+
+    style ORCH fill:#FFF3E0,stroke:#FB8C00,stroke-width:2px
+    style AGENTS fill:#E8F5E9,stroke:#43A047,stroke-width:2px
+    style Input fill:#E3F2FD,stroke:#1976D2,stroke-width:2px
+    style Output fill:#E3F2FD,stroke:#1976D2,stroke-width:2px
 ```
+
 
 
 ---
