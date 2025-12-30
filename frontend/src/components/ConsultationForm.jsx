@@ -37,6 +37,9 @@ export default function ConsultationForm({ motherId, doctorId, doctorName, onSav
     // Previous consultations for reference
     const [previousConsultations, setPreviousConsultations] = useState([])
     const [previousVitals, setPreviousVitals] = useState(null)
+    const [consultationHistory, setConsultationHistory] = useState([])
+    const [previousNutritionPlans, setPreviousNutritionPlans] = useState([])
+    const [allVitalsHistory, setAllVitalsHistory] = useState([])
 
     // Load previous data
     useEffect(() => {
@@ -48,43 +51,58 @@ export default function ConsultationForm({ motherId, doctorId, doctorName, onSav
     const loadPreviousData = async () => {
         setLoading(true)
         try {
-            // Load previous health metrics (vitals)
+            // Load ALL previous health metrics (vitals)
             const { data: metricsData } = await supabase
                 .from('health_metrics')
                 .select('*')
                 .eq('mother_id', motherId)
                 .order('created_at', { ascending: false })
-                .limit(1)
+                .limit(20)
 
-            if (metricsData && metricsData[0]) {
+            if (metricsData && metricsData.length > 0) {
                 setPreviousVitals(metricsData[0])
+                setAllVitalsHistory(metricsData)
                 // Pre-fill with previous values for reference
                 if (metricsData[0].notes) setHealthStatus(metricsData[0].notes)
             }
 
-            // Load previous nutrition plans
+            // Load ALL previous nutrition plans
             const { data: nutritionData } = await supabase
                 .from('nutrition_plans')
                 .select('*')
                 .eq('mother_id', motherId)
                 .order('created_at', { ascending: false })
-                .limit(1)
+                .limit(10)
 
-            if (nutritionData && nutritionData[0]) {
+            if (nutritionData && nutritionData.length > 0) {
+                setPreviousNutritionPlans(nutritionData)
                 setNutritionPlan(nutritionData[0].plan || '')
                 setTrimester(nutritionData[0].trimester || 1)
             }
 
-            // Load previous prescriptions
+            // Load ALL previous prescriptions
             const { data: prescriptionData } = await supabase
                 .from('prescriptions')
                 .select('*')
                 .eq('mother_id', motherId)
                 .order('created_at', { ascending: false })
-                .limit(5)
+                .limit(20)
 
             if (prescriptionData && prescriptionData.length > 0) {
                 setPreviousConsultations(prescriptionData)
+            }
+
+            // Load previous consultation history from health_timeline
+            const { data: historyData } = await supabase
+                .from('health_timeline')
+                .select('*')
+                .eq('mother_id', motherId)
+                .eq('event_type', 'doctor_consultation')
+                .order('event_date', { ascending: false })
+                .limit(20)
+
+            if (historyData && historyData.length > 0) {
+                setConsultationHistory(historyData)
             }
 
             // Load upcoming appointment
@@ -207,6 +225,42 @@ export default function ConsultationForm({ motherId, doctorId, doctorName, onSav
                 if (appointmentError) throw new Error(`Appointment Error: ${appointmentError.message}`)
             }
 
+            // 5. Save consultation summary to health_timeline for historical record
+            const consultationSummary = {
+                mother_id: motherId,
+                event_date: new Date().toISOString().split('T')[0],
+                event_type: 'doctor_consultation',
+                blood_pressure: (systolicBP && diastolicBP) ? `${systolicBP}/${diastolicBP}` : null,
+                hemoglobin: hemoglobin ? parseFloat(hemoglobin) : null,
+                sugar_level: bloodSugar ? parseFloat(bloodSugar) : null,
+                weight: weight ? parseFloat(weight) : null,
+                summary: healthStatus.trim() || 'Consultation completed',
+                event_data: {
+                    doctor_name: doctorName,
+                    vitals: {
+                        systolic_bp: systolicBP ? parseInt(systolicBP) : null,
+                        diastolic_bp: diastolicBP ? parseInt(diastolicBP) : null,
+                        heart_rate: heartRate ? parseInt(heartRate) : null,
+                        blood_sugar: bloodSugar ? parseFloat(bloodSugar) : null,
+                        hemoglobin: hemoglobin ? parseFloat(hemoglobin) : null,
+                        weight: weight ? parseFloat(weight) : null
+                    },
+                    medications: validMedications.map(m => m.medication),
+                    nutrition_plan: nutritionPlan.trim() || null,
+                    next_consultation: nextConsultationDate || null,
+                    recorded_at: new Date().toISOString()
+                },
+                concerns: null
+            }
+
+            const { error: timelineError } = await supabase
+                .from('health_timeline')
+                .insert(consultationSummary)
+
+            if (timelineError) {
+                console.warn('Timeline record error (non-fatal):', timelineError.message)
+            }
+
             setSuccess('Consultation details saved successfully!')
 
             // Reset form for new entry
@@ -268,20 +322,6 @@ export default function ConsultationForm({ motherId, doctorId, doctorName, onSav
                         Vital Signs
                     </h3>
 
-                    {/* Previous Vitals Reference */}
-                    {previousVitals && (
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 text-sm">
-                            <p className="font-medium text-blue-800 mb-1">Previous Reading ({new Date(previousVitals.measured_at || previousVitals.created_at).toLocaleDateString()}):</p>
-                            <div className="flex flex-wrap gap-3 text-blue-700">
-                                {previousVitals.blood_pressure_systolic && previousVitals.blood_pressure_diastolic && (
-                                    <span>BP: {previousVitals.blood_pressure_systolic}/{previousVitals.blood_pressure_diastolic} mmHg</span>
-                                )}
-                                {previousVitals.blood_sugar && <span>Sugar: {previousVitals.blood_sugar} mg/dL</span>}
-                                {previousVitals.hemoglobin && <span>Hb: {previousVitals.hemoglobin} g/dL</span>}
-                                {previousVitals.weight_kg && <span>Weight: {previousVitals.weight_kg} kg</span>}
-                            </div>
-                        </div>
-                    )}
 
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                         {/* Blood Pressure */}
@@ -544,10 +584,107 @@ export default function ConsultationForm({ motherId, doctorId, doctorName, onSav
                     </div>
                 </div>
 
+                {/* Previous Consultation History */}
+                {consultationHistory.length > 0 && (
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            <Calendar className="w-5 h-5 text-blue-500" />
+                            Previous Consultation History
+                        </h3>
+                        <div className="space-y-4">
+                            {consultationHistory.map((record, idx) => (
+                                <div key={record.id || idx} className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-100">
+                                    <div className="flex justify-between items-start mb-3">
+                                        <div className="flex items-center gap-2">
+                                            <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                                                Consultation #{consultationHistory.length - idx}
+                                            </span>
+                                            <span className="text-sm font-medium text-gray-700">
+                                                📅 {record.event_date ? new Date(record.event_date).toLocaleDateString('en-IN', {
+                                                    day: 'numeric',
+                                                    month: 'short',
+                                                    year: 'numeric'
+                                                }) : 'Date N/A'}
+                                            </span>
+                                        </div>
+                                        {record.event_data?.doctor_name && (
+                                            <span className="text-xs text-gray-500">Dr. {record.event_data.doctor_name}</span>
+                                        )}
+                                    </div>
+
+                                    {/* Vitals Summary */}
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
+                                        {record.blood_pressure && (
+                                            <div className="bg-white px-3 py-2 rounded text-xs">
+                                                <span className="text-gray-500">BP:</span>
+                                                <span className="font-semibold text-gray-800 ml-1">{record.blood_pressure} mmHg</span>
+                                            </div>
+                                        )}
+                                        {record.hemoglobin && (
+                                            <div className="bg-white px-3 py-2 rounded text-xs">
+                                                <span className="text-gray-500">Hb:</span>
+                                                <span className="font-semibold text-gray-800 ml-1">{record.hemoglobin} g/dL</span>
+                                            </div>
+                                        )}
+                                        {record.sugar_level && (
+                                            <div className="bg-white px-3 py-2 rounded text-xs">
+                                                <span className="text-gray-500">Sugar:</span>
+                                                <span className="font-semibold text-gray-800 ml-1">{record.sugar_level} mg/dL</span>
+                                            </div>
+                                        )}
+                                        {record.weight && (
+                                            <div className="bg-white px-3 py-2 rounded text-xs">
+                                                <span className="text-gray-500">Weight:</span>
+                                                <span className="font-semibold text-gray-800 ml-1">{record.weight} kg</span>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Summary/Notes */}
+                                    {record.summary && (
+                                        <div className="text-sm text-gray-700 bg-white p-2 rounded">
+                                            <span className="font-medium">Notes:</span> {record.summary}
+                                        </div>
+                                    )}
+
+                                    {/* Medications if available */}
+                                    {record.event_data?.medications?.length > 0 && (
+                                        <div className="mt-2 text-xs text-gray-600">
+                                            <span className="font-medium">💊 Medications:</span> {record.event_data.medications.join(', ')}
+                                        </div>
+                                    )}
+
+                                    {/* Nutrition Plan if available */}
+                                    {record.event_data?.nutrition_plan && (
+                                        <div className="mt-2 text-xs text-gray-600 bg-green-50 p-2 rounded border border-green-100">
+                                            <span className="font-medium text-green-700">🍎 Nutrition Plan:</span>
+                                            <p className="mt-1 text-gray-700">{record.event_data.nutrition_plan}</p>
+                                        </div>
+                                    )}
+
+                                    {/* Next Consultation if recorded */}
+                                    {record.event_data?.next_consultation && (
+                                        <div className="mt-2 text-xs text-blue-600">
+                                            <span className="font-medium">📅 Next Appointment:</span> {new Date(record.event_data.next_consultation).toLocaleDateString('en-IN', {
+                                                day: 'numeric',
+                                                month: 'short',
+                                                year: 'numeric'
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 {/* Previous Prescriptions Reference */}
                 {previousConsultations.length > 0 && (
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                        <h3 className="text-lg font-bold text-gray-900 mb-4">Previous Prescriptions</h3>
+                        <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            <Pill className="w-5 h-5 text-purple-500" />
+                            Previous Prescriptions
+                        </h3>
                         <div className="space-y-2">
                             {previousConsultations.map((presc, idx) => (
                                 <div key={presc.id || idx} className="bg-gray-50 p-3 rounded-lg text-sm flex justify-between items-center">
@@ -555,11 +692,115 @@ export default function ConsultationForm({ motherId, doctorId, doctorName, onSav
                                         <span className="font-medium text-gray-900">{presc.medication}</span>
                                         {presc.dosage && <span className="text-gray-600 ml-2">- {presc.dosage}</span>}
                                     </div>
-                                    <span className="text-xs text-gray-500">
-                                        {presc.created_at && new Date(presc.created_at).toLocaleDateString()}
+                                    <span className="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded">
+                                        📅 {presc.created_at && new Date(presc.created_at).toLocaleDateString('en-IN', {
+                                            day: 'numeric',
+                                            month: 'short',
+                                            year: 'numeric'
+                                        })}
                                     </span>
                                 </div>
                             ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Previous Nutrition Plans History */}
+                {previousNutritionPlans.length > 0 && (
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            <Apple className="w-5 h-5 text-green-500" />
+                            Previous Nutrition Plans
+                        </h3>
+                        <div className="space-y-3">
+                            {previousNutritionPlans.map((plan, idx) => (
+                                <div key={plan.id || idx} className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-100">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <div className="flex items-center gap-2">
+                                            <span className="bg-green-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                                                Trimester {plan.trimester || '?'}
+                                            </span>
+                                            <span className="text-xs text-gray-500 bg-green-100 px-2 py-1 rounded">
+                                                📅 {plan.created_at && new Date(plan.created_at).toLocaleDateString('en-IN', {
+                                                    day: 'numeric',
+                                                    month: 'short',
+                                                    year: 'numeric'
+                                                })}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                                        {plan.plan}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Previous Vitals History */}
+                {allVitalsHistory.length > 0 && (
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            <Activity className="w-5 h-5 text-red-500" />
+                            Complete Vitals History
+                        </h3>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="bg-gray-50 border-b">
+                                        <th className="px-3 py-2 text-left text-gray-600 font-semibold">Date</th>
+                                        <th className="px-3 py-2 text-center text-gray-600 font-semibold">BP (mmHg)</th>
+                                        <th className="px-3 py-2 text-center text-gray-600 font-semibold">Sugar (mg/dL)</th>
+                                        <th className="px-3 py-2 text-center text-gray-600 font-semibold">Hb (g/dL)</th>
+                                        <th className="px-3 py-2 text-center text-gray-600 font-semibold">Weight (kg)</th>
+                                        <th className="px-3 py-2 text-left text-gray-600 font-semibold">Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {allVitalsHistory.map((vital, idx) => (
+                                        <tr key={vital.id || idx} className={`border-b ${idx === 0 ? 'bg-blue-50' : ''}`}>
+                                            <td className="px-3 py-2 text-gray-700">
+                                                <div className="flex items-center gap-1">
+                                                    {idx === 0 && <span className="text-xs text-blue-600 font-semibold">(Latest)</span>}
+                                                    📅 {vital.measured_at || vital.created_at ? new Date(vital.measured_at || vital.created_at).toLocaleDateString('en-IN', {
+                                                        day: 'numeric',
+                                                        month: 'short',
+                                                        year: 'numeric'
+                                                    }) : 'N/A'}
+                                                </div>
+                                            </td>
+                                            <td className="px-3 py-2 text-center">
+                                                {vital.blood_pressure_systolic && vital.blood_pressure_diastolic ? (
+                                                    <span className="font-medium text-red-700">
+                                                        {vital.blood_pressure_systolic}/{vital.blood_pressure_diastolic}
+                                                    </span>
+                                                ) : '-'}
+                                            </td>
+                                            <td className="px-3 py-2 text-center">
+                                                {vital.blood_sugar ? (
+                                                    <span className="font-medium text-orange-700">{vital.blood_sugar}</span>
+                                                ) : '-'}
+                                            </td>
+                                            <td className="px-3 py-2 text-center">
+                                                {vital.hemoglobin ? (
+                                                    <span className={`font-medium ${vital.hemoglobin < 11 ? 'text-red-600' : 'text-green-700'}`}>
+                                                        {vital.hemoglobin}
+                                                    </span>
+                                                ) : '-'}
+                                            </td>
+                                            <td className="px-3 py-2 text-center">
+                                                {vital.weight_kg ? (
+                                                    <span className="font-medium text-blue-700">{vital.weight_kg}</span>
+                                                ) : '-'}
+                                            </td>
+                                            <td className="px-3 py-2 text-gray-600 max-w-xs truncate" title={vital.notes || ''}>
+                                                {vital.notes ? vital.notes.substring(0, 50) + (vital.notes.length > 50 ? '...' : '') : '-'}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 )}

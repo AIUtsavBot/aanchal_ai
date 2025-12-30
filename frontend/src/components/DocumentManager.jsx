@@ -10,6 +10,8 @@ import {
   Eye,
   RefreshCw,
   User,
+  Clock,
+  Zap,
 } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
@@ -24,9 +26,13 @@ export default function DocumentManager({
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [deleting, setDeleting] = useState(null); // Track which document is being deleted
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const fileInputRef = useRef(null);
+
+  // Check if current user is a doctor (can delete)
+  const isDoctor = uploaderRole?.toUpperCase() === "DOCTOR";
 
   useEffect(() => {
     if (motherId) {
@@ -119,6 +125,47 @@ export default function DocumentManager({
     }
   };
 
+  const handleDeleteDocument = async (reportId, fileName) => {
+    if (!isDoctor) {
+      setError("Only doctors can delete documents");
+      return;
+    }
+
+    if (!window.confirm(`Are you sure you want to delete "${fileName}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    setDeleting(reportId);
+    setError("");
+    setSuccess("");
+
+    try {
+      const response = await fetch(`${API_URL}/reports/${reportId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || "Failed to delete document");
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        setSuccess(`✅ Document "${fileName}" deleted successfully`);
+        // Reload documents to reflect the deletion
+        await loadDocuments();
+      } else {
+        throw new Error(result.message || "Delete failed");
+      }
+    } catch (err) {
+      console.error("Delete error:", err);
+      setError(err.message || "Failed to delete document");
+    } finally {
+      setDeleting(null);
+    }
+  };
+
   const formatDate = (dateStr) => {
     if (!dateStr) return "N/A";
     try {
@@ -137,13 +184,45 @@ export default function DocumentManager({
   const getStatusColor = (status) => {
     switch (status) {
       case "completed":
-        return "bg-green-100 text-green-800";
+        return "bg-green-100 text-green-800 border-green-200";
       case "processing":
-        return "bg-blue-100 text-blue-800";
+        return "bg-blue-100 text-blue-800 border-blue-200";
       case "error":
-        return "bg-red-100 text-red-800";
+        return "bg-red-100 text-red-800 border-red-200";
+      case "pending":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+  };
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case "completed":
+        return <CheckCircle className="w-3 h-3" />;
+      case "processing":
+        return <Loader className="w-3 h-3 animate-spin" />;
+      case "error":
+        return <AlertCircle className="w-3 h-3" />;
+      case "pending":
+        return <Clock className="w-3 h-3" />;
+      default:
+        return <Clock className="w-3 h-3" />;
+    }
+  };
+
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case "completed":
+        return "Analyzed";
+      case "processing":
+        return "Analyzing...";
+      case "error":
+        return "Error";
+      case "pending":
+        return "Awaiting Analysis";
+      default:
+        return "Pending";
     }
   };
 
@@ -255,12 +334,14 @@ export default function DocumentManager({
                       <span className="font-semibold text-gray-900">
                         {doc.filename || doc.file_name || "Document"}
                       </span>
+                      {/* Enhanced Status Badge */}
                       <span
-                        className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getStatusColor(
+                        className={`px-2 py-0.5 rounded-full text-xs font-semibold flex items-center gap-1 border ${getStatusColor(
                           doc.analysis_status
                         )}`}
                       >
-                        {doc.analysis_status || "pending"}
+                        {getStatusIcon(doc.analysis_status)}
+                        {getStatusLabel(doc.analysis_status)}
                       </span>
                     </div>
 
@@ -286,6 +367,19 @@ export default function DocumentManager({
                             </span>
                           )}
                         </p>
+                      )}
+
+                      {/* Pending Status Explanation */}
+                      {doc.analysis_status === "pending" && (
+                        <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
+                          <div className="flex items-center gap-1 font-medium">
+                            <Clock className="w-3 h-3" />
+                            Awaiting AI Analysis
+                          </div>
+                          <p className="mt-1">
+                            This document will be analyzed by our AI system to extract health metrics and detect any concerns.
+                          </p>
+                        </div>
                       )}
 
                       {doc.analysis_result?.risk_level && (
@@ -319,6 +413,7 @@ export default function DocumentManager({
                   </div>
 
                   <div className="flex items-center gap-2">
+                    {/* View Document Button */}
                     {doc.file_url && (
                       <a
                         href={doc.file_url}
@@ -329,6 +424,22 @@ export default function DocumentManager({
                       >
                         <ExternalLink className="w-5 h-5" />
                       </a>
+                    )}
+
+                    {/* Delete Button - Only for Doctors */}
+                    {isDoctor && (
+                      <button
+                        onClick={() => handleDeleteDocument(doc.id, doc.filename || doc.file_name || "Document")}
+                        disabled={deleting === doc.id}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                        title="Delete Document"
+                      >
+                        {deleting === doc.id ? (
+                          <Loader className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-5 h-5" />
+                        )}
+                      </button>
                     )}
                   </div>
                 </div>
