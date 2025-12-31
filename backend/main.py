@@ -419,8 +419,10 @@ try:
     from routes.admin_routes import router as admin_router
     app.include_router(admin_router)
     logger.info("✅ Admin routes loaded")
-except ImportError as e:
-    logger.warning(f"⚠️  Admin routes not available: {e}")
+except Exception as e:
+    import traceback
+    logger.error(f"❌ Admin routes FAILED to load: {e}")
+    logger.error(traceback.format_exc())
 
 # ==================== CORS SETUP ====================
 # Configure CORS to explicitly allow the frontend origin
