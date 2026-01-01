@@ -44,37 +44,55 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     let mounted = true
+    let timeoutId = null
 
-    // Verify session in background (don't block page load)
+    // Verify session in background with timeout (don't block page load forever)
     const verifySession = async () => {
+      // Set a timeout - if session check takes too long, stop loading anyway
+      timeoutId = setTimeout(() => {
+        if (mounted) {
+          console.log('⏱️ Session verification timeout - stopping loading')
+          setLoading(false)
+        }
+      }, 5000) // 5 second timeout
+
       try {
         const currentSession = await authService.getSession()
         console.log('🔐 Session verify:', currentSession ? 'Valid' : 'None')
 
         if (!mounted) return
+
+        clearTimeout(timeoutId)
         setSession(currentSession)
 
-        // If no valid session but we had cached user, clear it (session expired)
-        if (!currentSession?.user && cachedUser) {
-          console.log('⏰ Session expired, clearing user')
-          setUser(null)
-          cacheUser(null)
+        // If no valid session, clear everything and stop loading
+        if (!currentSession?.user) {
+          console.log('❌ No valid session')
+          if (cachedUser) {
+            console.log('⏰ Clearing expired cached user')
+            setUser(null)
+            cacheUser(null)
+          }
           setLoading(false)
           return
         }
 
         // If session exists, refresh user data in background
-        if (currentSession?.user) {
+        try {
           const freshUser = await authService.getCurrentUser()
           console.log('👤 User verified:', freshUser?.email, 'Role:', freshUser?.role)
           if (mounted && freshUser) {
             setUser(freshUser)
             updateActivity()
           }
+        } catch (userError) {
+          console.error('Error fetching user:', userError)
+          // Keep cached user if available
         }
       } catch (error) {
         console.error('Auth verification error:', error)
-        // On error with cached user, keep showing cached data
+        clearTimeout(timeoutId)
+        // On error, keep cached data if available but stop loading
       } finally {
         if (mounted) setLoading(false)
       }
@@ -121,6 +139,7 @@ export const AuthProvider = ({ children }) => {
 
     return () => {
       mounted = false
+      if (timeoutId) clearTimeout(timeoutId)
       subscription?.unsubscribe()
     }
   }, [])
