@@ -226,6 +226,9 @@ class AuthService {
    */
   async signOut() {
     try {
+      // Clear cache immediately
+      cacheUser(null)
+
       const { error } = await supabase.auth.signOut()
 
       if (error) throw error
@@ -236,6 +239,8 @@ class AuthService {
       }
     } catch (error) {
       console.error('Sign out error:', error)
+      // Still clear cache even if signOut fails
+      cacheUser(null)
       throw new Error(error.message || 'Sign out failed')
     }
   }
