@@ -118,10 +118,10 @@ export default function ASHAInterface() {
       }, 30000); // 30 second timeout for slow Supabase free tier
 
       try {
-        // CRITICAL: Wait for Supabase to restore session from localStorage
-        console.log("⏳ Waiting for Supabase to be ready...");
-        await waitForSupabaseReady(5000);
-        console.log("✅ Supabase is ready, running queries...");
+        // Small delay to let Supabase initialize
+        console.log("⏳ ASHA: Starting queries in 500ms...");
+        await new Promise(resolve => setTimeout(resolve, 500));
+        console.log("✅ Running profile queries...");
 
         // First try: Look up ASHA worker by user_profile_id (auth user ID)
         if (user?.id) {
