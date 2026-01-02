@@ -92,14 +92,14 @@ export default function ASHAInterface() {
         return;
       }
 
-      // Set a timeout to prevent infinite loading
+      // Set a timeout to prevent infinite loading (8s for slow production connections)
       timeoutId = setTimeout(() => {
         if (isMounted && loadingProfile) {
-          console.log('⏱️ ASHA profile detection timeout');
+          console.log('⏱️ ASHA profile detection timeout - query took too long');
           setLoadingProfile(false);
-          setError("Profile detection timed out. Please reload the page.");
+          // Don't set error here - let the actual query result determine the message
         }
-      }, 3000); // 3 second timeout
+      }, 8000); // 8 second timeout for slow Supabase cold starts
 
       try {
         // First try: Look up ASHA worker by user_profile_id (auth user ID)
@@ -183,9 +183,10 @@ export default function ASHAInterface() {
       // If no user yet, wait a bit and check again, but don't block forever
       const waitForUser = setTimeout(() => {
         if (isMounted && !user) {
+          console.log('⏱️ No user available after waiting');
           setLoadingProfile(false);
         }
-      }, 2000);
+      }, 3000); // 3 seconds to wait for user
       return () => clearTimeout(waitForUser);
     }
 

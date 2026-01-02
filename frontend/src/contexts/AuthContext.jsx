@@ -61,7 +61,7 @@ export const AuthProvider = ({ children }) => {
           console.log('⏱️ Session verification timeout - stopping loading')
           setLoading(false)
         }
-      }, 2000) // 2 second timeout (reduced from 5s for faster production loads)
+      }, 5000) // 5 second timeout for slow Supabase cold starts
 
       try {
         const currentSession = await authService.getSession()
