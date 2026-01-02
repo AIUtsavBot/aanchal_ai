@@ -46,24 +46,19 @@ export const AuthProvider = ({ children }) => {
     let mounted = true
     let timeoutId = null
 
-    // Verify session in background with timeout (don't block page load forever)
+    // Verify session - MUST complete before loading is set to false
     const verifySession = async () => {
-      // If we have a cached user with a valid role, stop loading immediately
-      // and verify session in background
-      if (cachedUser?.role) {
-        console.log('✅ Cached user with role found, loading instantly')
-        setLoading(false)
-      }
-
       // Set a timeout - if session check takes too long, stop loading anyway
       timeoutId = setTimeout(() => {
         if (mounted) {
-          console.log('⏱️ Session verification timeout - stopping loading')
+          console.log('⏱️ Session verification timeout - using cached user if available')
+          // On timeout, trust the cached user but still set loading to false
           setLoading(false)
         }
-      }, 5000) // 5 second timeout for slow Supabase cold starts
+      }, 8000) // 8 second timeout for slow Supabase cold starts
 
       try {
+        // Wait for Supabase to restore session from localStorage
         const currentSession = await authService.getSession()
         console.log('🔐 Session verify:', currentSession ? 'Valid' : 'None')
 
@@ -84,24 +79,32 @@ export const AuthProvider = ({ children }) => {
           return
         }
 
-        // If session exists, refresh user data in background
+        // Session is valid - now refresh user data
+        console.log('✅ Session valid, refreshing user data...')
         try {
           const freshUser = await authService.getCurrentUser()
           console.log('👤 User verified:', freshUser?.email, 'Role:', freshUser?.role)
           if (mounted && freshUser) {
             setUser(freshUser)
+            cacheUser(freshUser) // Update cache with fresh data
             updateActivity()
           }
         } catch (userError) {
           console.error('Error fetching user:', userError)
           // Keep cached user if available
+          if (cachedUser) {
+            console.log('📦 Using cached user as fallback')
+          }
         }
       } catch (error) {
         console.error('Auth verification error:', error)
         clearTimeout(timeoutId)
         // On error, keep cached data if available but stop loading
       } finally {
-        if (mounted) setLoading(false)
+        if (mounted) {
+          console.log('✅ Auth loading complete')
+          setLoading(false)
+        }
       }
     }
 
