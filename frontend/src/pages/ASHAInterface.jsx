@@ -110,12 +110,12 @@ export default function ASHAInterface() {
       // Set a timeout - if profile detection takes too long, abort and show error
       timeoutId = setTimeout(() => {
         if (isMounted && loadingProfile) {
-          console.log('⚠️ ASHA profile detection timeout - aborting');
+          console.log('⚠️ ASHA profile detection timeout (30s) - aborting');
           abortController.abort();
           setLoadingProfile(false);
           setError("Profile detection took too long. Please try signing out and signing back in.");
         }
-      }, 10000); // 10 second timeout
+      }, 30000); // 30 second timeout for slow Supabase free tier
 
       try {
         // CRITICAL: Wait for Supabase to restore session from localStorage
@@ -126,11 +126,13 @@ export default function ASHAInterface() {
         // First try: Look up ASHA worker by user_profile_id (auth user ID)
         if (user?.id) {
           console.log("🔍 Looking up ASHA worker by user_profile_id:", user.id);
+          const startTime = Date.now();
           const { data, error } = await supabase
             .from("asha_workers")
             .select("id, name, assigned_area, email")
             .eq("user_profile_id", user.id)
             .maybeSingle();
+          console.log(`📊 Query 1 completed in ${Date.now() - startTime}ms, data:`, data ? 'found' : 'not found', error ? `error: ${error.message}` : '');
 
           if (!error && data) {
             if (isMounted) {
@@ -146,11 +148,13 @@ export default function ASHAInterface() {
         // Second try: Look up by email
         if (user?.email) {
           console.log("🔍 Looking up ASHA worker by email:", user.email);
+          const startTime = Date.now();
           const { data, error } = await supabase
             .from("asha_workers")
             .select("id, name, assigned_area, email")
             .eq("email", user.email)
             .maybeSingle();
+          console.log(`📊 Query 2 completed in ${Date.now() - startTime}ms, data:`, data ? 'found' : 'not found', error ? `error: ${error.message}` : '');
 
           if (!error && data) {
             if (isMounted) {
@@ -166,11 +170,13 @@ export default function ASHAInterface() {
         // Third try: Match by name
         if (user?.full_name) {
           console.log("🔍 Looking up ASHA worker by name:", user.full_name);
+          const startTime = Date.now();
           const { data: byName } = await supabase
             .from("asha_workers")
             .select("id, name, assigned_area, email")
             .ilike("name", `%${user.full_name}%`)
             .limit(1);
+          console.log(`📊 Query 3 completed in ${Date.now() - startTime}ms, data:`, byName?.length || 0, 'results');
 
           if (byName && byName[0]) {
             if (isMounted) {
@@ -184,9 +190,11 @@ export default function ASHAInterface() {
         }
 
         // Fourth try: If user has ASHA_WORKER role but no entry exists, auto-create one
+        console.log("📋 User role:", user?.role, "| Has ID:", !!user?.id, "| Has email:", !!user?.email);
         if (user?.role === "ASHA_WORKER" && user?.id && user?.email) {
           console.log("⚡ No ASHA profile found, auto-creating one for:", user.email);
           try {
+            const startTime = Date.now();
             const { data: newEntry, error: insertError } = await supabase
               .from("asha_workers")
               .insert({
@@ -199,6 +207,7 @@ export default function ASHAInterface() {
               })
               .select()
               .single();
+            console.log(`📊 Insert completed in ${Date.now() - startTime}ms`);
 
             if (!insertError && newEntry) {
               if (isMounted) {
