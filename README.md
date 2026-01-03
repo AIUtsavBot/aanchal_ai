@@ -29,6 +29,17 @@ MatruRakshaAI is an intelligent maternal health monitoring system that leverages
 
 ## 🆕 What's New
 
+### v2.4.0 - Documentation Overhaul (January 2026)
+- ✅ **Complete API Documentation** - Full REST API reference in `docs/api/endpoints.md`
+- ✅ **System Architecture Docs** - High-level design and database schema documentation
+- ✅ **Setup & Deployment Guides** - Step-by-step guides for local dev and production
+- ✅ **Telegram Bot Docs** - Complete bot commands reference and configuration guide
+- ✅ **Docker Configuration** - Production-ready Docker Compose setup
+- ✅ **Nginx Reverse Proxy** - Security headers, caching, and rate limiting
+- ✅ **Environment Templates** - Comprehensive `.env` examples with all options
+
+📚 **Browse all documentation:** [docs/README.md](docs/README.md)
+
 ### v2.3.0 - Performance Optimizations (December 2024)
 - ✅ **In-Memory Caching** - 30-second TTL cache for dashboard data (no Redis needed)
 - ✅ **Optimized Database Queries** - COUNT queries instead of SELECT * for aggregates
