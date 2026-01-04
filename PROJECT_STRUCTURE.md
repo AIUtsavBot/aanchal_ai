@@ -1,251 +1,147 @@
-# 📁 Project Structure — MatruRaksha AI
+# Project structure — MatruRaksha_AI
 
-> Annotated repository layout with file descriptions and development guidelines.
+This document describes the repository layout, clarifies which files are important for day-to-day development, and contains explicit, actionable steps to clean up committed artifacts and run the project locally.
 
----
-
-## 📋 Table of Contents
-
-- [Top-Level Layout](#top-level-layout)
-- [Backend Structure](#backend-structure)
-- [Frontend Structure](#frontend-structure)
-- [Documentation Structure](#documentation-structure)
-- [Infrastructure](#infrastructure)
-- [How to Run](#how-to-run)
-- [Recommended .gitignore](#recommended-gitignore)
-- [Development Guidelines](#development-guidelines)
-
----
-
-## Top-Level Layout
+## Top-level layout
 
 ```
-matruraksha-ai/
-├── 📄 README.md                 # Project overview and features
-├── 📄 CHANGELOG.md              # Version history and changes
-├── 📄 PROJECT_STRUCTURE.md      # This file - repository layout
-├── 📄 render.yaml               # Render deployment config
-├── 📄 vercel.json               # Vercel deployment config
-├── 📄 .gitignore                # Git ignore rules
-│
-├── 📂 backend/                  # Python FastAPI backend
-├── 📂 frontend/                 # React Vite frontend
-├── 📂 docs/                     # Documentation
-└── 📂 infra/                    # Infrastructure configs
+maatru-raksha-ai/
+├─ README.md                 # Project overview
+├─ SETUP.md                  # Setup instructions
+├─ PROJECT_STRUCTURE.md      # (this file) annotated layout
+├─ backend/                  # Python backend (API, agents, services)
+├─ frontend/                 # Web client (Vite + React)
+├─ docs/                     # Documentation and guides
+├─ infra/                    # Deployment infrastructure (Docker, nginx, supabase)
+└─ .gitignore
 ```
 
----
-
-## Backend Structure
+## Detailed backend layout
 
 ```
 backend/
-├── 📄 main.py                   # 🚀 Primary application entry point (FastAPI)
-├── 📄 telegram_bot.py           # Telegram bot runner/handlers
-├── 📄 scheduler.py              # Cron/periodic job runner
-├── 📄 enhanced_api.py           # Extended API routes (/api/v1/...)
-├── 📄 context_builder.py        # AI context building utilities
-│
-├── 📄 requirements.txt          # Python dependencies
-├── 📄 Dockerfile                # Container image definition
-├── 📄 Procfile                  # Render/Heroku process file
-├── 📄 runtime.txt               # Python version specification
-├── 📄 .env.example              # Environment variables template
-│
-├── 📂 agents/                   # 🤖 AI Agent System
-│   ├── __init__.py              # Agent exports
-│   ├── base_agent.py            # Abstract base agent class
-│   ├── orchestrator.py          # Agent routing and coordination
-│   ├── risk_agent.py            # Risk assessment agent
-│   ├── emergency_agent.py       # Emergency detection agent
-│   ├── care_agent.py            # Care planning agent
-│   ├── nutrition_agent.py       # Nutrition advice agent
-│   ├── medication_agent.py      # Medication management agent
-│   └── asha_agent.py            # ASHA worker coordination
-│
-├── 📂 routes/                   # API Route Handlers
-│   ├── auth_routes.py           # Authentication endpoints
-│   ├── admin_routes.py          # Admin dashboard endpoints
-│   └── vapi_routes.py           # Voice AI (Vapi) endpoints
-│
-├── 📂 services/                 # Business Logic Services
-│   ├── __init__.py
-│   ├── auth_service.py          # User authentication logic
-│   ├── cache_service.py         # In-memory TTL caching (v2.3.0)
-│   ├── supabase_service.py      # Database operations
-│   ├── email_service.py         # Resend email integration
-│   ├── sms_service.py           # Fast2SMS/Twilio integration
-│   ├── telegram_service.py      # Telegram message handling
-│   ├── document_analyzer.py     # Gemini document analysis
-│   ├── memory_service.py        # Conversation memory
-│   ├── notification_service.py  # Alert notifications
-│   └── voice_service.py         # Voice call management
-│
-├── 📂 middleware/               # Request Middleware
-│   └── auth.py                  # JWT verification middleware
-│
-├── 📂 models/                   # Data Models
-│   ├── database.py              # Supabase client setup
-│   └── schemas.py               # Pydantic request/response models
-│
-├── 📂 config/                   # Configuration
-│   └── settings.py              # Environment and app settings
-│
-├── 📂 utils/                    # Utility Functions
-│   ├── helpers.py               # General helper functions
-│   └── validators.py            # Input validation utilities
-│
-├── 📂 scripts/                  # Utility Scripts
-│   └── ...                      # Database scripts, migrations
-│
-└── 📄 verify_setup.py           # Environment validation script
+├─ .env                      # local environment variables (should be in .gitignore and not committed)
+├─ requirements.txt          # Python package requirements
+├─ package.json              # Node-related tooling for backend (optional)
+├─ verify_setup.py           # helper to validate environment
+├─ main.py                   # primary application entry point (observed running with `python main.py`)
+├─ enhanced_api.py           # alternate API runner or extended endpoints
+├─ scheduler.py              # cron/periodic job runner
+├─ telegram_bot.py           # bot runner/entrypoint for Telegram integration
+├─ agents/                   # domain agents implementing business logic
+│  ├─ orchestrator.py
+│  ├─ asha_agent.py
+│  ├─ care_agent.py
+│  ├─ emergency_agent.py
+│  ├─ medication_agent.py
+│  ├─ nutrition_agent.py
+│  └─ risk_agent.py
+├─ config/
+│  └─ settings.py            # config and environment handling
+├─ middleware/
+│  └─ auth.py                # auth helpers/middleware
+├─ models/
+│  ├─ database.py
+│  └─ schemas.py             # Pydantic/ORM schemas
+├─ services/
+│  ├─ auth_service.py        # Authentication and user management
+│  ├─ cache_service.py       # In-memory caching with TTL (NEW in v2.3.0)
+│  ├─ document_analyzer.py
+│  ├─ email_service.py       # Resend email integration
+│  ├─ memory_service.py
+│  ├─ notification_service.py
+│  ├─ supabase_service.py
+│  ├─ telegram_service.py
+│  └─ voice_service.py
+├─ routes/
+│  ├─ admin_routes.py        # Admin dashboard endpoints
+│  ├─ auth_routes.py         # Authentication endpoints
+│  └─ vapi_routes.py         # Voice API endpoints
+└─ utils/
+   ├─ helpers.py
+   └─ validators.py
+
+
 ```
 
-### Key Entry Points
-
-| File | Purpose | Command |
-|------|---------|---------|
-| `main.py` | Primary API server | `python main.py` |
-| `telegram_bot.py` | Telegram bot | `python telegram_bot.py` |
-| `scheduler.py` | Scheduled tasks | `python scheduler.py` |
-
----
-
-## Frontend Structure
+## Frontend layout
 
 ```
 frontend/
-├── 📄 index.html                # HTML entry point
-├── 📄 package.json              # Node dependencies and scripts
-├── 📄 package-lock.json         # Locked dependency versions
-├── 📄 vite.config.js            # Vite bundler configuration
-├── 📄 tailwind.config.js        # Tailwind CSS configuration
-├── 📄 postcss.config.js         # PostCSS configuration
-├── 📄 Dockerfile                # Container image definition
-├── 📄 vercel.json               # Vercel SPA routing
-│
-├── 📂 src/
-│   ├── 📄 main.jsx              # React entry point
-│   ├── 📄 App.jsx               # Main app component with routing
-│   ├── 📄 index.css             # Global styles
-│   ├── 📄 i18n.js               # Internationalization setup
-│   │
-│   ├── 📂 pages/                # Route-Level Components
-│   │   ├── Home.jsx             # Landing page
-│   │   ├── Login.jsx            # Login page
-│   │   ├── Signup.jsx           # Registration page
-│   │   ├── AuthCallback.jsx     # OAuth callback handler
-│   │   ├── RiskDashboard.jsx    # Risk monitoring dashboard
-│   │   ├── DoctorDashboard.jsx  # Doctor patient management
-│   │   ├── ASHAInterface.jsx    # ASHA worker interface
-│   │   ├── AdminDashboard.jsx   # Admin portal
-│   │   ├── AdminApprovals.jsx   # User approval center
-│   │   └── Emergency.jsx        # Emergency page
-│   │
-│   ├── 📂 components/           # Reusable UI Components
-│   │   ├── Navbar.jsx           # Navigation header
-│   │   ├── PatientCard.jsx      # Patient summary card
-│   │   ├── RiskChart.jsx        # Risk visualization
-│   │   ├── CaseChat.jsx         # Real-time chat component
-│   │   ├── Dashboard.jsx        # Dashboard layout
-│   │   ├── ChatBot.jsx          # Chatbot interface
-│   │   └── ProtectedRoute.jsx   # Route authorization
-│   │
-│   ├── 📂 contexts/             # React Context Providers
-│   │   └── AuthContext.jsx      # Authentication state
-│   │
-│   ├── 📂 services/             # API Integration
-│   │   ├── api.js               # Axios HTTP client
-│   │   ├── auth.js              # Supabase Auth wrapper
-│   │   └── telegram.js          # Telegram integration
-│   │
-│   ├── 📂 styles/               # CSS Modules/Styles
-│   │   └── ...
-│   │
-│   ├── 📂 utils/                # Utility Functions
-│   │   └── ...
-│   │
-│   └── 📂 assets/               # Static Assets
-│       └── ...
-│
-└── 📂 dist/                     # Production build output
-```
-
----
-
-## Documentation Structure
+├─ package.json              # frontend dependencies & scripts (Vite + React)
+├─ index.html
+├─ src/
+│  ├─ main.jsx
+│  ├─ App.jsx
+│  ├─ index.css
+│  ├─ components/
+│  │  ├─ ChatBot.jsx
+│  │  ├─ Dashboard.jsx
+│  │  ├─ Navbar.jsx
+│  │  ├─ PatientCard.jsx
+│  │  └─ RiskChart.jsx
+│  ├─ pages/
+│  │  ├─ ASHAInterface.jsx
+│  │  ├─ Emergency.jsx
+│  │  ├─ Home.jsx
+│  │  └─ RiskDashboard.jsx
+│  └─ services/
+│     ├─ api.js
+│     └─ telegram.js
+└─ .env.local
 
 ```
-docs/
-├── 📄 README.md                 # Documentation index
-│
-├── 📂 api/                      # API Documentation
-│   ├── endpoints.md             # REST API reference
-│   └── telegram_endpoints.md    # Telegram bot API
-│
-├── 📂 architecture/             # System Architecture
-│   ├── system_design.md         # High-level design
-│   └── database_schema.md       # Database structure
-│
-├── 📂 guides/                   # Setup & Deployment Guides
-│   ├── setup_guide.md           # Local development setup
-│   └── deployment_guide.md      # Production deployment
-│
-└── 📂 telegram/                 # Telegram Bot Docs
-    ├── bot_commands.md          # Command reference
-    └── telegram_setup.md        # Bot configuration
-```
 
----
-
-## Infrastructure
+## Infra and docs
 
 ```
 infra/
-├── 📂 docker/                   # Docker Configuration
-│   ├── docker-compose.yml       # Multi-service orchestration
-│   ├── Dockerfile.backend       # Backend container
-│   └── Dockerfile.frontend      # Frontend container
-│
-├── 📂 nginx/                    # Reverse Proxy
-│   └── nginx.conf               # Nginx configuration
-│
-├── 📂 supabase/                 # Database
-│   ├── schema.sql               # Main database schema
-│   ├── seed.sql                 # Sample data
-│   ├── add_registration_requests_table.sql
-│   └── fix_oauth_trigger.sql
-│
-└── 📂 env_examples/             # Environment Templates
-    ├── .env.example             # Backend env template
-    └── .env.local.example       # Frontend env template
+├─ docker/
+│  ├─ docker-compose.yml
+│  ├─ Dockerfile.backend
+│  └─ Dockerfile.frontend
+├─ nginx/
+│  └─ nginx.conf
+└─ supabase/
+   ├─ schema.sql
+   └─ seed.sql
+
+docs/                       # docs grouped by area (api, guides, architecture)
 ```
 
----
+## What's updated (delta)
 
-## How to Run
+- Added explicit "How to run" instructions for both backend and frontend (including PowerShell-friendly commands).
+- Added a recommended `.gitignore` snippet showing lines to add (venv, .env, local db files).
+- Expanded the cleanup steps to include exact commands to remove a committed venv from history and how to safely remove it from the current repository state.
+- Clarified that `main.py` is the observed entrypoint (the last command run in the workspace was `python main.py`).
 
-### Backend (PowerShell)
+## How to run (quick)
+
+Backend (PowerShell, recommended):
 
 ```powershell
+# from repository root
 cd backend
-python -m venv venv
-.\venv\Scripts\Activate.ps1
+python -m venv .venv
+. .venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
 pip install -r requirements.txt
 python main.py
 ```
 
-### Backend (Unix/macOS)
+Backend (Unix / POSIX):
 
 ```bash
 cd backend
-python -m venv venv
-source venv/bin/activate
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
 pip install -r requirements.txt
 python main.py
 ```
 
-### Frontend
+Frontend (from repository root):
 
 ```bash
 cd frontend
@@ -253,97 +149,63 @@ npm install
 npm run dev
 ```
 
-### Docker
+If your frontend uses `pnpm` or `yarn`, substitute the install/run commands accordingly.
 
-```bash
-cd infra/docker
-docker-compose up -d --build
+## Recommended `.gitignore` additions
+
+Add the following lines to the top-level `.gitignore` (or to `backend/.gitignore`):
+
 ```
-
----
-
-## Recommended .gitignore
-
-Add these to your `.gitignore`:
-
-```gitignore
-# Python
-backend/venv/
+# Python virtualenvs
+backend/venv*/
 backend/.venv/
-**/__pycache__/
-*.py[cod]
-
-# Node
-frontend/node_modules/
-frontend/dist/
 
 # Environment files
 backend/.env
 frontend/.env.local
 
-# IDE
+# Bytecode
+**/__pycache__/
+*.py[cod]
+
+# IDE/editor
 .vscode/
-.idea/
 *.swp
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Logs
-*.log
 ```
+
+## How to remove a committed virtualenv (safe, local removal)
+
+If the `backend/venv312/` or any venv was accidentally committed, you can remove it from the latest commit and keep history simple with:
+
+1. Add the entry to `.gitignore` (see recommended additions above).
+2. Remove the files and commit the removal:
+
+```powershell
+# from repository root (PowerShell)
+git rm -r --cached backend/venv312
+git commit -m "chore: remove committed virtualenv and ignore it"
+git push
+```
+
+If the venv was committed across many historical commits and you need to purge it from the repository history (makes a rewritten history), use `git filter-repo` or the BFG repo cleaner. That's a larger operation; ask if you want me to prepare a safe plan.
+
+## Actionable recommendations (prioritized)
+
+1. Add the `.gitignore` entries above and remove the committed `venv312` folder as shown.
+2. Move secrets from `backend/.env` to environment variables or a secrets manager and ensure `.env` is ignored.
+3. Decide and document the primary backend entrypoint: `main.py` vs `enhanced_api.py` in `README.md`.
+4. Add developer scripts in `backend/` (PowerShell script `scripts\setup.ps1` and a small `Makefile` or cross-platform `tasks.json` for VS Code) to standardize setup.
+5. Add a minimal CI workflow (GitHub Actions) to run tests and linters on push/PR.
+
+## Quick verification steps
+
+- After adding `.gitignore` and removing the venv, run the backend setup commands above to ensure dependencies install and `python main.py` starts cleanly.
+- Run `npm install` and `npm run dev` in `frontend/` to verify the frontend dev server starts.
 
 ---
 
-## Development Guidelines
-
-### Code Style
-
-| Language | Style Guide | Linter |
-|----------|-------------|--------|
-| Python | PEP 8 | `flake8`, `black` |
-| JavaScript | ESLint Recommended | `eslint` |
-| TypeScript | TypeScript Strict | `typescript` |
-
-### Commit Messages
-
-Follow [Conventional Commits](https://www.conventionalcommits.org/):
-
-```
-feat: add new risk assessment endpoint
-fix: resolve CORS issue on production
-docs: update API documentation
-chore: upgrade dependencies
-```
-
-### Branch Strategy
-
-| Branch | Purpose |
-|--------|---------|
-| `main` | Production-ready code |
-| `develop` | Integration branch |
-| `feature/*` | New features |
-| `fix/*` | Bug fixes |
-| `docs/*` | Documentation updates |
+Generated on: 2025-10-19
 
 ---
 
-## Quick Verification
-
-After setup, verify everything works:
-
-```bash
-# Backend health check
-curl http://localhost:8000/health
-
-# Frontend dev server
-# Open http://localhost:5173
-
-# API documentation
-# Open http://localhost:8000/docs
-```
-
----
-
-*Last Updated: January 2026*
+Generated on: 2025-10-19
