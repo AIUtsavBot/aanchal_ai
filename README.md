@@ -1,394 +1,345 @@
-# 🤰 MatruRakshaAI - Complete Project Documentation
+# 🤰 MatruRaksha AI + 🍼 SantanRaksha
 
-> AI-Powered Maternal Health Monitoring & Care System with Hybrid RAG and Offline-First Architecture
+> **Complete Maternal & Child Health Care System** - From Pregnancy to Postnatal Recovery & Child Development
 
 [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/React-18+-blue.svg)](https://reactjs.org/)
-[![Supabase](https://img.shields.io/badge/Supabase-pgvector-orange.svg)](https://supabase.com/)
+[![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-orange.svg)](https://supabase.com/)
 [![Gemini](https://img.shields.io/badge/Gemini-2.5%20Flash-purple.svg)](https://ai.google.dev/)
 
 ---
 
-## 📋 Table of Contents
+## 🎯 Overview
 
-- [Project Overview](#-project-overview)
-- [Architecture](#-complete-architecture)
-- [Features](#-features-comparison-existing-vs-new)
-- [User Flows](#-user-flows)
-- [Tech Stack](#-tech-stack)
-- [Setup Guide](#-setup-guide)
-- [API Reference](#-api-reference)
-- [Changelog](#-changelog)
+This system provides **end-to-end maternal and child health care** through two integrated modules:
 
----
-
-## 🎯 Project Overview
-
-MatruRakshaAI is an intelligent maternal health monitoring system designed for underserved communities. It combines:
-
-- **6 Specialized AI Agents** powered by Google Gemini
-- **Telegram Bot** for 24/7 accessible care
-- **Web Dashboard** for healthcare workers
-- **Hybrid RAG** for evidence-based recommendations (NEW)
-- **Offline-First Sync** for low-connectivity areas (NEW)
+| Module | Focus | Features |
+|--------|-------|----------|
+| **🤰 MatruRaksha** | Pregnancy Care | Risk assessment, symptom tracking, AI health guidance |
+| **🍼 SantanRaksha** | Postnatal & Child Care | Vaccination tracking, growth monitoring, milestone tracking |
 
 ### Target Users
 
-| User | Access Point | Primary Features |
-|------|-------------|------------------|
-| 🤰 **Pregnant Mother** | Telegram Bot | Health queries, daily check-ins, emergency alerts |
-| 👩‍⚕️ **ASHA Worker** | Web Dashboard | Patient monitoring, visit scheduling, risk tracking |
-| 👨‍⚕️ **Doctor** | Web Dashboard | Case review, risk assessments, treatment plans |
-| 👨‍💼 **Admin** | Web Dashboard | User management, approvals, system oversight |
+| User | Access | Features |
+|------|--------|----------|
+| 🤰 **Mother** | Telegram Bot, Web | Health queries, check-ins, emergency alerts |
+| 👩‍⚕️ **ASHA Worker** | Web Dashboard | Patient monitoring, visits, assessments, toggle between pregnancy/postnatal |
+| 👨‍⚕️ **Doctor** | Web Dashboard | Case review, risk assessments, consultations, toggle between pregnancy/postnatal |
+| 👨‍💼 **Admin** | Web Dashboard | User management, approvals |
 
 ---
 
-## 🆕 What's New (v3.0)
+## 🏗️ Architecture
 
-**MatruRakshaAI v3.0** introduces a robust **Hybrid RAG System** and **Offline-First Architecture**.
+### Single App, Two Views
 
-- **Hybrid RAG**: Combines BM25 and pgvector to retrieve similar patient cases from a dataset of 1,000+ records, providing context-aware AI responses.
-- **Offline-First**: ASHA workers can submit forms and chat without internet. Data syncs automatically when online.
-- **Smart Conversations**: Improved Doctor-Mother chat routing with emergency overrides and smart cooldowns.
-
-👉 **[See CHANGELOG.md for full version history](CHANGELOG.md)**
-
----
-
-## 🏗️ Complete Architecture
-
-### High-Level System Design
-
-```mermaid
-flowchart TB
-    subgraph USERS[" 👥 USERS "]
-        Mother["🤰 Mother"]
-        ASHA["👩‍⚕️ ASHA"]
-        Doctor["👨‍⚕️ Doctor"]
-        Admin["👨‍💼 Admin"]
-    end
-
-    subgraph FRONTEND[" 🌐 FRONTEND (React) "]
-        WebApp["Web Dashboard :5173"]
-        OfflineSync["Offline Sync Service"]
-        IndexedDB[("IndexedDB")]
-    end
-
-    subgraph TELEGRAM[" 📱 TELEGRAM "]
-        TGBot["MatruRaksha Bot"]
-    end
-
-    subgraph BACKEND[" ⚙️ BACKEND (FastAPI) "]
-        API["REST API :8000"]
-        Orchestrator["AI Orchestrator"]
-        RAGService["Hybrid RAG Service"]
-        SyncRoutes["Offline Sync Routes"]
-    end
-
-    subgraph AI_AGENTS[" 🤖 AI AGENTS "]
-        Risk["Risk Agent"]
-        Care["Care Agent"]
-        Nutrition["Nutrition Agent"]
-        Medication["Medication Agent"]
-        Emergency["Emergency Agent"]
-        ASHAAgent["ASHA Agent"]
-    end
-
-    subgraph EXTERNAL[" 🔗 EXTERNAL SERVICES "]
-        Gemini["Gemini AI"]
-        GeminiEmbed["Gemini Embeddings"]
-        Resend["Resend Email"]
-    end
-
-    subgraph DATABASE[" 🗄️ SUPABASE "]
-        PG[("PostgreSQL")]
-        pgvector[("pgvector")]
-        Auth["Supabase Auth"]
-        Storage[("File Storage")]
-    end
-
-    Mother --> TGBot
-    Mother --> WebApp
-    ASHA --> WebApp
-    Doctor --> WebApp
-    Admin --> WebApp
-
-    TGBot --> API
-    WebApp --> OfflineSync
-    OfflineSync <--> IndexedDB
-    OfflineSync --> API
-
-    API --> Orchestrator
-    API --> RAGService
-    API --> SyncRoutes
-    
-    Orchestrator --> Risk & Care & Nutrition
-    Orchestrator --> Medication & Emergency & ASHAAgent
-    
-    RAGService --> GeminiEmbed
-    RAGService --> pgvector
-    
-    Risk & Care --> Gemini
-    
-    API --> PG
-    API --> Auth
-    API --> Storage
-    API --> Resend
-
-    style USERS fill:#e8f5e9
-    style FRONTEND fill:#e3f2fd
-    style TELEGRAM fill:#fff3e0
-    style BACKEND fill:#fce4ec
-    style AI_AGENTS fill:#f3e5f5
-    style EXTERNAL fill:#e0f2f1
-    style DATABASE fill:#fff8e1
 ```
-
-### Hybrid RAG System
-
-Retrieval-Augmented Generation using 1,015 maternal health cases for context-aware AI responses.
-
-```mermaid
-flowchart TB
-    Query["📥 User Query: 28yr, BP 140/90, BS 15"]
-    
-    subgraph FILTER["STEP 1: Metadata Filtering"]
-        F1["Filter by age range 25-35"]
-        F2["Filter by risk level"]
-        F3["Filter by BP ranges"]
-    end
-    
-    subgraph RETRIEVAL["STEP 2: Hybrid Retrieval"]
-        BM25["🔤 BM25 Sparse Search<br/>Keywords: hypertension, diabetes"]
-        PGVEC["🧮 pgvector Dense Search<br/>768-dim Gemini Embeddings"]
-    end
-    
-    subgraph FUSION["STEP 3: Reciprocal Rank Fusion"]
-        RRF["Combine BM25 + pgvector scores"]
-        TOPK["Top-K similar cases"]
-    end
-    
-    subgraph GEMINI["STEP 4: Gemini AI + Context"]
-        CTX["📋 Similar Cases Context:<br/>• Case 1: 27yr, BP 145/95 → HIGH RISK<br/>• Case 2: 29yr, BP 138/88 → MID RISK<br/>• Case 3: 28yr, BP 142/92 → HIGH RISK"]
-        LLM["🤖 Gemini 2.5 Flash"]
-        RESP["📤 Response with evidence"]
-    end
-    
-    Query --> FILTER
-    F1 --> BM25
-    F2 --> BM25
-    F3 --> BM25
-    F1 --> PGVEC
-    F2 --> PGVEC
-    F3 --> PGVEC
-    BM25 --> RRF
-    PGVEC --> RRF
-    RRF --> TOPK
-    TOPK --> CTX
-    CTX --> LLM
-    LLM --> RESP
-    
-    style Query fill:#e3f2fd
-    style FILTER fill:#fff3e0
-    style RETRIEVAL fill:#e8f5e9
-    style FUSION fill:#f3e5f5
-    style GEMINI fill:#fce4ec
-```
-
-### Offline-First Data Sync
-
-Ensures forms, chats, and documents are never lost in low-connectivity areas.
-
-```mermaid
-flowchart TB
-    Action["👤 User Action<br/>Form Submit / Chat / Doc Upload"]
-    
-    subgraph CHECK["Network Check"]
-        Online{"navigator.onLine?"}
-    end
-    
-    subgraph ONLINE_PATH["✅ ONLINE"]
-        API["🌐 API Call"]
-        SB1[("Supabase")]
-        Success["✓ Success"]
-    end
-    
-    subgraph OFFLINE_PATH["📴 OFFLINE"]
-        IDB[("IndexedDB")]
-        PF["pendingForms"]
-        PC["pendingChats"]
-        PD["pendingDocs"]
-        Saved["💾 Saved Locally"]
-    end
-    
-    subgraph SYNC["🔄 Auto-Sync on Reconnect"]
-        Event["'online' event"]
-        Batch["POST /api/sync/batch"]
-        SB2[("Supabase")]
-        Clear["Clear IndexedDB"]
-        Done["✓ Synced!"]
-    end
-    
-    Action --> Online
-    Online -->|Yes| API
-    API --> SB1
-    SB1 --> Success
-    
-    Online -->|No| IDB
-    IDB --> PF
-    IDB --> PC
-    IDB --> PD
-    PF --> Saved
-    PC --> Saved
-    PD --> Saved
-    
-    Saved -.-> Event
-    Event --> Batch
-    Batch --> SB2
-    SB2 --> Clear
-    Clear --> Done
-    
-    style Action fill:#e3f2fd
-    style ONLINE_PATH fill:#c8e6c9
-    style OFFLINE_PATH fill:#ffecb3
-    style SYNC fill:#e1bee7
+┌─────────────────────────────────────────────────────────────┐
+│                   React Frontend (:5173)                     │
+│  ┌─────────────────────────────────────────────────────────┐│
+│  │ Navbar: [🤰 Pregnancy] [🍼 Postnatal]  ← Toggle Switch  ││
+│  └─────────────────────────────────────────────────────────┘│
+│                           │                                  │
+│         ┌─────────────────┴─────────────────┐               │
+│         ▼                                   ▼               │
+│  ┌──────────────────┐          ┌──────────────────┐         │
+│  │  MatruRaksha     │          │  SantanRaksha    │         │
+│  │  (Pregnancy)     │          │  (Postnatal)     │         │
+│  │                  │          │                  │         │
+│  │ • Risk assess    │          │ • Children list  │         │
+│  │ • Symptoms       │          │ • Vaccinations   │         │
+│  │ • AI agents      │          │ • Growth charts  │         │
+│  │ • Chat           │          │ • Milestones     │         │
+│  └──────────────────┘          └──────────────────┘         │
+│                           │                                  │
+│                           ▼                                  │
+│              ┌─────────────────────────┐                    │
+│              │  FastAPI Backend (:8000)│                    │
+│              │  10 AI Agents + RAG     │                    │
+│              └─────────────────────────┘                    │
+│                           │                                  │
+│                           ▼                                  │
+│              ┌─────────────────────────┐                    │
+│              │  Supabase (PostgreSQL)  │                    │
+│              │  + pgvector + Auth      │                    │
+│              └─────────────────────────┘                    │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 🔄 User Flows
+## 🤖 AI Agents (10 Total)
 
-### Flow 1: Mother Registration & Risk Assessment
+### MatruRaksha Agents (6)
+| Agent | Purpose |
+|-------|---------|
+| **RiskAgent** | Pregnancy risk assessment |
+| **CareAgent** | General prenatal care guidance |
+| **NutritionAgent** | Diet and nutrition advice |
+| **MedicationAgent** | Safe medication guidance |
+| **EmergencyAgent** | Emergency detection and escalation |
+| **ASHAAgent** | ASHA worker support |
 
-```mermaid
-sequenceDiagram
-    participant M as Mother
-    participant T as Telegram Bot
-    participant B as Backend API
-    participant R as RAG Service
-    participant AI as AI Agents
-    participant DB as Supabase
-
-    M->>T: /start
-    T->>M: Welcome! Let's register you
-    M->>T: Provides: Name, Age, Due Date, Location
-    T->>B: POST /mothers/register
-    B->>DB: Insert mother profile
-    B-->>T: Registration success
-    T-->>M: ✅ Welcome to MatruRaksha!
-
-    Note over M,DB: Daily Health Check-in
-    M->>T: "My BP is 140/90, feeling dizzy"
-    T->>B: POST /api/agent/query
-    B->>R: get_risk_context(age=28, BP=140/90)
-    R->>R: BM25 search + pgvector search
-    R->>R: RRF fusion → Top 5 similar cases
-    R-->>B: "3/5 similar cases were HIGH RISK"
-    B->>AI: Risk Agent + RAG context
-    AI-->>B: HIGH RISK - Recommend hospital visit
-    B->>DB: Save risk_assessment
-    B-->>T: ⚠️ HIGH RISK detected
-    T-->>M: Please visit hospital immediately!
-```
+### SantanRaksha Agents (4)
+| Agent | Purpose | Standards |
+|-------|---------|-----------|
+| **PostnatalAgent** | Mother's recovery (0-6 weeks) | NHM SUMAN, EPDS |
+| **PediatricAgent** | Child illness assessment | IMNCI |
+| **VaccineAgent** | Immunization guidance | IAP 2023 |
+| **GrowthAgent** | Growth & nutrition monitoring | WHO, RBSK |
 
 ---
 
-## 🛠️ Tech Stack
+## 📋 Clinical Standards
 
-### Core Technologies
-
-| Layer | Technology | Purpose |
-|-------|------------|---------|
-| **Backend** | FastAPI (Python 3.11+) | REST API, async support |
-| **Frontend** | React 18 + Vite | Web dashboard |
-| **Database** | Supabase (PostgreSQL) | Primary data store |
-| **Vector DB** | Supabase pgvector | Embedding storage + HNSW search |
-| **AI/LLM** | Google Gemini 2.5 Flash | Agent responses |
-| **Embeddings** | Gemini text-embedding-004 | 768-dim semantic vectors |
-| **Messaging** | Telegram Bot API | Mother communication |
-| **Email** | Resend API | Alerts and notifications |
+| Standard | Application |
+|----------|-------------|
+| **IAP 2023** | 19 vaccines from birth to 2 years |
+| **WHO Growth Standards** | Z-score classification for weight/height |
+| **RBSK 4Ds** | Developmental screening (Defects, Diseases, Deficiencies, Delays) |
+| **NHM SUMAN** | Postnatal care - 6 checkups in 42 days |
+| **IMNCI** | Integrated child illness management |
+| **WHO IYCF** | Infant feeding recommendations |
 
 ---
 
-## 🚀 Setup Guide
+## 🚀 Quick Start
 
 ### 1. Backend Setup
 
 ```bash
 cd backend
 
+# Create virtual environment
+python -m venv venv
+venv\Scripts\activate  # Windows
+source venv/bin/activate  # Linux/Mac
+
 # Install dependencies
 pip install -r requirements.txt
 
-# Environment variables (add to .env)
-GEMINI_API_KEY=your_gemini_api_key  # Required for embeddings
+# Create .env file
+GEMINI_API_KEY=your_gemini_key
 SUPABASE_URL=your_supabase_url
 SUPABASE_KEY=your_supabase_key
+TELEGRAM_BOT_TOKEN=your_bot_token
 
-# Start server
+# Run server
 python main.py
 ```
 
-### 2. Initialize RAG (First Run)
-
-The RAG service auto-initializes on first query. It will:
-
-1. Load the maternal health CSV (1015 records)
-2. Generate embeddings via Gemini API (~30 seconds)
-3. Store embeddings in Supabase pgvector
-
-### 3. Frontend Setup
+### 2. Frontend Setup
 
 ```bash
 cd frontend
+
+# Install dependencies
 npm install
+
+# Create .env.local
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_API_URL=http://localhost:8000
+
+# Run dev server
 npm run dev
 ```
 
+### 3. Access the App
+
+- **Frontend**: http://localhost:5173
+- **Backend API**: http://localhost:8000
+- **API Docs**: http://localhost:8000/docs
+
 ---
 
-## 📡 API Reference
+## 📁 Project Structure
 
-### New Endpoints (v3.0)
-
-#### Offline Sync
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/sync/batch` | Batch sync all pending data |
-| POST | `/api/sync/forms` | Sync pending forms only |
-| POST | `/api/sync/chats` | Sync pending chats only |
-| POST | `/api/sync/documents` | Sync pending documents only |
-| GET | `/api/sync/status` | Check sync service status |
-
-**Batch Sync Request:**
-
-```json
-{
-  "forms": [
-    {
-      "form_type": "health_checkin",
-      "form_data": {...},
-      "created_at": "2026-01-24T14:00:00Z"
-    }
-  ],
-  "chats": [...],
-  "documents": [...]
-}
+```
+SantanRaksha/
+├── README.md                     # This file
+├── CHANGELOG.md                  # Version history
+├── SANTANRAKSHA.md               # SantanRaksha detailed docs
+│
+├── backend/
+│   ├── agents/
+│   │   ├── orchestrator.py       # Routes to correct agent
+│   │   ├── risk_agent.py         # Pregnancy risk
+│   │   ├── care_agent.py         # General care
+│   │   ├── nutrition_agent.py    # Diet advice
+│   │   ├── medication_agent.py   # Safe meds
+│   │   ├── emergency_agent.py    # Emergencies
+│   │   ├── asha_agent.py         # ASHA support
+│   │   ├── postnatal_agent.py    # Postnatal recovery
+│   │   ├── pediatric_agent.py    # Child illness
+│   │   ├── vaccine_agent.py      # Vaccinations
+│   │   └── growth_agent.py       # Growth tracking
+│   ├── routes/
+│   │   ├── delivery.py           # Delivery completion API
+│   │   └── ...
+│   ├── services/
+│   │   └── rag_service.py        # Hybrid RAG
+│   ├── main.py                   # FastAPI app
+│   └── telegram_bot.py           # Telegram integration
+│
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── Navbar.jsx        # With view toggle
+│   │   │   └── ViewToggle.jsx    # Toggle component
+│   │   ├── contexts/
+│   │   │   ├── AuthContext.jsx   # Authentication
+│   │   │   └── ViewContext.jsx   # View state (pregnancy/postnatal)
+│   │   ├── pages/
+│   │   │   ├── ASHAInterface.jsx # ASHA dashboard
+│   │   │   ├── DoctorDashboard.jsx # Doctor dashboard
+│   │   │   └── postnatal/        # SantanRaksha pages
+│   │   │       ├── PostnatalDashboard.jsx
+│   │   │       ├── ChildrenList.jsx
+│   │   │       ├── VaccinationCalendar.jsx
+│   │   │       ├── GrowthCharts.jsx
+│   │   │       └── MilestonesTracker.jsx
+│   │   └── ...
+│   └── ...
+│
+├── docs/
+│   └── API_SPECIFICATION.md      # Full API reference
+│
+└── infra/
+    └── supabase/
+        ├── migration_santanraksha_v1.sql  # Children, vaccines, growth tables
+        └── migration_delivery_switch.sql  # Delivery completion logic
 ```
 
 ---
 
-## 📄 File Reference
+## 🔄 User Flow
 
-| New File | Location | Lines | Purpose |
-|----------|----------|-------|---------|
-| `rag_service.py` | `backend/services/` | ~500 | Hybrid RAG implementation |
-| `offline_queue_routes.py` | `backend/routes/` | ~250 | Batch sync API |
-| `db.js` | `frontend/src/utils/` | ~280 | IndexedDB wrapper |
-| `offlineSync.js` | `frontend/src/services/` | ~350 | Auto-sync service |
-| `rag_migration.sql` | `infra/supabase/` | ~90 | Database migration |
+### Pregnancy → Delivery → Postnatal
+
+```
+1. Mother registers via Telegram/Web
+       ↓
+2. ASHA/Doctor manages in MatruRaksha (Pregnancy View)
+       ↓
+3. Delivery completed → API call switches to SantanRaksha
+       ↓
+4. ASHA/Doctor toggles to Postnatal View
+       ↓
+5. Track vaccinations, growth, milestones
+```
+
+### Toggle Usage
+
+1. Login as ASHA Worker or Doctor
+2. Go to dashboard (`/asha` or `/doctor`)
+3. Find toggle in **blue navigation bar**
+4. Click **"🍼 Postnatal"** to switch views
+5. Click **"🤰 Pregnancy"** to switch back
+
+---
+
+## 📡 Key API Endpoints
+
+### Authentication
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/auth/login` | User login |
+| POST | `/auth/signup` | User registration |
+
+### Mothers
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/mothers/register` | Register new mother |
+| GET | `/mothers/{id}` | Get mother details |
+| POST | `/api/agent/query` | AI agent query |
+
+### SantanRaksha (New)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/delivery/complete/{mother_id}` | Complete delivery, switch to postnatal |
+| GET | `/api/children` | List children |
+| POST | `/api/children` | Register child |
+| GET | `/api/vaccinations/{child_id}` | Get vaccination schedule |
+| POST | `/api/growth/{child_id}` | Add growth record |
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| **Backend** | Python 3.11+, FastAPI |
+| **Frontend** | React 18, Vite |
+| **Database** | Supabase (PostgreSQL + pgvector) |
+| **AI/LLM** | Google Gemini 2.5 Flash |
+| **Auth** | Supabase Auth |
+| **Messaging** | Telegram Bot API |
+| **Email** | Resend API |
+
+---
+
+## 📊 Database Tables
+
+### MatruRaksha (Existing)
+- `mothers` - Mother profiles
+- `risk_assessments` - Health assessments
+- `chat_history` - Conversation logs
+- `user_profiles` - Auth users
+
+### SantanRaksha (New)
+- `children` - Child profiles linked to mothers
+- `vaccinations` - IAP 2023 vaccine records
+- `growth_records` - Weight, height, z-scores
+- `milestones` - Developmental achievements
+- `postnatal_checkins` - Mother recovery checkups
+
+---
+
+## 📄 Documentation
+
+| Document | Description |
+|----------|-------------|
+| [README.md](README.md) | This file - overview |
+| [SANTANRAKSHA.md](SANTANRAKSHA.md) | SantanRaksha detailed documentation |
+| [CHANGELOG.md](CHANGELOG.md) | Version history |
+| [docs/API_SPECIFICATION.md](docs/API_SPECIFICATION.md) | Full API reference |
+
+---
+
+## 🚀 Deployment
+
+### Vercel (Frontend)
+```bash
+# vercel.json already configured
+vercel deploy
+```
+
+### Render (Backend)
+```bash
+# render.yaml already configured
+# Connect GitHub repo to Render
+```
+
+### Environment Variables Needed
+- `GEMINI_API_KEY`
+- `SUPABASE_URL`
+- `SUPABASE_KEY`
+- `TELEGRAM_BOT_TOKEN`
+- `RESEND_API_KEY` (optional)
+
+---
+
+## 👥 Team
+
+Built for maternal and child health improvement in underserved communities.
+
+---
+
+## 📝 License
+
+MIT License
 
 ---
 
