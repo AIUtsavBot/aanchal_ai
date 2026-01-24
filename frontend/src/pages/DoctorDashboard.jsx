@@ -4,6 +4,7 @@ import PatientChatHistory from "../components/PatientChatHistory.jsx";
 import ConsultationForm from "../components/ConsultationForm.jsx";
 import MotherRegistrationForm from "../components/MotherRegistrationForm.jsx";
 import DocumentManager from "../components/DocumentManager.jsx";
+import DeliveryForm from "../components/DeliveryForm.jsx";
 import { supabase, waitForSupabaseReady } from "../services/auth.js";
 import { useAuth } from "../contexts/AuthContext";
 import { useView } from "../contexts/ViewContext";
@@ -29,6 +30,7 @@ import {
   ClipboardList,
   UserPlus,
   Upload,
+  Baby,
 } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
@@ -501,6 +503,19 @@ export default function DoctorDashboard() {
             <UserPlus className="w-4 h-4" />
             Register
           </button>
+          <button
+            onClick={() => {
+              setMainView("delivery");
+              setSelected(null);
+            }}
+            className={`flex-1 py-3 text-xs font-semibold flex flex-col items-center gap-1 ${mainView === "delivery"
+              ? "text-purple-600 bg-purple-50"
+              : "text-gray-500"
+              }`}
+          >
+            <Baby className="w-4 h-4" />
+            Delivery
+          </button>
         </div>
 
         {/* Success Message */}
@@ -883,6 +898,16 @@ export default function DoctorDashboard() {
                 setSuccessMsg(`✅ Successfully registered: ${newMother.name}`);
                 loadMothers();
                 setMainView("patients");
+              }}
+            />
+          </div>
+        ) : mainView === "delivery" ? (
+          <div className="flex-1 overflow-y-auto p-8 bg-gradient-to-br from-purple-50 to-pink-50">
+            <DeliveryForm
+              doctorId={doctorId}
+              onSuccess={(result) => {
+                setSuccessMsg(`✅ Delivery completed! ${result.child_created ? 'Baby registered successfully.' : ''} Mother transitioned to SantanRaksha.`);
+                loadMothers();
               }}
             />
           </div>
