@@ -36,54 +36,69 @@ This system provides **end-to-end maternal and child health care** through two i
 
 ```mermaid
 flowchart TB
-    subgraph USERS[" USERS "]
-        Mother["Mother"]
-        ASHA["ASHA Worker"]
-        Doctor["Doctor"]
-        Admin["Admin"]
+    %% Defined Styles
+    classDef users fill:#ffecb3,stroke:#ff6f00,stroke-width:2px,color:black
+    classDef frontend fill:#bbdefb,stroke:#0d47a1,stroke-width:2px,color:black
+    classDef telegram fill:#e1bee7,stroke:#4a148c,stroke-width:2px,color:black
+    classDef backend fill:#ffcdd2,stroke:#b71c1c,stroke-width:2px,color:black
+    classDef ai fill:#d1c4e9,stroke:#512da8,stroke-width:2px,color:black
+    classDef external fill:#b2dfdb,stroke:#004d40,stroke-width:2px,color:black
+    classDef db fill:#c8e6c9,stroke:#1b5e20,stroke-width:2px,color:black
+
+    subgraph USERS[" 👥 USERS "]
+        direction TB
+        Mother["🤰 Mother"]:::users
+        ASHA["👩‍⚕️ ASHA"]:::users
+        Doctor["👨‍⚕️ Doctor"]:::users
+        Admin["👨‍💼 Admin"]:::users
     end
 
-    subgraph FRONTEND[" FRONTEND - React "]
-        WebApp["Web Dashboard :5173"]
-        OfflineSync["Offline Sync Service"]
-        IndexedDB[("IndexedDB")]
+    subgraph FRONTEND[" 🌐 FRONTEND (React) "]
+        direction TB
+        WebApp["Web Dashboard :5173"]:::frontend
+        OfflineSync["Offline Sync Service"]:::frontend
+        IndexedDB[("IndexedDB")]:::frontend
     end
 
-    subgraph TELEGRAM[" TELEGRAM "]
-        TGBot["MatruRaksha Bot"]
+    subgraph TELEGRAM[" 📱 TELEGRAM "]
+        TGBot["MatruRaksha Bot"]:::telegram
     end
 
-    subgraph BACKEND[" BACKEND - FastAPI "]
-        API["REST API :8000"]
-        Orchestrator["AI Orchestrator"]
-        RAGService["Hybrid RAG Service"]
-        SyncRoutes["Offline Sync Routes"]
+    subgraph BACKEND[" ⚙️ BACKEND (FastAPI) "]
+        direction TB
+        API["REST API :8000"]:::backend
+        Orchestrator["AI Orchestrator"]:::backend
+        RAGService["Hybrid RAG Service"]:::backend
+        SyncRoutes["Offline Sync Routes"]:::backend
     end
 
-    subgraph AI_AGENTS[" AI AGENTS "]
-        Risk["Risk Agent"]
-        Care["Care Agent"]
-        Nutrition["Nutrition Agent"]
-        Medication["Medication Agent"]
-        Emergency["Emergency Agent"]
-        ASHAAgent["ASHA Agent"]
-        Postnatal["Postnatal Agent"]
-        Pediatric["Pediatric Agent"]
-        Vaccine["Vaccine Agent"]
-        Growth["Growth Agent"]
+    subgraph AI_AGENTS[" 🤖 AI AGENTS "]
+        direction TB
+        Risk["Risk Agent"]:::ai
+        Care["Care Agent"]:::ai
+        Nutrition["Nutrition Agent"]:::ai
+        Medication["Medication Agent"]:::ai
+        Emergency["Emergency Agent"]:::ai
+        ASHAAgent["ASHA Agent"]:::ai
+        Postnatal["Postnatal Agent"]:::ai
+        Pediatric["Pediatric Agent"]:::ai
+        Vaccine["Vaccine Agent"]:::ai
+        Growth["Growth Agent"]:::ai
     end
 
-    subgraph EXTERNAL[" EXTERNAL SERVICES "]
-        Gemini["Gemini AI"]
-        GeminiEmbed["Gemini Embeddings"]
-        Resend["Resend Email"]
+    subgraph EXTERNAL[" 🔗 EXTERNAL SERVICES "]
+        direction TB
+        Gemini["Gemini AI"]:::external
+        GeminiEmbed["Gemini Embeddings"]:::external
+        Resend["Resend Email"]:::external
     end
 
-    subgraph DATABASE[" SUPABASE "]
-        PG[("PostgreSQL")]
-        pgvector[("pgvector")]
-        Auth["Supabase Auth"]
-        Storage[("File Storage")]
+    subgraph DATABASE[" 🗄️ SUPABASE "]
+        direction TB
+        PG[("PostgreSQL")]:::db
+        pgvector[("pgvector")]:::db
+        Auth["Supabase Auth"]:::db
+        Storage[("File Storage")]:::db
     end
 
     Mother --> TGBot
@@ -128,20 +143,28 @@ flowchart TB
 
 ```mermaid
 flowchart LR
-    Query["User Query"] --> Classify{"Classify Intent"}
+    %% Styles
+    classDef trigger fill:#ffecb3,stroke:#ff6f00,stroke-width:2px,color:black
+    classDef decision fill:#fff9c4,stroke:#fbc02d,stroke-width:2px,color:black
+    classDef agent fill:#d1c4e9,stroke:#512da8,stroke-width:2px,color:black
+    classDef rag fill:#ffcdd2,stroke:#b71c1c,stroke-width:2px,color:black
+    classDef llm fill:#b2dfdb,stroke:#004d40,stroke-width:2px,color:black
+    classDef output fill:#c8e6c9,stroke:#1b5e20,stroke-width:2px,color:black
+
+    Query["User Query"]:::trigger --> Classify{"Classify Intent"}:::decision
     
-    Classify -->|"Pregnancy Risk"| Risk["RiskAgent"]
-    Classify -->|"General Care"| Care["CareAgent"]
-    Classify -->|"Diet/Nutrition"| Nutrition["NutritionAgent"]
-    Classify -->|"Medications"| Medication["MedicationAgent"]
-    Classify -->|"Emergency"| Emergency["EmergencyAgent"]
-    Classify -->|"ASHA Support"| ASHA["ASHAAgent"]
-    Classify -->|"Postnatal Recovery"| Postnatal["PostnatalAgent"]
-    Classify -->|"Child Illness"| Pediatric["PediatricAgent"]
-    Classify -->|"Vaccination"| Vaccine["VaccineAgent"]
-    Classify -->|"Growth/Nutrition"| Growth["GrowthAgent"]
+    Classify -->|"Pregnancy Risk"| Risk["RiskAgent"]:::agent
+    Classify -->|"General Care"| Care["CareAgent"]:::agent
+    Classify -->|"Diet/Nutrition"| Nutrition["NutritionAgent"]:::agent
+    Classify -->|"Medications"| Medication["MedicationAgent"]:::agent
+    Classify -->|"Emergency"| Emergency["EmergencyAgent"]:::agent
+    Classify -->|"ASHA Support"| ASHA["ASHAAgent"]:::agent
+    Classify -->|"Postnatal Recovery"| Postnatal["PostnatalAgent"]:::agent
+    Classify -->|"Child Illness"| Pediatric["PediatricAgent"]:::agent
+    Classify -->|"Vaccination"| Vaccine["VaccineAgent"]:::agent
+    Classify -->|"Growth/Nutrition"| Growth["GrowthAgent"]:::agent
     
-    Risk --> RAG["RAG Context"]
+    Risk --> RAG["RAG Context"]:::rag
     Care --> RAG
     Nutrition --> RAG
     Medication --> RAG
@@ -152,8 +175,8 @@ flowchart LR
     Vaccine --> RAG
     Growth --> RAG
     
-    RAG --> Gemini["Gemini 2.5 Flash"]
-    Gemini --> Response["AI Response"]
+    RAG --> Gemini["Gemini 2.5 Flash"]:::llm
+    Gemini --> Response["AI Response"]:::output
 ```
 
 ### Hybrid RAG System
@@ -162,28 +185,43 @@ Retrieval-Augmented Generation using 1,015 maternal health cases for context-awa
 
 ```mermaid
 flowchart TB
-    Query["User Query: 28yr, BP 140/90, BS 15"]
+    %% Styles
+    classDef input fill:#e1bee7,stroke:#4a148c,stroke-width:2px,color:black
+    classDef filter fill:#ffcc80,stroke:#e65100,stroke-width:2px,color:black
+    classDef retrieval fill:#bbdefb,stroke:#0d47a1,stroke-width:2px,color:black
+    classDef fusion fill:#f8bbd0,stroke:#c2185b,stroke-width:2px,color:black
+    classDef gemini fill:#b2dfdb,stroke:#004d40,stroke-width:2px,color:black
+
+    Query["User Query: 28yr, BP 140/90, BS 15"]:::input
     
     subgraph FILTER["STEP 1: Metadata Filtering"]
-        F1["Filter by age range 25-35"]
-        F2["Filter by risk level"]
-        F3["Filter by BP ranges"]
+        direction TB
+        style FILTER fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:black
+        F1["Filter by age range 25-35"]:::filter
+        F2["Filter by risk level"]:::filter
+        F3["Filter by BP ranges"]:::filter
     end
     
     subgraph RETRIEVAL["STEP 2: Hybrid Retrieval"]
-        BM25["BM25 Sparse Search"]
-        PGVEC["pgvector Dense Search"]
+        direction TB
+        style RETRIEVAL fill:#e3f2fd,stroke:#0d47a1,stroke-width:2px,color:black
+        BM25["BM25 Sparse Search"]:::retrieval
+        PGVEC["pgvector Dense Search"]:::retrieval
     end
     
     subgraph FUSION["STEP 3: Reciprocal Rank Fusion"]
-        RRF["Combine BM25 + pgvector scores"]
-        TOPK["Top-K similar cases"]
+        direction TB
+        style FUSION fill:#fce4ec,stroke:#880e4f,stroke-width:2px,color:black
+        RRF["Combine BM25 + pgvector scores"]:::fusion
+        TOPK["Top-K similar cases"]:::fusion
     end
     
     subgraph GEMINI["STEP 4: Gemini AI + Context"]
-        CTX["Similar Cases Context"]
-        LLM["Gemini 2.5 Flash"]
-        RESP["Response with evidence"]
+        direction TB
+        style GEMINI fill:#e0f2f1,stroke:#00695c,stroke-width:2px,color:black
+        CTX["Similar Cases Context"]:::gemini
+        LLM["Gemini 2.5 Flash"]:::gemini
+        RESP["Response with evidence"]:::gemini
     end
     
     Query --> FILTER
@@ -207,32 +245,47 @@ Ensures forms, chats, and documents are never lost in low-connectivity areas.
 
 ```mermaid
 flowchart TB
-    Action["User Action: Form Submit / Chat / Doc Upload"]
+    %% Styles
+    classDef action fill:#b3e5fc,stroke:#01579b,stroke-width:2px,color:black
+    classDef check fill:#ffcc80,stroke:#e65100,stroke-width:2px,color:black
+    classDef online fill:#c8e6c9,stroke:#1b5e20,stroke-width:2px,color:black
+    classDef offline fill:#fff9c4,stroke:#fbc02d,stroke-width:2px,color:black
+    classDef sync fill:#e1bee7,stroke:#4a148c,stroke-width:2px,color:black
+
+    Action["User Action: Form Submit / Chat / Doc Upload"]:::action
     
     subgraph CHECK["Network Check"]
-        Online{"navigator.onLine?"}
+        direction TB
+        style CHECK fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:black
+        Online{"navigator.onLine?"}:::check
     end
     
     subgraph ONLINE_PATH["ONLINE PATH"]
-        API["API Call"]
-        SB1[("Supabase")]
-        Success["Success"]
+        direction TB
+        style ONLINE_PATH fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px,color:black
+        API["API Call"]:::online
+        SB1[("Supabase")]:::online
+        Success["Success"]:::online
     end
     
     subgraph OFFLINE_PATH["OFFLINE PATH"]
-        IDB[("IndexedDB")]
-        PF["pendingForms"]
-        PC["pendingChats"]
-        PD["pendingDocs"]
-        Saved["Saved Locally"]
+        direction TB
+        style OFFLINE_PATH fill:#fffde7,stroke:#fbc02d,stroke-width:2px,color:black
+        IDB[("IndexedDB")]:::offline
+        PF["pendingForms"]:::offline
+        PC["pendingChats"]:::offline
+        PD["pendingDocs"]:::offline
+        Saved["Saved Locally"]:::offline
     end
     
     subgraph SYNC["Auto-Sync on Reconnect"]
-        Event["online event"]
-        Batch["POST /api/sync/batch"]
-        SB2[("Supabase")]
-        Clear["Clear IndexedDB"]
-        Done["Synced"]
+        direction TB
+        style SYNC fill:#f3e5f5,stroke:#4a148c,stroke-width:2px,color:black
+        Event["online event"]:::sync
+        Batch["POST /api/sync/batch"]:::sync
+        SB2[("Supabase")]:::sync
+        Clear["Clear IndexedDB"]:::sync
+        Done["Synced"]:::sync
     end
     
     Action --> Online
@@ -263,6 +316,7 @@ flowchart TB
 
 ```mermaid
 sequenceDiagram
+    %%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#e3f2fd', 'edgeLabelBackground':'#ffffff', 'actorBorder': '#1565c0', 'actorBkg': '#e3f2fd', 'signalColor': '#1565c0', 'signalTextColor': '#000000'}}}%%
     participant M as Mother
     participant T as Telegram Bot
     participant B as Backend API
@@ -278,24 +332,27 @@ sequenceDiagram
     B-->>T: Registration success
     T-->>M: Welcome to MatruRaksha!
 
-    Note over M,DB: Daily Health Check-in
-    M->>T: My BP is 140/90, feeling dizzy
-    T->>B: POST /api/agent/query
-    B->>R: get_risk_context age=28, BP=140/90
-    R->>R: BM25 search + pgvector search
-    R->>R: RRF fusion - Top 5 similar cases
-    R-->>B: 3/5 similar cases were HIGH RISK
-    B->>AI: Risk Agent + RAG context
-    AI-->>B: HIGH RISK - Recommend hospital visit
-    B->>DB: Save risk_assessment
-    B-->>T: HIGH RISK detected
-    T-->>M: Please visit hospital immediately!
+    rect rgb(255, 243, 224)
+        Note over M,DB: Daily Health Check-in
+        M->>T: My BP is 140/90, feeling dizzy
+        T->>B: POST /api/agent/query
+        B->>R: get_risk_context age=28, BP=140/90
+        R->>R: BM25 search + pgvector search
+        R->>R: RRF fusion - Top 5 similar cases
+        R-->>B: 3/5 similar cases were HIGH RISK
+        B->>AI: Risk Agent + RAG context
+        AI-->>B: HIGH RISK - Recommend hospital visit
+        B->>DB: Save risk_assessment
+        B-->>T: HIGH RISK detected
+        T-->>M: Please visit hospital immediately!
+    end
 ```
 
 ### Flow 2: ASHA Worker Daily Workflow
 
 ```mermaid
 sequenceDiagram
+    %%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#e8f5e9', 'edgeLabelBackground':'#ffffff', 'actorBorder': '#2e7d32', 'actorBkg': '#e8f5e9', 'signalColor': '#2e7d32', 'signalTextColor': '#000000'}}}%%
     participant A as ASHA Worker
     participant W as Web Dashboard
     participant B as Backend API
@@ -309,23 +366,26 @@ sequenceDiagram
     B-->>W: Patient list with risk levels
     W->>A: Display: 3 HIGH, 5 MID, 17 LOW risk
 
-    Note over A,DB: Home Visit Recording
-    A->>W: Select HIGH risk patient
-    W->>B: GET /mothers/patient-id
-    B-->>W: Full patient history
-    A->>W: Record visit: BP reading, symptoms
-    W->>B: POST /api/visits
-    B->>AI: ASHAAgent analysis
-    AI-->>B: Recommendations for next steps
-    B->>DB: Save visit record
-    B-->>W: Visit saved with AI recommendations
-    W->>A: Show recommendations
+    rect rgb(255, 235, 238)
+        Note over A,DB: Home Visit Recording
+        A->>W: Select HIGH risk patient
+        W->>B: GET /mothers/patient-id
+        B-->>W: Full patient history
+        A->>W: Record visit: BP reading, symptoms
+        W->>B: POST /api/visits
+        B->>AI: ASHAAgent analysis
+        AI-->>B: Recommendations for next steps
+        B->>DB: Save visit record
+        B-->>W: Visit saved with AI recommendations
+        W->>A: Show recommendations
+    end
 ```
 
 ### Flow 3: Delivery to Postnatal Transition
 
 ```mermaid
 sequenceDiagram
+    %%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#e1bee7', 'edgeLabelBackground':'#ffffff', 'actorBorder': '#6a1b9a', 'actorBkg': '#f3e5f5', 'signalColor': '#6a1b9a', 'signalTextColor': '#000000'}}}%%
     participant D as Doctor
     participant W as Web Dashboard
     participant B as Backend API
@@ -335,13 +395,15 @@ sequenceDiagram
     D->>W: Click Complete Delivery
     W->>B: POST /api/delivery/complete/mother-id
     
-    Note over B,DB: System Transition
-    B->>DB: Update mother.active_system = santanraksha
-    B->>DB: Create child record
-    B->>DB: Generate vaccination schedule IAP 2023
-    B->>DB: Create postnatal checkup schedule
-    DB-->>B: All records created
-    B-->>W: Delivery completed successfully
+    rect rgb(227, 242, 253)
+        Note over B,DB: System Transition
+        B->>DB: Update mother.active_system = santanraksha
+        B->>DB: Create child record
+        B->>DB: Generate vaccination schedule IAP 2023
+        B->>DB: Create postnatal checkup schedule
+        DB-->>B: All records created
+        B-->>W: Delivery completed successfully
+    end
 
     D->>W: Toggle to Postnatal View
     W->>B: GET /api/children/mother-id
@@ -353,6 +415,7 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
+    %%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#fff9c4', 'edgeLabelBackground':'#ffffff', 'actorBorder': '#fbc02d', 'actorBkg': '#fffde7', 'signalColor': '#fbc02d', 'signalTextColor': '#000000'}}}%%
     participant A as ASHA Worker
     participant W as Web Dashboard
     participant B as Backend API
@@ -371,13 +434,15 @@ sequenceDiagram
     B->>DB: Update vaccination record
     B-->>W: Success
 
-    Note over A,DB: Parent has concerns
-    A->>W: Ask AI about vaccine side effects
-    W->>B: POST /api/agent/query
-    B->>AI: VaccineAgent query
-    AI-->>B: Normal side effects list + when to worry
-    B-->>W: AI response
-    W->>A: Display guidance for parent
+    rect rgb(243, 229, 245)
+        Note over A,DB: Parent has concerns
+        A->>W: Ask AI about vaccine side effects
+        W->>B: POST /api/agent/query
+        B->>AI: VaccineAgent query
+        AI-->>B: Normal side effects list + when to worry
+        B-->>W: AI response
+        W->>A: Display guidance for parent
+    end
 ```
 
 ---
