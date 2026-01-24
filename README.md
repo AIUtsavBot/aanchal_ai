@@ -313,40 +313,7 @@ sequenceDiagram
 
 ## 🚀 Setup Guide
 
-### 1. Database Setup (Supabase)
-
-Run the RAG migration in Supabase SQL Editor:
-
-```sql
--- Enable pgvector extension
-CREATE EXTENSION IF NOT EXISTS vector;
-
--- Create embeddings table
-CREATE TABLE maternal_health_embeddings (
-    id SERIAL PRIMARY KEY,
-    case_id INTEGER UNIQUE NOT NULL,
-    age INTEGER NOT NULL,
-    systolic_bp INTEGER NOT NULL,
-    diastolic_bp INTEGER NOT NULL,
-    blood_sugar NUMERIC(5,2) NOT NULL,
-    body_temp NUMERIC(5,2) NOT NULL,
-    heart_rate INTEGER NOT NULL,
-    risk_level VARCHAR(20) NOT NULL,
-    document_text TEXT NOT NULL,
-    embedding vector(768),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Create HNSW index
-CREATE INDEX maternal_embeddings_vector_idx 
-ON maternal_health_embeddings 
-USING ivfflat (embedding vector_cosine_ops)
-WITH (lists = 100);
-
--- Create search function (see rag_migration.sql for full code)
-```
-
-### 2. Backend Setup
+### 1. Backend Setup
 
 ```bash
 cd backend
@@ -363,7 +330,7 @@ SUPABASE_KEY=your_supabase_key
 python main.py
 ```
 
-### 3. Initialize RAG (First Run)
+### 2. Initialize RAG (First Run)
 
 The RAG service auto-initializes on first query. It will:
 
@@ -371,7 +338,7 @@ The RAG service auto-initializes on first query. It will:
 2. Generate embeddings via Gemini API (~30 seconds)
 3. Store embeddings in Supabase pgvector
 
-### 4. Frontend Setup
+### 3. Frontend Setup
 
 ```bash
 cd frontend
