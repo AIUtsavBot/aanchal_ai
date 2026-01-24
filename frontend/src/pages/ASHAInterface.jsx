@@ -2,9 +2,11 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase, waitForSupabaseReady } from "../services/auth.js";
 import { useAuth } from "../contexts/AuthContext";
+import { useView } from "../contexts/ViewContext";
 import PatientChatHistory from "../components/PatientChatHistory.jsx";
 import DocumentManager from "../components/DocumentManager.jsx";
 import MotherRegistrationForm from "../components/MotherRegistrationForm.jsx";
+import { PostnatalDashboard } from "./postnatal/PostnatalDashboard.jsx";
 import {
   Users,
   Search,
@@ -42,6 +44,7 @@ const apiCall = async (method, endpoint, data = null) => {
 export default function ASHAInterface() {
   const { t } = useTranslation();
   const { user, loading: authLoading } = useAuth();
+  const { currentView } = useView();
 
   // ASHA worker state
   const [ashaWorkerId, setAshaWorkerId] = useState(null);
@@ -505,12 +508,17 @@ export default function ASHAInterface() {
     );
   }
 
+  // If viewing postnatal care, show SantanRaksha dashboard
+  if (currentView === 'postnatal') {
+    return <PostnatalDashboard ashaWorkerId={ashaWorkerId} />;
+  }
+
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar - Mothers List */}
       <div className="w-80 bg-white border-r flex flex-col shadow-lg">
         {/* Header */}
-        <div className="bg-gradient-to-br from-green-600 to-green-800 text-white px-5 py-5">
+        <div className="bg-gradient-to-br from-green-600 to-green-800 text-white px-5 py-4">
           <div className="flex items-center gap-3">
             <div className="bg-green-500 p-2 rounded-lg">
               <Users className="w-5 h-5" />

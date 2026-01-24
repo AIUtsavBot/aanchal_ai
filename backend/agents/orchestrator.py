@@ -1,14 +1,20 @@
 """
-MatruRaksha AI - Orchestrator Agent
+SantanRaksha AI - Orchestrator Agent
 Routes messages to specialized agents based on intent classification
 
-Agents:
+Maternal Health Agents (MatruRaksha):
 - ASHA Agent: Community health, appointments, local resources
 - Care Agent: General pregnancy care, wellness tips
 - Emergency Agent: Urgent symptoms, crisis situations
 - Medication Agent: Medicine queries, prescriptions, side effects
 - Nutrition Agent: Diet plans, nutrition advice, recipes
 - Risk Agent: Risk assessment, complications, warning signs
+
+Postnatal & Child Health Agents (SantanRaksha):
+- Postnatal Agent: Postnatal recovery, breastfeeding, mental health
+- Pediatric Agent: Child illnesses, IMNCI protocols, general pediatric care
+- Vaccine Agent: Vaccination schedule, reminders, side effects
+- Growth Agent: Growth monitoring, WHO z-scores, feeding guidance
 """
 
 import os
@@ -34,12 +40,18 @@ except:
 
 class AgentType(Enum):
     """Available agent types"""
+    # Maternal health agents
     ASHA = "asha_agent"
     CARE = "care_agent"
     EMERGENCY = "emergency_agent"
     MEDICATION = "medication_agent"
     NUTRITION = "nutrition_agent"
     RISK = "risk_agent"
+    # Postnatal & child health agents (SantanRaksha)
+    POSTNATAL = "postnatal_agent"
+    PEDIATRIC = "pediatric_agent"
+    VACCINE = "vaccine_agent"
+    GROWTH = "growth_agent"
     GENERAL = "general"  # Fallback
 
 
@@ -78,8 +90,34 @@ class MessageIntent:
     
     CARE_KEYWORDS = [
         'pregnancy', 'trimester', 'week', 'month', 'baby', 'fetus',
-        'movement', 'kicks', 'growth', 'development', 'normal', 'common',
+        'movement', 'kicks', 'development', 'normal', 'common',
         'symptom', 'feeling', 'tired', 'nausea', 'morning sickness', 'back pain'
+    ]
+    
+    # SantanRaksha-specific keywords
+    POSTNATAL_KEYWORDS = [
+        'postnatal', 'postpartum', 'after delivery', 'after birth', 'recovery',
+        'breastfeeding', 'breast feed', 'lactation', 'milk supply', 'cracked nipple',
+        'cesarean', 'c-section', 'stitches', 'episiotomy', 'bleeding after delivery',
+        'lochia', 'postpartum depression', 'baby blues', 'mood', 'sad', 'crying'
+    ]
+    
+    PEDIATRIC_KEYWORDS = [
+        'child', 'infant', 'newborn', 'toddler', 'kids', 'baby sick', 'baby fever',
+        'cough', 'cold', 'diarrhea', 'vomiting', 'rash', 'ear infection', 'pneumonia',
+        'baby not eating', 'baby crying', 'teething', 'sleep', 'baby development'
+    ]
+    
+    VACCINE_KEYWORDS = [
+        'vaccine', 'vaccination', 'immunization', 'bcg', 'opv', 'pentavalent',
+        'measles', 'polio', 'dpt', 'vaccine due', 'vaccine schedule', 'booster',
+        'vaccine side effect', 'vaccine safe', 'autism vaccine'
+    ]
+    
+    GROWTH_KEYWORDS = [
+        'growth', 'weight', 'height', 'underweight', 'malnutrition', 'stunted',
+        'not gaining weight', 'feeding', 'food', 'solid food', 'complementary feeding',
+        'diet', 'nutrition', 'meal plan', 'baby food', 'eating', 'growth chart'
     ]
 
 
@@ -96,74 +134,122 @@ class OrchestratorAgent:
         """Lazy load agents when needed"""
         try:
             try:
+                # Maternal health agents
                 from backend.agents.asha_agent import AshaAgent
                 from backend.agents.care_agent import CareAgent
                 from backend.agents.emergency_agent import EmergencyAgent
                 from backend.agents.medication_agent import MedicationAgent
                 from backend.agents.nutrition_agent import NutritionAgent
                 from backend.agents.risk_agent import RiskAgent
+                # SantanRaksha agents
+                from backend.agents.postnatal_agent import PostnatalAgent
+                from backend.agents.pediatric_agent import PediatricAgent
+                from backend.agents.vaccine_agent import VaccineAgent
+                from backend.agents.growth_agent import GrowthAgent
             except ImportError:
+                # Maternal health agents
                 from agents.asha_agent import AshaAgent
                 from agents.care_agent import CareAgent
                 from agents.emergency_agent import EmergencyAgent
                 from agents.medication_agent import MedicationAgent
                 from agents.nutrition_agent import NutritionAgent
                 from agents.risk_agent import RiskAgent
+                # SantanRaksha agents
+                from agents.postnatal_agent import PostnatalAgent
+                from agents.pediatric_agent import PediatricAgent
+                from agents.vaccine_agent import VaccineAgent
+                from agents.growth_agent import GrowthAgent
             
             self.agents = {
+                # Maternal health agents
                 AgentType.ASHA: AshaAgent(),
                 AgentType.CARE: CareAgent(),
                 AgentType.EMERGENCY: EmergencyAgent(),
                 AgentType.MEDICATION: MedicationAgent(),
                 AgentType.NUTRITION: NutritionAgent(),
-                AgentType.RISK: RiskAgent()
+                AgentType.RISK: RiskAgent(),
+                # SantanRaksha agents
+                AgentType.POSTNATAL: PostnatalAgent(),
+                AgentType.PEDIATRIC: PediatricAgent(),
+                AgentType.VACCINE: VaccineAgent(),
+                AgentType.GROWTH: GrowthAgent()
             }
             logger.info("✅ All agents loaded successfully")
         except ImportError as e:
             logger.warning(f"⚠️ Some agents not available: {e}")
             self.agents = {}
     
-    def classify_intent(self, message: str) -> AgentType:
+    def classify_intent(self, message: str, mother_context: Dict[str, Any] = None) -> AgentType:
         """
         Classify message intent using keyword matching + AI
         Returns the most appropriate agent type
+        
+        IMPORTANT: Checks delivery_status to route to correct system
+        - pregnant → MatruRaksha agents (pregnancy care)
+        - delivered/postnatal → SantanRaksha agents (postnatal + child)
         """
         message_lower = message.lower()
         
-        # Priority 1: Emergency detection (highest priority)
+        # SYSTEM ROUTING: Check if mother has delivered
+        is_postnatal = False
+        if mother_context:
+            delivery_status = mother_context.get('delivery_status', 'pregnant')
+            active_system = mother_context.get('active_system', 'matruraksha')
+            is_postnatal = (delivery_status in ['delivered', 'postnatal'] or active_system == 'santanraksha')
+            
+            if is_postnatal:
+                logger.info(f"🍼 Mother has delivered - routing to SantanRaksha agents")
+        
+        # Priority 1: Emergency detection (highest priority for both systems)
         if any(keyword in message_lower for keyword in MessageIntent.EMERGENCY_KEYWORDS):
             logger.info(f"🚨 EMERGENCY detected: {message[:50]}")
             return AgentType.EMERGENCY
         
         # Priority 2: Specific domain keywords
-        keyword_scores = {
-            AgentType.MEDICATION: sum(1 for kw in MessageIntent.MEDICATION_KEYWORDS if kw in message_lower),
-            AgentType.NUTRITION: sum(1 for kw in MessageIntent.NUTRITION_KEYWORDS if kw in message_lower),
-            AgentType.RISK: sum(1 for kw in MessageIntent.RISK_KEYWORDS if kw in message_lower),
-            AgentType.ASHA: sum(1 for kw in MessageIntent.ASHA_KEYWORDS if kw in message_lower),
-            AgentType.CARE: sum(1 for kw in MessageIntent.CARE_KEYWORDS if kw in message_lower)
-        }
+        if is_postnatal:
+            # POSTNATAL SYSTEM: Prioritize SantanRaksha agents
+            keyword_scores = {
+                AgentType.POSTNATAL: sum(1 for kw in MessageIntent.POSTNATAL_KEYWORDS if kw in message_lower),
+                AgentType.PEDIATRIC: sum(1 for kw in MessageIntent.PEDIATRIC_KEYWORDS if kw in message_lower),
+                AgentType.VACCINE: sum(1 for kw in MessageIntent.VACCINE_KEYWORDS if kw in message_lower),
+                AgentType.GROWTH: sum(1 for kw in MessageIntent.GROWTH_KEYWORDS if kw in message_lower),
+                # Emergency still available
+                AgentType.EMERGENCY: 0
+            }
+        else:
+            # PREGNANCY SYSTEM: Use MatruRaksha agents
+            keyword_scores = {
+                AgentType.MEDICATION: sum(1 for kw in MessageIntent.MEDICATION_KEYWORDS if kw in message_lower),
+                AgentType.NUTRITION: sum(1 for kw in MessageIntent.NUTRITION_KEYWORDS if kw in message_lower),
+                AgentType.RISK: sum(1 for kw in MessageIntent.RISK_KEYWORDS if kw in message_lower),
+                AgentType.ASHA: sum(1 for kw in MessageIntent.ASHA_KEYWORDS if kw in message_lower),
+                AgentType.CARE: sum(1 for kw in MessageIntent.CARE_KEYWORDS if kw in message_lower)
+            }
         
         # Get highest scoring agent
         best_agent = max(keyword_scores.items(), key=lambda x: x[1])
         if best_agent[1] > 0:
-            logger.info(f"📍 Intent classified: {best_agent[0].value} (score: {best_agent[1]})")
+            logger.info(f"📍 Intent classified: {best_agent[0].value} (score: {best_agent[1]}) [System: {'SantanRaksha' if is_postnatal else 'MatruRaksha'}]")
             return best_agent[0]
         
         # Priority 3: Use AI classification if available
         if GEMINI_AVAILABLE:
             try:
-                ai_agent = self._ai_classify(message)
+                ai_agent = self._ai_classify(message, is_postnatal)
                 if ai_agent:
                     return ai_agent
             except Exception as e:
                 logger.error(f"AI classification error: {e}")
         
-        # Default to general care agent
-        logger.info("📍 No specific intent - using CARE agent")
-        return AgentType.CARE
+        # Default based on system
+        if is_postnatal:
+            logger.info("📍 No specific intent - using POSTNATAL agent (SantanRaksha)")
+            return AgentType.POSTNATAL
+        else:
+            logger.info("📍 No specific intent - using CARE agent (MatruRaksha)")
+            return AgentType.CARE
     
-    def _ai_classify(self, message: str) -> Optional[AgentType]:
+    def _ai_classify(self, message: str, is_postnatal: bool = False) -> Optional[AgentType]:
         """Use Gemini AI for intent classification (fast)"""
         try:
             if not gemini_client:
@@ -222,8 +308,8 @@ Respond with ONLY the category name (one word).
         Returns:
             Agent's response text
         """
-        # Classify intent
-        agent_type = self.classify_intent(message)
+        # Classify intent (with mother context for system routing)
+        agent_type = self.classify_intent(message, mother_context)
         
         # Get appropriate agent
         agent = self.agents.get(agent_type)

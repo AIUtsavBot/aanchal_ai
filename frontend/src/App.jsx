@@ -3,6 +3,7 @@ import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
+import { ViewProvider } from './contexts/ViewContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import Navbar from './components/Navbar'
 import Login from './pages/Login'
@@ -20,83 +21,85 @@ export default function App() {
 
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Navbar />
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/auth/login" element={<Login />} />
-          <Route path="/auth/signup" element={<Signup />} />
-          <Route path="/auth/callback" element={<AuthCallback />} />
+      <ViewProvider>
+        <BrowserRouter>
+          <Navbar />
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/auth/login" element={<Login />} />
+            <Route path="/auth/signup" element={<Signup />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
 
-          {/* Public Homepage */}
-          <Route path="/" element={<Home />} />
-          {/* Protected Routes */}
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute allowedRoles={['ADMIN']}>
-                <RiskDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/doctor"
-            element={
-              <ProtectedRoute allowedRoles={['DOCTOR', 'ADMIN']}>
-                <DoctorDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/asha"
-            element={
-              <ProtectedRoute allowedRoles={['ASHA_WORKER', 'ADMIN']}>
-                <ASHAInterface />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute allowedRoles={['ADMIN']}>
-                <AdminDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/dashboard"
-            element={
-              <ProtectedRoute allowedRoles={['ADMIN']}>
-                <AdminDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/approvals"
-            element={
-              <ProtectedRoute allowedRoles={['ADMIN']}>
-                <AdminApprovals />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/doctor/dashboard"
-            element={
-              <ProtectedRoute allowedRoles={['DOCTOR', 'ADMIN']}>
-                <DoctorDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/asha/dashboard"
-            element={
-              <ProtectedRoute allowedRoles={['ASHA_WORKER', 'DOCTOR', 'ADMIN']}>
-                <ASHAInterface />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </BrowserRouter>
+            {/* Public Homepage */}
+            <Route path="/" element={<Home />} />
+            {/* Protected Routes */}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['ADMIN']}>
+                  <RiskDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/doctor"
+              element={
+                <ProtectedRoute allowedRoles={['DOCTOR', 'ADMIN']}>
+                  <DoctorDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/asha"
+              element={
+                <ProtectedRoute allowedRoles={['ASHA_WORKER', 'ADMIN']}>
+                  <ASHAInterface />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute allowedRoles={['ADMIN']}>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['ADMIN']}>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/approvals"
+              element={
+                <ProtectedRoute allowedRoles={['ADMIN']}>
+                  <AdminApprovals />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/doctor/dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['DOCTOR', 'ADMIN']}>
+                  <DoctorDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/asha/dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['ASHA_WORKER', 'DOCTOR', 'ADMIN']}>
+                  <ASHAInterface />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </BrowserRouter>
+      </ViewProvider>
     </AuthProvider>
   )
 }

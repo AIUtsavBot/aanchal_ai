@@ -1,11 +1,14 @@
 import React from 'react'
 import { Heart } from 'lucide-react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { useView } from '../contexts/ViewContext'
 
 export default function Navbar() {
   const { user, isAuthenticated, signOut } = useAuth()
+  const { currentView, setCurrentView } = useView()
   const navigate = useNavigate()
+  const location = useLocation()
 
   const handleSignOut = async () => {
     await signOut()
@@ -17,6 +20,12 @@ export default function Navbar() {
     : user?.role === 'DOCTOR'
       ? 'bg-green-600'
       : 'bg-purple-600'
+
+  // Only show toggle on ASHA/Doctor dashboard pages
+  const showToggle = isAuthenticated &&
+    (user?.role === 'ASHA_WORKER' || user?.role === 'DOCTOR') &&
+    (location.pathname === '/asha/dashboard' || location.pathname === '/doctor' ||
+      location.pathname === '/asha' || location.pathname === '/doctor/dashboard')
 
   return (
     <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-xl">
@@ -31,6 +40,30 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center gap-4">
+            {/* View Toggle - Only on dashboard pages */}
+            {showToggle && (
+              <div className="flex bg-white/20 rounded-lg p-1 mr-4">
+                <button
+                  onClick={() => setCurrentView('pregnancy')}
+                  className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${currentView === 'pregnancy'
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-white/80 hover:text-white'
+                    }`}
+                >
+                  🤰 Pregnancy
+                </button>
+                <button
+                  onClick={() => setCurrentView('postnatal')}
+                  className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${currentView === 'postnatal'
+                    ? 'bg-white text-green-600 shadow-sm'
+                    : 'text-white/80 hover:text-white'
+                    }`}
+                >
+                  🍼 Postnatal
+                </button>
+              </div>
+            )}
+
             <Link to="/" className="text-white/90 hover:text-white">Home</Link>
 
             {/* Doctor link - visible ONLY to doctors */}

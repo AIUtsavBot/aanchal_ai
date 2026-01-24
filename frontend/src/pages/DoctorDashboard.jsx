@@ -6,6 +6,8 @@ import MotherRegistrationForm from "../components/MotherRegistrationForm.jsx";
 import DocumentManager from "../components/DocumentManager.jsx";
 import { supabase, waitForSupabaseReady } from "../services/auth.js";
 import { useAuth } from "../contexts/AuthContext";
+import { useView } from "../contexts/ViewContext";
+import { PostnatalDashboard } from "./postnatal/PostnatalDashboard.jsx";
 import {
   Stethoscope,
   AlertTriangle,
@@ -45,6 +47,7 @@ const apiCall = async (method, endpoint, data = null) => {
 export default function DoctorDashboard() {
   const { t } = useTranslation();
   const { user, loading: authLoading } = useAuth();
+  const { currentView } = useView();
 
   const [doctorId, setDoctorId] = useState(null);
   const [doctorInfo, setDoctorInfo] = useState(null);
@@ -426,6 +429,11 @@ export default function DoctorDashboard() {
     );
   }
 
+  // If viewing postnatal care, show SantanRaksha dashboard
+  if (currentView === 'postnatal') {
+    return <PostnatalDashboard doctorId={doctorId} userRole="doctor" />;
+  }
+
   return (
     <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Sidebar */}
@@ -438,9 +446,7 @@ export default function DoctorDashboard() {
             </div>
             <div>
               <h1 className="text-xl font-bold">Doctor Portal</h1>
-              <p className="text-blue-100 text-sm">
-                {doctorInfo?.name || "Doctor"}
-              </p>
+              <p className="text-blue-100 text-sm">{doctorInfo?.name || "Doctor"}</p>
             </div>
           </div>
         </div>
