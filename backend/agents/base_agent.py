@@ -263,7 +263,19 @@ CRITICAL: Strictly follow WHO and NHM India guidelines. If High Risk, recommend 
 
 {context_info}
 
-User Question: {query}
+"""
+            
+            # Add RAG context if available (similar historical cases)
+            rag_context = mother_context.get('rag_similar_cases', '')
+            if rag_context:
+                full_prompt += f"""
+===== SIMILAR HISTORICAL CASES (RAG) =====
+{rag_context}
+Use these similar cases to inform your risk assessment and recommendations.
+
+"""
+            
+            full_prompt += f"""User Question: {query}
 
 Response:
 """

@@ -21,10 +21,10 @@ export default function CaseChat({ motherId, userRole = 'DOCTOR', userName = 'Do
         .select('*')
         .eq('mother_id', motherId)
         .order('created_at', { ascending: true })
-      
+
       if (err) throw err
       setMessages(data || [])
-      
+
       // Scroll to bottom after loading
       setTimeout(() => {
         if (listRef.current) {
@@ -41,17 +41,22 @@ export default function CaseChat({ motherId, userRole = 'DOCTOR', userName = 'Do
 
   useEffect(() => {
     if (!motherId) return
-    
+
     loadMessages()
-    
+
+    // Polling fallback - refresh every 5 seconds for reliable updates
+    const pollInterval = setInterval(() => {
+      loadMessages()
+    }, 5000)
+
     try {
       const channel = supabase
         .channel(`case_discussions_${motherId}`)
-        .on('postgres_changes', { 
-          event: 'INSERT', 
-          schema: 'public', 
-          table: 'case_discussions', 
-          filter: `mother_id=eq.${motherId}` 
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'case_discussions',
+          filter: `mother_id=eq.${motherId}`
         }, payload => {
           setMessages(prev => [...prev, payload.new])
           setTimeout(() => {
@@ -61,22 +66,24 @@ export default function CaseChat({ motherId, userRole = 'DOCTOR', userName = 'Do
           }, 50)
         })
         .subscribe()
-      
+
       return () => {
+        clearInterval(pollInterval)
         supabase.removeChannel(channel)
       }
     } catch (err) {
       console.error('Subscription error:', err)
+      return () => clearInterval(pollInterval)
     }
   }, [motherId])
 
   const sendMessage = async e => {
     e.preventDefault()
     if (!input.trim()) return
-    
+
     setSending(true)
     setError('')
-    
+
     try {
       const { error: err } = await supabase.from('case_discussions').insert({
         mother_id: motherId,
@@ -84,7 +91,7 @@ export default function CaseChat({ motherId, userRole = 'DOCTOR', userName = 'Do
         sender_name: userName,
         message: input.trim()
       })
-      
+
       if (err) throw err
       setInput('')
     } catch (err) {
@@ -96,19 +103,21 @@ export default function CaseChat({ motherId, userRole = 'DOCTOR', userName = 'Do
   }
 
   const getRoleColor = (role) => {
-    switch(role?.toUpperCase()) {
+    switch (role?.toUpperCase()) {
       case 'DOCTOR': return 'bg-blue-50 border-blue-200'
       case 'ASHA': return 'bg-green-50 border-green-200'
       case 'ADMIN': return 'bg-purple-50 border-purple-200'
+      case 'MOTHER': return 'bg-pink-50 border-pink-200'
       default: return 'bg-gray-50 border-gray-200'
     }
   }
 
   const getRoleTextColor = (role) => {
-    switch(role?.toUpperCase()) {
+    switch (role?.toUpperCase()) {
       case 'DOCTOR': return 'text-blue-700'
       case 'ASHA': return 'text-green-700'
       case 'ADMIN': return 'text-purple-700'
+      case 'MOTHER': return 'text-pink-700'
       default: return 'text-gray-700'
     }
   }
@@ -116,8 +125,8 @@ export default function CaseChat({ motherId, userRole = 'DOCTOR', userName = 'Do
   return (
     <div className="flex flex-col h-full bg-gray-50">
       {/* Messages Container */}
-      <div 
-        ref={listRef} 
+      <div
+        ref={listRef}
         className="flex-1 overflow-y-auto p-4 space-y-4"
       >
         {loading ? (
@@ -137,7 +146,7 @@ export default function CaseChat({ motherId, userRole = 'DOCTOR', userName = 'Do
           </div>
         ) : (
           messages.map(m => (
-          <div key={m.id} className="animate-fade-in">
+            <div key={m.id} className="animate-fade-in">
               <div className={`rounded-lg border ${getRoleColor(m.sender_role)} p-3`}>
                 <div className="flex items-center justify-between mb-2">
                   <span className={`text-xs font-semibold uppercase tracking-wide ${getRoleTextColor(m.sender_role)}`}>
@@ -174,8 +183,8 @@ export default function CaseChat({ motherId, userRole = 'DOCTOR', userName = 'Do
             disabled={sending}
             className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
           />
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={sending || !input.trim()}
             className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2 transition-colors disabled:cursor-not-allowed"
           >

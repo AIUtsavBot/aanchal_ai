@@ -36,11 +36,50 @@ export default function PatientChatHistory({
     }, 100);
   };
 
-  const loadAllMessages = async () => {
+  // Cache key for this mother's chats
+  const cacheKey = `chat_cache_${motherId}`;
+  const cacheExpiryKey = `chat_cache_expiry_${motherId}`;
+  const CACHE_DURATION_MS = 60 * 24 * 60 * 60 * 1000; // 60 days / 2 months
+
+  // Load from cache first for instant display
+  const loadFromCache = () => {
+    try {
+      const cached = localStorage.getItem(cacheKey);
+      const expiry = localStorage.getItem(cacheExpiryKey);
+
+      if (cached && expiry && Date.now() < parseInt(expiry)) {
+        const parsed = JSON.parse(cached);
+        // Convert date strings back to Date objects
+        const messages = parsed.map(m => ({
+          ...m,
+          createdAt: new Date(m.createdAt)
+        }));
+        setMessages(messages);
+        setLoading(false);
+        scrollToBottom();
+        return true;
+      }
+    } catch (err) {
+      console.warn("Cache read error:", err);
+    }
+    return false;
+  };
+
+  // Save to cache
+  const saveToCache = (messages) => {
+    try {
+      localStorage.setItem(cacheKey, JSON.stringify(messages));
+      localStorage.setItem(cacheExpiryKey, String(Date.now() + CACHE_DURATION_MS));
+    } catch (err) {
+      console.warn("Cache write error:", err);
+    }
+  };
+
+  const loadAllMessages = async (showLoading = true) => {
     if (!motherId) return;
 
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       setError("");
 
       // Fetch telegram bot conversations from telegram_logs table
@@ -86,6 +125,7 @@ export default function PatientChatHistory({
       ].sort((a, b) => a.createdAt - b.createdAt);
 
       setMessages(allMessages);
+      saveToCache(allMessages);
       scrollToBottom();
     } catch (err) {
       setError("Failed to load messages: " + err.message);
@@ -98,7 +138,16 @@ export default function PatientChatHistory({
   useEffect(() => {
     if (!motherId) return;
 
-    loadAllMessages();
+    // Load from cache first for instant display
+    const hasCachedData = loadFromCache();
+
+    // Then fetch fresh data in background (without loading spinner if we have cache)
+    loadAllMessages(!hasCachedData);
+
+    // Polling fallback - refresh every 5 seconds for reliable updates (no loading spinner)
+    const pollInterval = setInterval(() => {
+      loadAllMessages(false);
+    }, 5000);
 
     // Set up real-time subscription for new case discussions
     const channel = supabase
@@ -127,6 +176,7 @@ export default function PatientChatHistory({
       .subscribe();
 
     return () => {
+      clearInterval(pollInterval);
       supabase.removeChannel(channel);
     };
   }, [motherId]);

@@ -948,18 +948,149 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
     if mother:
         logger.info(f"📱 Processing message for mother: {mother.get('name')} (ID: {mother.get('id')})")
     
-    try:
-        reports = await get_recent_reports_for_mother(mother.get('id')) if (mother and callable(get_recent_reports_for_mother)) else []
-    except Exception:
-        reports = []
-    
     mother_context = mother or {"preferred_language": "en"}
     mother_id = mother_context.get('id') if isinstance(mother_context, dict) else None
+    
+    # Check for active doctor/ASHA conversation
+    # Logic: 
+    # 1. EMERGENCY keywords ALWAYS get AI response + alert (bypass doctor mode)
+    # 2. If mother addresses doctor/ASHA directly (keywords), start new conversation
+    # 3. If there's recent activity in case_discussions, keep AI silent
+    # 4. Only resume AI if no case_discussion activity for 30 minutes
+    skip_ai_response = False
+    sender_role = "doctor"  # Default for message
+    
+    # EMERGENCY keywords - these ALWAYS get AI response, NEVER silently routed
+    emergency_keywords = [
+        # English
+        'blood loss', 'bleeding', 'blood', 'hemorrhage', 'haemorrhage',
+        'severe pain', 'unbearable pain', 'cant breathe', "can't breathe", 'difficulty breathing',
+        'unconscious', 'fainted', 'fainting', 'collapsed', 'seizure', 'convulsion',
+        'baby not moving', 'no movement', 'water broke', 'water break', 'labor',
+        'emergency', 'urgent', 'help me', 'dying', 'hospital', 'ambulance',
+        'headache', 'blurred vision', 'swelling', 'high fever', 'chest pain',
+        # Hindi
+        'खून', 'रक्तस्राव', 'दर्द', 'बेहोश', 'सांस', 'मदद', 'इमरजेंसी', 'अस्पताल',
+        # Marathi
+        'रक्त', 'वेदना', 'बेशुद्ध', 'श्वास', 'मदत', 'इमर्जन्सी', 'हॉस्पिटल',
+    ]
+    text_lower = text.lower()
+    is_emergency = any(keyword in text_lower for keyword in emergency_keywords)
+    
+    # Keywords that indicate mother wants to talk to doctor/ASHA (not AI)
+    doctor_keywords = [
+        'doctor', 'dr.', 'dr ', 'asha', 'nurse', 'didi',  # Common terms
+        'डॉक्टर', 'आशा', 'दीदी',  # Hindi
+        'डॉक्टर', 'आशा', 'ताई',  # Marathi
+    ]
+    addressing_doctor = any(keyword in text_lower for keyword in doctor_keywords)
+    
+    # EMERGENCY messages ALWAYS bypass doctor mode
+    if is_emergency:
+        logger.info(f"🚨 EMERGENCY detected in message: '{text[:50]}...' - forcing AI response")
+        addressing_doctor = False  # Don't route to doctor, let AI handle it
+    
+    if mother_id:
+        try:
+            from datetime import datetime, timedelta
+            
+            # Get the LAST message in case_discussions (from anyone)
+            result = supabase.table("case_discussions")\
+                .select("created_at, sender_role, sender_name")\
+                .eq("mother_id", str(mother_id))\
+                .order("created_at", desc=True)\
+                .limit(1)\
+                .execute()
+            
+            if result.data:
+                last_msg = result.data[0]
+                last_msg_time = datetime.fromisoformat(last_msg['created_at'].replace('Z', '+00:00'))
+                now = datetime.now(last_msg_time.tzinfo) if last_msg_time.tzinfo else datetime.now()
+                time_diff = now - last_msg_time.replace(tzinfo=None) if not last_msg_time.tzinfo else now - last_msg_time
+                
+                # Also check if a doctor/ASHA has EVER messaged (to confirm it's an active convo)
+                doctor_check = supabase.table("case_discussions")\
+                    .select("id")\
+                    .eq("mother_id", str(mother_id))\
+                    .in_("sender_role", ["DOCTOR", "ASHA"])\
+                    .limit(1)\
+                    .execute()
+                
+                has_doctor_messages = bool(doctor_check.data)
+                
+                # Skip AI if:
+                # 1. NOT an emergency, AND
+                # 2. Mother is addressing doctor directly (keywords detected), OR
+                # 3. There's active conversation (activity in last 30 min AND doctor has messaged)
+                # EMERGENCY messages ALWAYS get AI response regardless of doctor conversation
+                if not is_emergency and (addressing_doctor or (has_doctor_messages and time_diff < timedelta(minutes=30))):
+                    skip_ai_response = True
+                    sender_role = last_msg.get('sender_role', 'Doctor')
+                    if sender_role == "MOTHER":
+                        # Find the doctor who started the conversation
+                        doc_result = supabase.table("case_discussions")\
+                            .select("sender_role, sender_name")\
+                            .eq("mother_id", str(mother_id))\
+                            .in_("sender_role", ["DOCTOR", "ASHA"])\
+                            .order("created_at", desc=True)\
+                            .limit(1)\
+                            .execute()
+                        if doc_result.data:
+                            sender_role = doc_result.data[0].get('sender_role', 'Doctor')
+                    
+                    logger.info(f"🔇 Skipping AI - active case discussion (last activity {time_diff.seconds//60}m ago)")
+                    
+                    # Store mother's reply in case_discussions
+                    try:
+                        supabase.table("case_discussions").insert({
+                            "mother_id": str(mother_id),
+                            "sender_role": "MOTHER",
+                            "sender_name": mother.get('name', 'Mother'),
+                            "message": text,
+                        }).execute()
+                        logger.info(f"💬 Mother's reply saved to case_discussions")
+                    except Exception as db_err:
+                        logger.error(f"Failed to save mother reply: {db_err}")
+        except Exception as e:
+            logger.warning(f"Could not check conversation status: {e}")
+    
+    # If mother is addressing doctor but we couldn't find case_discussions (first time),
+    # still route to doctor
+    if addressing_doctor and not skip_ai_response and mother_id:
+        skip_ai_response = True
+        sender_role = "doctor"
+        logger.info(f"👨‍⚕️ Mother addressing doctor - routing to case_discussions")
+        try:
+            supabase.table("case_discussions").insert({
+                "mother_id": str(mother_id),
+                "sender_role": "MOTHER",
+                "sender_name": mother.get('name', 'Mother') if mother else 'Mother',
+                "message": text,
+            }).execute()
+            logger.info(f"💬 New doctor conversation started by mother")
+        except Exception as db_err:
+            logger.error(f"Failed to save mother message: {db_err}")
     
     try:
         await save_chat_history(mother_id, "user_query", text, telegram_chat_id=chat_id)
     except Exception:
         pass
+    
+    # If doctor/ASHA conversation is active, just acknowledge without AI response
+    if skip_ai_response:
+        try:
+            await update.message.reply_text(
+                f"✅ Your message has been sent to your {sender_role.lower()}. They will respond shortly."
+            )
+        except Exception:
+            pass
+        return
+    
+    # Normal AI agent flow
+    try:
+        reports = await get_recent_reports_for_mother(mother.get('id')) if (mother and callable(get_recent_reports_for_mother)) else []
+    except Exception:
+        reports = []
     
     try:
         reply = await route_message(text, mother_context, reports)
@@ -980,3 +1111,4 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
             await update.message.reply_text("I'm here to help. Please try rephrasing your question or use /start for the menu.")
         except:
             pass
+

@@ -31,6 +31,22 @@ try:
 except:
     GEMINI_AVAILABLE = False
 
+# Try to import RAG service for context enrichment
+RAG_AVAILABLE = False
+rag_service = None
+try:
+    try:
+        from backend.services.rag_service import get_rag_service, get_risk_context
+    except ImportError:
+        from services.rag_service import get_rag_service, get_risk_context
+    rag_service = get_rag_service()
+    RAG_AVAILABLE = True
+    logger.info("✅ RAG service loaded for context enrichment")
+except ImportError as e:
+    logger.warning(f"⚠️ RAG service not available: {e}")
+except Exception as e:
+    logger.warning(f"⚠️ RAG service initialization failed: {e}")
+
 
 class AgentType(Enum):
     """Available agent types"""
@@ -224,6 +240,32 @@ Respond with ONLY the category name (one word).
         """
         # Classify intent
         agent_type = self.classify_intent(message)
+        
+        # Enrich context with RAG if available
+        rag_context = ""
+        if RAG_AVAILABLE and rag_service:
+            try:
+                # Extract health parameters from mother context for RAG
+                age = mother_context.get('age')
+                # Try to get latest vitals from reports or context
+                systolic_bp = mother_context.get('systolic_bp', 120)
+                diastolic_bp = mother_context.get('diastolic_bp', 80)
+                blood_sugar = mother_context.get('blood_sugar', 7.0)
+                
+                if age:
+                    rag_context = get_risk_context(
+                        age=int(age),
+                        systolic_bp=int(systolic_bp),
+                        diastolic_bp=int(diastolic_bp),
+                        blood_sugar=float(blood_sugar)
+                    )
+                    logger.info(f"🔍 RAG context added: {len(rag_context)} chars")
+            except Exception as e:
+                logger.warning(f"⚠️ RAG context retrieval failed: {e}")
+        
+        # Add RAG context to mother_context for agents
+        if rag_context:
+            mother_context['rag_similar_cases'] = rag_context
         
         # Get appropriate agent
         agent = self.agents.get(agent_type)
