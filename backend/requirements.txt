@@ -23,6 +23,9 @@ numpy>=1.26.0
 pandas>=2.1.0
 joblib>=1.3.0
 
+# RAG - Hybrid Retrieval (uses Supabase pgvector + Gemini embeddings)
+rank_bm25>=0.2.2
+
 # HTTP & Requests
 requests>=2.31.0
 aiohttp>=3.9.0

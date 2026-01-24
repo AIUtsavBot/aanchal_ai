@@ -477,6 +477,14 @@ except Exception as e:
     logger.error(f"❌ Admin routes FAILED to load: {e}")
     logger.error(traceback.format_exc())
 
+# Mount offline sync routes
+try:
+    from routes.offline_queue_routes import router as offline_router
+    app.include_router(offline_router)
+    logger.info("✅ Offline sync routes loaded")
+except Exception as e:
+    logger.warning(f"⚠️  Offline sync routes not available: {e}")
+
 # ==================== CORS SETUP ====================
 # Configure CORS to explicitly allow the frontend origin
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173").strip()
@@ -1458,6 +1466,24 @@ async def assess_risk(assessment: RiskAssessment, background_tasks: BackgroundTa
         
         # Invalidate risk-related cache after new assessment
         invalidate_risk_cache()
+        
+        # Add case to RAG database for continuous learning
+        try:
+            from services.rag_service import add_case_to_rag
+            rag_result = add_case_to_rag(
+                age=mother_data.get("age", 25),
+                systolic_bp=assessment.systolic_bp,
+                diastolic_bp=assessment.diastolic_bp,
+                blood_sugar=assessment.blood_glucose or 7.0,
+                body_temp=98.6,  # Default if not provided
+                heart_rate=assessment.heart_rate or 80,
+                risk_level=risk_calculation["risk_level"],
+                mother_id=assessment.mother_id
+            )
+            if rag_result.get("success"):
+                logger.info(f"📚 Added to RAG: case #{rag_result['case_id']}, total: {rag_result['total_cases']}")
+        except Exception as rag_error:
+            logger.warning(f"⚠️ RAG learning skipped: {rag_error}")
         
         return {
             "status": "success",
