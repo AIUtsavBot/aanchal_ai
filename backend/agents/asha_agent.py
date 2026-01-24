@@ -1,7 +1,7 @@
 """
 MatruRaksha AI - Care and Nutrition Agents
 """
-from typing import Any, List
+from typing import Any, List, Dict
 import logging
 
 from agents.base_agent import BaseAgent
