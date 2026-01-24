@@ -1,152 +1,57 @@
-# MatruRaksha AI - Changelog
+# 📋 Changelog
 
-All notable changes to this project are documented in this file.
-
----
-
-## [2.3.0] - 2024-12-30
-
-### 🚀 Performance Optimizations
-
-Major dashboard performance improvements - **3x faster loading**.
-
-#### Backend Optimizations
-
-**New Files:**
-- `backend/services/cache_service.py` - Thread-safe in-memory cache with TTL
-
-**Optimized Endpoints:**
-
-| Endpoint | Before | After | Improvement |
-|----------|--------|-------|-------------|
-| `/analytics/dashboard` | 3 SELECT * queries | COUNT queries + caching | **60% faster** |
-| `/dashboard/full` | N/A | Combined endpoint | **67% fewer calls** |
-| `/admin/stats` | 4 queries | 4 queries + caching | **Instant on repeat** |
-| `/admin/full` | N/A | Combined endpoint | **75% fewer calls** |
-| `/admin/doctors` | N+1 queries | Batch query | **Fixed N+1 problem** |
-| `/admin/asha-workers` | N+1 queries | Batch query | **Fixed N+1 problem** |
-
-**Key Changes:**
-- ✅ In-memory caching with 30-second TTL (free, no Redis needed)
-- ✅ COUNT queries instead of `SELECT *` for aggregates
-- ✅ Combined endpoints reduce frontend API calls
-- ✅ Fixed N+1 query patterns in admin routes
-- ✅ Cache invalidation on data updates
-
-#### Frontend Optimizations
-
-**Modified Files:**
-- `frontend/src/pages/RiskDashboard.jsx` - Uses combined endpoint + Promise.all fallback
-- `frontend/src/pages/AdminDashboard.jsx` - Uses combined endpoint + Promise.all fallback
-- `frontend/src/services/api.js` - Added `adminAPI.getFull()`
-
-**Key Changes:**
-- ✅ Single API call for dashboard data (combined endpoint)
-- ✅ Parallel fetching with `Promise.all` as fallback
-- ✅ Reduced network roundtrips from 3-4 calls to 1
-
-#### Performance Impact
-
-| Metric | Before | After |
-|--------|--------|-------|
-| RiskDashboard API calls | 3 sequential | 1 combined |
-| AdminDashboard API calls | 4 parallel | 1 combined |
-| Repeat load (within 30s) | Full query | Instant (cached) |
-| Data transferred | Full rows | Optimized columns |
+All notable changes to the **MatruRakshaAI** project will be documented in this file.
 
 ---
 
-## [2.2.0] - 2024-12-13
+## [v3.0.0] - 2026-01-24
 
-### 🔐 Enhanced Authentication & Authorization
+### 🚀 Major Features
 
-#### New Features
-- ✅ Google OAuth with role selection flow
-- ✅ Multi-step onboarding for new users
-- ✅ Doctor certificate upload & verification
-- ✅ Pending approval screens
-- ✅ Unified admin approval center (`/admin/approvals`)
-- ✅ Email notifications via Resend API
+- **Hybrid RAG System (Retrieval-Augmented Generation)**
+  - Combines BM25 (sparse) and Supabase pgvector (dense) search.
+  - Context-aware AI responses using 1,015 maternal health case records.
+  - Integrated with Gemini 2.5 Flash for evidence-based recommendations.
+- **Offline-First Architecture**
+  - `IndexedDB` based local queue for forms, chats, and documents.
+  - Auto-sync service that processes pending items when network restores.
+  - Seamless experience for ASHA workers in low-connectivity areas.
+- **Doctor-Mother Chat Improvements**
+  - **Real-time Updates**: 5-second polling + Supabase Realtime for instant message delivery.
+  - **Direct Addressing**: Mothers can address doctors directly ("Doctor...", "Didi...") to bypass AI.
+  - **Smart Cooldown**: AI agent stays silent during active doctor-patient conversations (30 min timeout).
+  - **Emergency Override**: "Blood loss", "pain", and other emergency keywords **always** trigger AI response and alerts, regardless of chat mode.
+- **Continuous Learning**
+  - New risk assessments are automatically added to the RAG knowledge base.
 
-#### New API Endpoints
-- `GET /auth/role-requests` - List role requests
-- `POST /auth/role-requests/{id}/approve` - Approve with role assignment
-- `POST /auth/role-requests/{id}/reject` - Reject request
-- `POST /auth/upload-cert` - Upload doctor certificate
-- `POST /admin/mothers/{id}/send-alert` - Send email alerts
+### ⚡ Improvements
 
-#### Database Changes
-- Added `registration_requests` table
-- Added `password_hash` column for encrypted storage
-- Added `degree_cert_url` to `doctors` table
-
----
-
-## [2.1.0] - 2024-11-25
-
-### 🎨 UI/UX Redesign
-
-#### Doctor Dashboard
-- ✅ Professional blue gradient header
-- ✅ Patient search and risk-based sorting
-- ✅ Quick stats (Total, High Risk, Moderate Risk)
-- ✅ Enhanced clinical profile display
-- ✅ Real-time case discussion with timestamps
-
-#### ASHA Interface
-- ✅ Professional green gradient header
-- ✅ Mother search and filtering
-- ✅ Risk emoji indicators (🔴🟡🟢)
-- ✅ Enhanced mother profile display
-
-#### CaseChat Component
-- ✅ Modern Tailwind CSS styling
-- ✅ Role-based color coding (Doctor: blue, ASHA: green, Admin: purple)
-- ✅ Timestamps on all messages
-- ✅ Real-time Supabase subscriptions
-
-### 🗄️ Database Changes
-- Added `case_discussions` table with RLS
-- Added performance indexes
-
-### 🐛 Bug Fixes
-- Fixed backend import errors
-- Fixed absolute/relative import fallbacks
-- Added `VITE_API_URL` environment variable
+- **Performance**: 2-month local caching for chat history for instant load times.
+- **UI/UX**: Distinct coloring for MOTHER (Pink), DOCTOR (Teal), and BOT (Blue) roles in chat.
+- **Multilingual Support**: added Hindi/Marathi keyword detection for chat routing.
 
 ---
 
-## [2.0.0] - Initial Release
+## [v2.3.0] - Performance Optimizations (December 2024)
 
-### Core Features
-- 🤖 AI-powered maternal health risk prediction
-- 💬 Multilingual Telegram bot integration
-- 📊 Risk assessment dashboards
-- 👩‍⚕️ Doctor and ASHA worker interfaces
-- 📄 Medical document analysis with Gemini AI
-- 🔔 Real-time notifications
+### ✅ Optimizations
 
-### Tech Stack
-- **Backend:** FastAPI, Python, Supabase
-- **Frontend:** React, Vite, Tailwind CSS
-- **AI:** Google Gemini, scikit-learn
-- **Database:** PostgreSQL (Supabase)
-- **Bot:** python-telegram-bot
+- **In-Memory Caching**: 30-second TTL cache for dashboard data (eliminating Redis dependency).
+- **Optimized Database Queries**: Replaced `SELECT *` with `COUNT` queries for aggregates.
+- **Combined API Endpoints**: merged `/dashboard/full` and `/admin/full` to reduce API calls by 75%.
+- **Fixed N+1 Query Patterns**: Admin routes now batch queries efficiently.
+- **Frontend Parallel Fetching**: implemented `Promise.all` with combined endpoint fallback.
+- **3x Faster Dashboard Loading**: First load and instant repeat loads within cache TTL.
 
 ---
 
-## Documentation
+## [v2.2.0] - Enhanced Authentication (December 2024)
 
-For detailed documentation, see:
-- [README.md](README.md) - Project overview and setup
-- [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) - Code organization
-- [docs/](docs/) - API, architecture, and setup guides
+### ✅ Features
 
----
-
-## Support
-
-For issues or questions:
-1. Check the documentation
-2. Review error logs
-3. Open a GitHub issue
+- **Google OAuth Integration**: Users can now sign in with Google.
+- **Role Selection Flow**: New users select their role (Doctor/ASHA Worker) after OAuth.
+- **Doctor Certificate Upload**: Doctors must upload medical registration certificates for verification.
+- **Multi-Step Onboarding**: Guided registration process with pending approval screen.
+- **Unified Approval Center**: `/admin/approvals` endpoint handles all pending registrations.
+- **Email Alerts**: Integration with Resend API to send emergency alerts to assigned doctors/ASHA workers.
