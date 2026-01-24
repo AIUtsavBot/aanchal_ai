@@ -108,27 +108,51 @@ def cached(ttl_seconds: int = 30, key_prefix: str = ""):
         def get_dashboard_data():
             return expensive_computation()
     """
+    import inspect
+    import asyncio
+
     def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            # Generate cache key from function name and arguments
-            cache_key = f"{key_prefix}:{func.__name__}"
-            if args:
-                cache_key += f":{hash(args)}"
-            if kwargs:
-                cache_key += f":{hash(frozenset(kwargs.items()))}"
-            
-            # Try to get from cache
-            cached_value = cache.get(cache_key)
-            if cached_value is not None:
-                return cached_value
-            
-            # Execute function and cache result
-            result = func(*args, **kwargs)
-            cache.set(cache_key, result, ttl_seconds)
-            return result
-        
-        return wrapper
+        if inspect.iscoroutinefunction(func):
+            @wraps(func)
+            async def async_wrapper(*args, **kwargs):
+                # Generate cache key
+                cache_key = f"{key_prefix}:{func.__name__}"
+                if args:
+                    cache_key += f":{hash(args)}"
+                if kwargs:
+                    cache_key += f":{hash(frozenset(kwargs.items()))}"
+                
+                # Check cache
+                cached_value = cache.get(cache_key)
+                if cached_value is not None:
+                    return cached_value
+                
+                # Execute and cache
+                result = await func(*args, **kwargs)
+                cache.set(cache_key, result, ttl_seconds)
+                return result
+            return async_wrapper
+        else:
+            @wraps(func)
+            def sync_wrapper(*args, **kwargs):
+                # Generate cache key
+                cache_key = f"{key_prefix}:{func.__name__}"
+                if args:
+                    cache_key += f":{hash(args)}"
+                if kwargs:
+                    cache_key += f":{hash(frozenset(kwargs.items()))}"
+                
+                # Check cache
+                cached_value = cache.get(cache_key)
+                if cached_value is not None:
+                    return cached_value
+                
+                # Execute and cache
+                result = func(*args, **kwargs)
+                cache.set(cache_key, result, ttl_seconds)
+                return result
+            return sync_wrapper
+
     return decorator
 
 

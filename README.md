@@ -52,18 +52,21 @@ graph TB
         Admin(👨‍💼 Admin):::users
     end
 
-    subgraph FRONTEND [🌐 FRONTEND - React]
+    subgraph FRONTEND [🌐 FRONTEND - React + Vite]
         WebApp(Web Dashboard :5173):::frontend
+        VoiceInput(🎤 Voice Input Module):::frontend
+        LazyLoad(⚡ Code Splitting):::frontend
         OfflineSync(Offline Sync Service):::frontend
         IndexedDB[("IndexedDB")]:::frontend
     end
 
     subgraph TELEGRAM [📱 TELEGRAM]
-        TGBot(MatruRaksha Bot):::telegram
+        TGBot(MatruRaksha Bot <br/> *Async Threaded*):::telegram
     end
 
-    subgraph BACKEND [⚙️ BACKEND - FastAPI]
+    subgraph BACKEND [⚙️ BACKEND - FastAPI Async]
         API(REST API :8000):::backend
+        AsyncEngine(⚡ Async Context Engine):::backend
         Orchestrator(AI Orchestrator):::backend
         RAGService(Hybrid RAG Service):::backend
         SyncRoutes(Offline Sync Routes):::backend
@@ -83,7 +86,7 @@ graph TB
     end
 
     subgraph EXTERNAL [🔗 EXTERNAL SERVICES]
-        Gemini(Gemini AI):::external
+        Gemini(Gemini 2.0 Flash):::external
         GeminiEmbed(Gemini Embeddings):::external
         Resend(Resend Email):::external
     end
@@ -93,6 +96,7 @@ graph TB
         pgvector[("pgvector")]:::db
         Auth(Supabase Auth):::db
         Storage[("File Storage")]:::db
+        Cache[(⚡ In-Memory Cache)]:::db
     end
 
     Mother --> TGBot
@@ -101,14 +105,18 @@ graph TB
     Doctor --> WebApp
     Admin --> WebApp
 
+    WebApp --> VoiceInput
+    WebApp -.-> LazyLoad
+    VoiceInput --> API
     TGBot --> API
     WebApp --> OfflineSync
     OfflineSync <--> IndexedDB
     OfflineSync --> API
 
-    API --> Orchestrator
-    API --> RAGService
-    API --> SyncRoutes
+    API --> AsyncEngine
+    AsyncEngine --Parallel Fetch--> PG
+    AsyncEngine --Parallel Fetch--> pgvector
+    AsyncEngine --> Orchestrator
     
     Orchestrator --> Risk
     Orchestrator --> Care
@@ -141,7 +149,7 @@ graph LR
     classDef trigger fill:#ffecb3,stroke:#ff6f00,stroke-width:2px,color:black
     classDef decision fill:#fff9c4,stroke:#fbc02d,stroke-width:2px,color:black
     classDef agent fill:#d1c4e9,stroke:#512da8,stroke-width:2px,color:black
-    classDef rag fill:#ffcdd2,stroke:#b71c1c,stroke-width:2px,color:black
+    classDef context fill:#ffcdd2,stroke:#b71c1c,stroke-width:2px,color:black
     classDef llm fill:#b2dfdb,stroke:#004d40,stroke-width:2px,color:black
     classDef output fill:#c8e6c9,stroke:#1b5e20,stroke-width:2px,color:black
 
@@ -158,18 +166,18 @@ graph LR
     Classify -->|Vaccination| Vaccine(VaccineAgent):::agent
     Classify -->|Growth/Nutrition| Growth(GrowthAgent):::agent
     
-    Risk --> RAG(RAG Context):::rag
-    Care --> RAG
-    Nutrition --> RAG
-    Medication --> RAG
-    Emergency --> RAG
-    ASHA --> RAG
-    Postnatal --> RAG
-    Pediatric --> RAG
-    Vaccine --> RAG
-    Growth --> RAG
+    Risk --> Context(Supabase Context):::context
+    Care --> Context
+    Nutrition --> Context
+    Medication --> Context
+    Emergency --> Context
+    ASHA --> Context
+    Postnatal --> Context
+    Pediatric --> Context
+    Vaccine --> Context
+    Growth --> Context
     
-    RAG --> Gemini(Gemini 2.5 Flash):::llm
+    Context --> Gemini(Gemini 2.5 Flash):::llm
     Gemini --> Response(AI Response):::output
 ```
 
@@ -663,8 +671,35 @@ SantanRaksha/
 - `children` - Child profiles linked to mothers
 - `vaccinations` - IAP 2023 vaccine records
 - `growth_records` - Weight, height, z-scores
+- `health_metrics` - Vitals history
 - `milestones` - Developmental achievements
 - `postnatal_checkins` - Mother recovery checkups
+
+### 🛠️ Database Setup (Important)
+
+If you are setting this up for the first time or updating, run the SQL script to create necessary tables:
+
+1. Go to Supabase SQL Editor
+2. Copy content from `backend/db_setup.sql`
+3. Run the script
+
+---
+
+## ✨ New Features (v2.0)
+
+### 📈 Interactive WHO Growth Charts
+
+- Visual tracking of child's weight-for-age.
+- **Green Zone**: Normal growth.
+- **Red Zone**: Malnutrition risk indicators (< -2SD).
+- Accessible via "View Child Growth" on the Patient Card.
+
+### 🎙️ Voice-First Medical Entry
+
+- **AI-Powered**: Convert speech to structured data using Gemini 2.0 Flash.
+- **Auto-Fill**: Automatically populates BP, Weight, Heart Rate, Symptoms, and Medications.
+- **Multi-lingual Support**: Works with Indian English and Hinglish medical terms.
+- **Usage**: Tap the microphone icon in the New Consultation form.
 
 ---
 

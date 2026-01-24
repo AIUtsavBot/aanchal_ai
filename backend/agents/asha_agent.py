@@ -22,40 +22,40 @@ class AshaAgent(BaseAgent):
             agent_role="Community Health Services Coordinator"
         )
     
-    def build_context(self, mother_id: Any) -> str:
-        """Build context with appointment data from database"""
+    async def build_context(self, mother_id: Any) -> Dict[str, Any]:
+        """Build context with appointment data from database (using base async builder)"""
         try:
-            upcoming = DatabaseService.get_upcoming_appointments(mother_id)
-            next_appt = DatabaseService.get_next_appointment(mother_id)
-            anc_status = DatabaseService.get_anc_schedule_status(mother_id)
-
-            context = super().build_context(mother_id)
-
-            context += "\n\nAPPOINTMENT INFORMATION:"
-            context += f"\nPregnancy Week: {anc_status.get('pregnancy_week', 'Unknown')}"
-            context += f"\nCompleted ANC Visits: {anc_status.get('completed_visits', 0)}"
-            context += f"\nRecommended Visits: {anc_status.get('recommended_visits', 4)}"
-
-            if next_appt:
-                appt_date = (next_appt.get('appointment_date', '') or '')[:10]
-                context += "\n\nNEXT APPOINTMENT:"
-                context += f"\n- Type: {next_appt.get('appointment_type', 'Checkup')}"
-                context += f"\n- Date: {appt_date}"
-                context += f"\n- Location: {next_appt.get('appointment_location', 'Not specified')}"
-            else:
-                context += "\n\nNEXT APPOINTMENT: None scheduled"
-
-            if upcoming:
-                context += f"\n\nUPCOMING APPOINTMENTS ({len(upcoming)}):"
-                for i, appt in enumerate(upcoming[:3], 1):
-                    appt_date = (appt.get('appointment_date', '') or '')[:10]
-                    context += f"\n{i}. {appt.get('appointment_type')} on {appt_date}"
-
-            return context
+            # Call base async builder which fetches everything including appointments
+            base_result = await super().build_context(mother_id)
+            
+            context_text = base_result.get("context_text", "")
+            raw_data = base_result.get("raw_data", {})
+            
+            appointments = raw_data.get("appointments", [])
+            profile = raw_data.get("profile", {})
+            
+            # Additional ASHA specific formatting
+            # Calculate ANC status logic (simplified here as we have raw data)
+            
+            # We can re-implement ANC logic or just rely on what's in text.
+            # But let's add specific focus since this is the ASHA agent.
+            
+            upcoming_text = ""
+            if appointments:
+                upcoming_text = "\n\n=== UPCOMING APPOINTMENTS DETAILS ==="
+                for i, appt in enumerate(appointments[:3], 1):
+                    dt = appt.get('appointment_date', '')[:10]
+                    upcoming_text += f"\n{i}. {appt.get('appointment_type', 'Visit')} on {dt} @ {appt.get('facility', 'Clinic')}"
+            
+            # Append to base text
+            base_result["context_text"] = context_text + upcoming_text
+            
+            return base_result
 
         except Exception as e:
             logger.error(f"Error building ASHA context: {e}")
-            return super().build_context(mother_id)
+            # Fallback to base
+            return await super().build_context(mother_id)
     
     def get_system_prompt(self) -> str:
         return """

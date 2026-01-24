@@ -89,6 +89,34 @@ export default function DeliveryForm({ doctorId, onSuccess }) {
         }
     };
 
+    // Load draft from storage on mount
+    useEffect(() => {
+        const draft = localStorage.getItem('delivery_form_draft');
+        if (draft) {
+            try {
+                const parsed = JSON.parse(draft);
+                // Only restore if it matches the current structure roughly
+                if (parsed.babyName !== undefined) {
+                    setFormData(prev => ({ ...prev, ...parsed }));
+                    console.log("📝 Restored draft from local storage");
+                }
+            } catch (e) {
+                console.error("Error loading draft", e);
+            }
+        }
+    }, []);
+
+    // Save draft on change
+    useEffect(() => {
+        // Debounce slightly to avoid excessive writes
+        const timer = setTimeout(() => {
+            if (formData.babyName || formData.birthWeightKg) { // Only save if some data entered
+                localStorage.setItem('delivery_form_draft', JSON.stringify(formData));
+            }
+        }, 1000);
+        return () => clearTimeout(timer);
+    }, [formData]);
+
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
 
@@ -167,7 +195,6 @@ export default function DeliveryForm({ doctorId, onSuccess }) {
             if (response.ok && data.success) {
                 setSuccess(true);
                 // Reset form
-                setSelectedMother(null);
                 setFormData({
                     deliveryDate: new Date().toISOString().split('T')[0],
                     deliveryTime: new Date().toTimeString().slice(0, 5),
@@ -183,8 +210,15 @@ export default function DeliveryForm({ doctorId, onSuccess }) {
                     apgarScore5min: '',
                     birthComplications: []
                 });
-                // Reload mothers list
-                loadPregnantMothers();
+
+                // Clear local storage draft
+                localStorage.removeItem('delivery_form_draft');
+
+                // Optimistically remove mother from list (much faster than reload)
+                setMothers(prev => prev.filter(m => m.id !== selectedMother.id));
+
+                // Reload in background just in case
+                // loadPregnantMothers();
                 // Callback
                 if (onSuccess) onSuccess(data);
             } else {

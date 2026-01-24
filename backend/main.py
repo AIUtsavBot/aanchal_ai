@@ -125,6 +125,10 @@ class Mother(BaseModel):
     preferred_language: str = "en"
     telegram_chat_id: Optional[str] = None
     due_date: Optional[str] = None
+    # New fields for delivery switch
+    delivery_status: Optional[str] = "pregnant"
+    active_system: Optional[str] = "matruraksha"
+    delivery_date: Optional[str] = None
 
 class RiskAssessment(BaseModel):
     mother_id: str
@@ -265,6 +269,10 @@ def run_telegram_bot():
         application.add_handler(CallbackQueryHandler(handle_switch_callback, pattern=r"^switch_mother_"))
         application.add_handler(CallbackQueryHandler(handle_home_action, pattern=r"^action_"))
         application.add_handler(MessageHandler(filters.Document.ALL | filters.PHOTO, handle_document_upload))
+        
+        # Add Voice Handler
+        application.add_handler(MessageHandler(filters.VOICE, bot.handle_voice))
+
         # Add text message handler for other free-form queries (but not during registration)
         application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_message))
         
@@ -289,9 +297,19 @@ def run_telegram_bot():
         time.sleep(2)
         
         # Use webhooks if BACKEND_URL is set (more efficient - only triggers on messages)
-        if USE_TELEGRAM_WEBHOOK and BACKEND_URL:
+        # Use webhooks if BACKEND_URL is set (more efficient - only triggers on messages)
+        # Check if BACKEND_URL is localhost - webhooks won't work
+        is_localhost = "localhost" in BACKEND_URL or "127.0.0.1" in BACKEND_URL
+        
+        logger.info(f"📋 Telegram Config: Webhook={USE_TELEGRAM_WEBHOOK}, Backend URL={BACKEND_URL or 'Not Set'}")
+        
+        if is_localhost and USE_TELEGRAM_WEBHOOK:
+            logger.warning("⚠️ BACKEND_URL contains 'localhost' or '127.0.0.1'. Telegram Webhooks require a PUBLIC HTTPS URL.")
+            logger.warning("⚠️ Falling back to polling mode automatically.")
+            
+        if USE_TELEGRAM_WEBHOOK and BACKEND_URL and not is_localhost:
             webhook_url = f"{BACKEND_URL}/telegram/webhook/{TELEGRAM_BOT_TOKEN}"
-            logger.info(f"🔗 Setting up Telegram webhook: {BACKEND_URL}/telegram/webhook/***")
+            logger.info(f"🔗 Setting up Telegram webhook: {BACKEND_URL}/telegram/webhook/...")
             
             try:
                 # Set webhook with Telegram
@@ -312,15 +330,17 @@ def run_telegram_bot():
                 # In webhook mode, we don't run_forever - FastAPI handles incoming requests
                 # Keep the application running but don't poll
                 while bot_running:
-                    time.sleep(60)  # Just keep thread alive, no polling
+                    time.sleep(1)  # Shorter sleep for responsiveness
                     
             except Exception as webhook_error:
                 logger.error(f"❌ Webhook setup failed: {webhook_error}")
-                logger.info("⚠️ Falling back to polling mode...")
+                logger.warning("⚠️ Falling back to polling mode due to webhook error...")
                 # Fall through to polling
         else:
             if not BACKEND_URL:
-                logger.warning("⚠️ BACKEND_URL not set - using polling (set BACKEND_URL for webhook mode)")
+                logger.warning("⚠️ BACKEND_URL not set - cannot use webhooks. Defaulting to polling.")
+            elif is_localhost:
+                 logger.info("ℹ️ Localhost detected - using polling mode.")
         
         # Fallback: Start polling if webhooks not available
         if not bot_running:

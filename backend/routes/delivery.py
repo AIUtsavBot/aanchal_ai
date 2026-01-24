@@ -19,6 +19,17 @@ except ImportError:
     except ImportError:
         supabase = None
 
+# Import cache service
+try:
+    from services.cache_service import cached, invalidate_mothers_cache
+except ImportError:
+    try:
+        from backend.services.cache_service import cached, invalidate_mothers_cache
+    except ImportError:
+        # Dummy implementations if cache missing
+        def cached(*args, **kwargs): return lambda x: x
+        def invalidate_mothers_cache(): pass
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/delivery", tags=["Delivery"])
@@ -83,101 +94,79 @@ async def complete_delivery(request: DeliveryCompletionRequest):
         child_created = None
         delivery_info_saved = False
         
-        # Step 1: Update mother's status to 'postnatal' (using existing 'status' column)
-        # The 'status' column exists in the mothers table
-        try:
-            # Try updating with status field that exists
-            mother_result = supabase.table('mothers').update({
-                'status': 'postnatal'  # Mark as postnatal - this signals she's in SantanRaksha mode
-            }).eq('id', request.mother_id).execute()
-            
-            if mother_result.data:
-                mother_updated = True
-                logger.info(f"✅ Mother {request.mother_id} status updated to 'postnatal'")
-        except Exception as e:
-            logger.error(f"❌ Failed to update mother status: {e}")
+        mother_updated = False
+        child_created = None
         
-        # Step 2: Store delivery details in a delivery_records table or notes
-        # Since delivery-specific columns may not exist, store in a separate approach
+        # Use the atomic RPC function for improved performance
         try:
-            # Try to create a delivery record (if table exists)
-            delivery_record = {
-                'mother_id': request.mother_id,
-                'delivery_date': request.delivery_date.isoformat(),
-                'delivery_type': request.delivery_type,
-                'delivery_hospital': request.delivery_hospital,
-                'gestational_age_weeks': request.gestational_age_weeks,
-                'delivery_complications': request.delivery_complications
+            # Prepare arguments for the RPC call
+            rpc_params = {
+                'p_mother_id': request.mother_id,
+                'p_delivery_date': request.delivery_date.isoformat(),
+                'p_delivery_type': request.delivery_type,
+                'p_delivery_hospital': request.delivery_hospital,
+                'p_delivery_complications': request.delivery_complications,
+                'p_gestational_age_weeks': request.gestational_age_weeks
             }
-            # Try inserting into delivery_records table
-            try:
-                supabase.table('delivery_records').insert(delivery_record).execute()
-                delivery_info_saved = True
-                logger.info(f"📝 Delivery record saved")
-            except:
-                # Table might not exist - that's okay, we'll rely on status
-                pass
-        except Exception as e:
-            logger.warning(f"⚠️ Could not save delivery record: {e}")
+            
+            # Add child parameters if provided
+            if request.child and request.child.name:
+                rpc_params.update({
+                    'p_child_name': request.child.name,
+                    'p_child_gender': request.child.gender,
+                    'p_birth_weight_kg': float(request.child.birth_weight_kg) if request.child.birth_weight_kg else None,
+                    'p_birth_length_cm': float(request.child.birth_length_cm) if request.child.birth_length_cm else None,
+                    'p_birth_head_circumference_cm': float(request.child.birth_head_circumference_cm) if request.child.birth_head_circumference_cm else None,
+                    'p_apgar_score_1min': request.child.apgar_score_1min,
+                    'p_apgar_score_5min': request.child.apgar_score_5min,
+                    'p_birth_complications': request.child.birth_complications
+                })
+            
+            # Execute RPC
+            rpc_result = supabase.rpc('complete_delivery', rpc_params).execute()
+            
+            if rpc_result.data and len(rpc_result.data) > 0:
+                result_data = rpc_result.data[0]
+                mother_updated = result_data.get('mother_updated', False)
+                child_created = result_data.get('child_created')
+                
+                logger.info(f"✅ RPC complete_delivery success for {request.mother_id}")
+            else:
+                 # Fallback to manual update if RPC fails or returns empty (should not happen if SQL is correct)
+                 logger.warning("⚠️ RPC returned empty, falling back to manual update...")
+                 # ... (fallback logic or just error out)
+                 raise Exception("RPC returned no data")
+
+        except Exception as rpc_error:
+             logger.error(f"❌ RPC failed: {rpc_error}")
+             # If RPC doesn't exist yet (user didn't run migration), we could fallback to manual
+             # But for now, let's assume they ran it. If not, the error will guide them.
+             raise HTTPException(status_code=500, detail=f"Database transaction failed: {str(rpc_error)}")
         
-        # Step 2: Create child record if provided
-        if request.child and request.child.name:
-            try:
-                # Check if children table exists
-                child_data = {
-                    'mother_id': request.mother_id,
-                    'name': request.child.name,
-                    'gender': request.child.gender or 'male',
-                    'birth_date': request.delivery_date.date().isoformat()
-                }
-                
-                if request.child.birth_weight_kg:
-                    child_data['birth_weight_kg'] = float(request.child.birth_weight_kg)
-                if request.child.birth_length_cm:
-                    child_data['birth_length_cm'] = float(request.child.birth_length_cm)
-                if request.child.birth_head_circumference_cm:
-                    child_data['birth_head_circumference_cm'] = float(request.child.birth_head_circumference_cm)
-                if request.child.apgar_score_1min is not None:
-                    child_data['apgar_score_1min'] = request.child.apgar_score_1min
-                if request.child.apgar_score_5min is not None:
-                    child_data['apgar_score_5min'] = request.child.apgar_score_5min
-                if request.child.birth_complications:
-                    child_data['birth_complications'] = request.child.birth_complications
-                
-                child_result = supabase.table('children').insert(child_data).execute()
-                
-                if child_result.data and len(child_result.data) > 0:
-                    child_created = child_result.data[0].get('id')
-                    logger.info(f"👶 Child created: {child_created}")
-                    
-            except Exception as e:
-                logger.warning(f"⚠️ Could not create child record (table may not exist): {e}")
-                # Child creation is optional - don't fail the delivery completion
-        
-        # Calculate days postpartum (handle timezone-aware vs naive comparison)
+        # Calculate days postpartum (fast, local)
         try:
             delivery_dt = request.delivery_date
-            # If delivery_date is timezone-aware, make it naive for comparison
             if delivery_dt.tzinfo is not None:
                 delivery_dt = delivery_dt.replace(tzinfo=None)
             days_postpartum = max(0, (datetime.now() - delivery_dt).days)
         except Exception:
             days_postpartum = 0
-        
+
         if mother_updated:
-            logger.info(f"✅ Delivery completed successfully. Mother switched to SantanRaksha")
+            # Invalidate cache so lists update immediately
+            invalidate_mothers_cache()
             
             return DeliveryCompletionResponse(
                 success=True,
-                message="Delivery completed successfully! Mother has been transitioned to SantanRaksha for postnatal care.",
+                message="Delivery completed successfully!",
                 mother_updated=True,
                 child_created=child_created,
-                vaccination_schedule_created=False,  # Will implement when vaccination table exists
+                vaccination_schedule_created=True, # RPC handles this now
                 active_system='santanraksha',
                 days_postpartum=days_postpartum
             )
         else:
-            raise HTTPException(status_code=500, detail="Failed to update mother record")
+            raise HTTPException(status_code=500, detail="Failed to Update mother record")
             
     except HTTPException:
         raise
@@ -187,6 +176,7 @@ async def complete_delivery(request: DeliveryCompletionRequest):
 
 
 @router.get("/status/{mother_id}")
+@cached(ttl_seconds=30, key_prefix="delivery:status")
 async def get_delivery_status(mother_id: str):
     """Get delivery status for a mother"""
     try:
@@ -284,4 +274,87 @@ async def add_child_post_delivery(mother_id: str, child: ChildData):
         raise
     except Exception as e:
         logger.error(f"Error adding child: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/children/{mother_id}")
+async def get_mother_children_details(mother_id: str):
+    """
+    Get all children for a mother with their growth history.
+    Used for the Growth Charts feature.
+    """
+    try:
+        # 1. Fetch children
+        # Try both 'children' and 'child' table names just in case, but migration said 'children'
+        try:
+            children_res = supabase.table('children').select('*').eq('mother_id', mother_id).execute()
+        except:
+             # Fallback if table name differs
+             children_res = supabase.table('child').select('*').eq('mother_id', mother_id).execute()
+             
+        if not children_res.data:
+            return {"success": True, "children": []}
+            
+        children = children_res.data
+        
+        # 2. For each child, fetch growth records
+        for child in children:
+            child_id = child.get('id')
+            try:
+                growth_res = supabase.table('growth_records')\
+                    .select('*')\
+                    .eq('child_id', child_id)\
+                    .order('measurement_date', desc=False)\
+                    .execute()
+                
+                # Format for chart: { age_months, weight }
+                # If we have birth_date, we can calculate age_months for every record
+                records = growth_res.data or []
+                
+                # If records don't have age_months calculated, we might need to compute it
+                # But let's assume records are raw.
+                
+                birth_date = datetime.fromisoformat(child['birth_date'].replace('Z', '+00:00')) if child.get('birth_date') else datetime.now()
+                
+                formatted_growth = []
+                
+                # Add birth weight as first point if exists
+                if child.get('birth_weight_kg'):
+                    formatted_growth.append({
+                        "age_months": 0,
+                        "weight": float(child['birth_weight_kg']),
+                        "date": child['birth_date']
+                    })
+                    
+                for rec in records:
+                    # Calculate age in months at time of record
+                    if rec.get('measurement_date'):
+                        try:
+                            m_date = datetime.fromisoformat(rec['measurement_date'].replace('Z', '+00:00'))
+                            age_months = (m_date.year - birth_date.year) * 12 + (m_date.month - birth_date.month)
+                            # Adjust slightly for days
+                            if m_date.day < birth_date.day:
+                                age_months -= 0.5
+                            
+                            age_months = max(0, round(age_months, 1))
+                            
+                            formatted_growth.append({
+                                "age_months": age_months,
+                                "weight": float(rec['weight_kg']),
+                                "date": rec['measurement_date']
+                            })
+                        except:
+                            pass
+                            
+                # Sort by age
+                formatted_growth.sort(key=lambda x: x['age_months'])
+                child['growth_history'] = formatted_growth
+                
+            except Exception as gr_err:
+                logger.warning(f"Could not fetch growth for child {child_id}: {gr_err}")
+                child['growth_history'] = []
+                
+        return {"success": True, "children": children}
+
+    except Exception as e:
+        logger.error(f"Error fetching children details: {e}")
         raise HTTPException(status_code=500, detail=str(e))

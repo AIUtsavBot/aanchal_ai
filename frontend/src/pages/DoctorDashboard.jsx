@@ -576,14 +576,16 @@ export default function DoctorDashboard() {
                     </div>
                     <div className="mt-3 pt-3 border-t border-gray-200 flex items-center justify-between text-xs">
                       <span
-                        className={`px-2 py-1 rounded-full font-semibold ${risk === "HIGH"
-                          ? "bg-red-100 text-red-700"
-                          : risk === "MODERATE"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : "bg-green-100 text-green-700"
+                        className={`px-2 py-1 rounded-full font-semibold ${m.delivery_status === 'delivered' || m.active_system === 'santanraksha'
+                          ? "bg-purple-100 text-purple-700"
+                          : risk === "HIGH"
+                            ? "bg-red-100 text-red-700"
+                            : risk === "MODERATE"
+                              ? "bg-yellow-100 text-yellow-700"
+                              : "bg-green-100 text-green-700"
                           }`}
                       >
-                        {risk}
+                        {m.delivery_status === 'delivered' || m.active_system === 'santanraksha' ? 'Delivered' : risk}
                       </span>
                       <span className="text-gray-500">Age: {m.age}</span>
                     </div>
@@ -611,9 +613,16 @@ export default function DoctorDashboard() {
             <div className="bg-white border-b border-gray-200 px-8 py-6 shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">
-                    {selected.name}
-                  </h2>
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-2xl font-bold text-gray-900">
+                      {selected.name}
+                    </h2>
+                    {(selected.delivery_status === 'delivered' || selected.active_system === 'santanraksha') && (
+                      <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-xs font-bold border border-purple-200 uppercase tracking-wide">
+                        Delivered
+                      </span>
+                    )}
+                  </div>
                   <p className="text-gray-600 mt-1 flex items-center gap-2 text-sm">
                     <MapPin className="w-4 h-4" /> {selected.location} · Age{" "}
                     {selected.age}

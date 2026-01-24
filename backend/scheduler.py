@@ -371,6 +371,86 @@ def check_milestone_reminders():
     except Exception as e:
         logger.error(f"❌ Error checking milestones: {str(e)}")
 
+
+def check_vaccination_reminders():
+    """
+    Check for upcoming or due vaccinations
+    Schedule: Every day at 9:30 AM
+    """
+    try:
+        if not db:
+            logger.error("❌ Database not connected, skipping vaccine checks")
+            return
+
+        logger.info("=" * 60)
+        logger.info("💉 CHECKING VACCINATION REMINDERS")
+        logger.info("=" * 60)
+        
+        # Get pending vaccines due today or overdue
+        today = datetime.now().date().isoformat()
+        
+        # We need to join with mothers table to get chat_id, but Supabase doesn't support easy joins in simple client
+        # So we query vaccines first, then fetch mothers
+        pending_vacs = db.table("vaccinations").select("*").eq("status", "pending").lte("due_date", today).execute()
+        vaccines = pending_vacs.data or []
+        
+        if not vaccines:
+            logger.info("✅ No vaccines due today.")
+            return
+
+        sent_count = 0
+        
+        # Group by mother (via child) to avoid spamming
+        # Need to fetch child -> mother mapping
+        child_ids = list(set(v['child_id'] for v in vaccines))
+        children_res = db.table("children").select("id, name, mother_id").in_("id", child_ids).execute()
+        children_map = {c['id']: c for c in children_res.data}
+        
+        # Fetch mothers
+        mother_ids = list(set(c['mother_id'] for c in children_map.values()))
+        mothers_res = db.table("mothers").select("id, name, telegram_chat_id").in_("id", mother_ids).execute()
+        mothers_map = {m['id']: m for m in mothers_res.data}
+        
+        # Process each vaccine
+        for vac in vaccines:
+            try:
+                child = children_map.get(vac['child_id'])
+                if not child: continue
+                
+                mother = mothers_map.get(child['mother_id'])
+                if not mother or not mother.get('telegram_chat_id'): continue
+                
+                chat_id = mother['telegram_chat_id']
+                vac_name = vac['vaccine_name']
+                due_date = vac['due_date']
+                
+                message = (
+                    f"💉 <b>Vaccination Reminder</b>\n\n"
+                    f"Hi {mother['name']}, a vaccine is due for <b>{child['name']}</b>:\n\n"
+                    f"🦠 <b>{vac_name}</b>\n"
+                    f"📅 Due: {due_date}\n\n"
+                    f"Please visit your nearest health center or ASHA worker.\n"
+                    f"Reply with 'Done' after vaccination to update the record! 💚"
+                )
+                
+                # Check if we already sent a reminder today (simple dedupe logic could be added here)
+                if send_telegram_message(chat_id, message):
+                    sent_count += 1
+                    logger.info(f"  ✅ Vaccine reminder sent to {mother['name']} for {vac_name}")
+                
+                time.sleep(1)
+                
+            except Exception as inner_e:
+                logger.error(f"  ❌ Error processing vaccine {vac.get('id')}: {inner_e}")
+        
+        logger.info("-" * 60)
+        logger.info(f"✅ Vaccine check complete: {sent_count} reminders sent")
+        logger.info("=" * 60)
+        logger.info("")
+
+    except Exception as e:
+        logger.error(f"❌ Error checking vaccinations: {str(e)}")
+
 def send_next_day_appointment_reminders():
     try:
         logger.info("=" * 60)
@@ -507,6 +587,10 @@ def setup_scheduler():
     schedule.every().day.at("09:00").do(send_medication_reminders_morning)
     schedule.every().day.at("19:30").do(send_medication_reminders_evening)
     logger.info("✓ Medication reminders: 9:00 AM, 7:30 PM")
+    
+    # Vaccination Reminders - 9:30 AM
+    schedule.every().day.at("09:30").do(check_vaccination_reminders)
+    logger.info("✓ Vaccination checks: 9:30 AM")
     
     # Milestone Check - 10:00 AM
     schedule.every().day.at("10:00").do(check_milestone_reminders)

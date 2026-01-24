@@ -47,6 +47,10 @@ schedule>=1.2.0
 # Date handling
 python-dateutil>=2.8.0
 
+# Audio Processing
+gTTS>=2.5.1
+pydub>=0.25.1
+
 # Document processing
 pillow==10.1.0
 PyPDF2==3.0.1

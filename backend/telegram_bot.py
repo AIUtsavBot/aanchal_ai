@@ -12,7 +12,11 @@ import logging
 from uuid import uuid4
 from datetime import datetime, timedelta
 from typing import Optional, List, Dict, Any
+import tempfile
+from pathlib import Path
+from io import BytesIO
 
+from gtts import gTTS
 import aiohttp
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.constants import ParseMode
@@ -205,11 +209,12 @@ async def send_home_dashboard(
     show_switch = context.user_data.get("show_switch_panel", False)
     keyboard = _build_dashboard_keyboard(mothers or [mother], active_id, show_switch_panel=show_switch)
 
-    pregnancy_line = _calculate_pregnancy_status(mother.get("due_date"))
-    due_line = _format_date(mother.get("due_date"))
+    # Determine system status
+    is_postnatal = mother.get("active_system") == "santanraksha" or mother.get("delivery_status") in ["delivered", "postnatal"]
+    
     name = mother.get("name") or "Mother"
     location = mother.get("location") or "Not set"
-
+    
     # Extract ASHA worker details if present on the mother record
     asha_name = mother.get("asha_name") or mother.get("asha_worker_name")
     asha_phone = mother.get("asha_phone") or mother.get("asha_worker_phone")
@@ -217,20 +222,51 @@ async def send_home_dashboard(
         asha_name = mother["asha_worker"].get("name")
         asha_phone = asha_phone or mother["asha_worker"].get("phone")
 
-    lines = [
-        f"👋 *Welcome back, {name}!*",
-        "",
-        f"🆔 *Telegram Chat ID:* `{chat_id}`" if chat_id else "",
-        f"👩‍🍼 *Active Profile:* {name}",
-        f"📍 *Location:* {location}",
-        f"📅 *Due Date:* {due_line}",
-        f"🤰 *Pregnancy:* {pregnancy_line}" if pregnancy_line else "",
-        (f"🧑‍⚕️ *ASHA Worker:* {asha_name} ({asha_phone})" if asha_name and asha_phone else
-         f"🧑‍⚕️ *ASHA Worker:* {asha_name}" if asha_name else ""),
-        "",
+    # Build Dashboard Lines
+    lines = [f"👋 *Welcome back, {name}!*", ""]
+    
+    if chat_id:
+        lines.append(f"🆔 *Telegram Chat ID:* `{chat_id}`")
+    
+    lines.append(f"👩‍🍼 *Active Profile:* {name}")
+    lines.append(f"📍 *Location:* {location}")
+
+    if is_postnatal:
+        # Postnatal Dashboard Fields
+        delivery_date = _format_date(mother.get("delivery_date"))
+        lines.append(f"🎉 *Status:* Delivered (SantanRaksha)")
+        
+        if mother.get("delivery_date"):
+            # Calculate baby age / days postpartum
+            try:
+                del_dt = datetime.fromisoformat(mother.get("delivery_date").replace("Z", "+00:00"))
+                days_diff = (datetime.now(del_dt.tzinfo) - del_dt).days
+                if days_diff < 30:
+                    age_text = f"{days_diff} days old"
+                else:
+                    age_text = f"{days_diff // 30} months old"
+                lines.append(f"👶 *Baby Age:* {age_text}")
+            except:
+                lines.append(f"📅 *Delivery Date:* {delivery_date}")
+        
+        lines.append("💉 *Next Vaccine:* Check 'Health Reports'")
+    else:
+        # Pregnancy Dashboard Fields
+        pregnancy_line = _calculate_pregnancy_status(mother.get("due_date"))
+        due_line = _format_date(mother.get("due_date"))
+        lines.append(f"📅 *Due Date:* {due_line}")
+        if pregnancy_line:
+            lines.append(f"🤰 *Pregnancy:* {pregnancy_line}")
+
+    # Common ASHA line
+    if asha_name:
+        lines.append(f"🧑‍⚕️ *ASHA Worker:* {asha_name}" + (f" ({asha_phone})" if asha_phone else ""))
+
+    lines.append("")
+    lines.append(
         "Use the buttons below to view your health summary, upload documents, "
-        "or switch between registered mothers.",
-    ]
+        "or switch between registered mothers."
+    )
 
     text = "\n".join(filter(None, lines))
 
@@ -747,6 +783,9 @@ class MatruRakshaBot:
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await globals()["start"](update, context)
 
+    async def handle_voice(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        return await globals()["handle_voice_message"](update, context)
+
 # Backward-compatibility alias for typo
 MatruRakkshaBot = MatruRakshaBot
 
@@ -766,6 +805,137 @@ async def receive_age(update: Update, context: ContextTypes.DEFAULT_TYPE):
         value = None
     context.user_data.setdefault('registration_data', {})
     context.user_data['registration_data']['age'] = value
+
+async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Handle voice messages:
+    1. STT: Transcribe using Gemini
+    2. Process: Route entire text to orchestrator
+    3. TTS: Convert response to Audio and reply
+    """
+    # Block voice during registration for simplicity (or we could support it, but risky)
+    if context.chat_data.get('registration_active'):
+        await update.message.reply_text("Please type your details for registration.")
+        return
+
+    # User feedback: "Listening..."
+    status_msg = await update.message.reply_text("🎤 Listening and processing...")
+
+    try:
+        voice = update.message.voice or update.message.audio
+        if not voice:
+            await status_msg.edit_text("⚠️ No voice detected.")
+            return
+
+        # 1. Download file
+        file_id = voice.file_id
+        file = await context.bot.get_file(file_id)
+        
+        # Use temp dir for processing
+        with tempfile.TemporaryDirectory() as temp_dir:
+            file_path = Path(temp_dir) / "voice_input.oga"
+            await file.download_to_drive(file_path)
+
+            # 2. Transcribe with Gemini (STT)
+            # We use the same Gemini client initialized in main.py, but need access here.
+            # Best way: Check if agent system has one or just use direct REST if needed.
+            # Assuming main.py has `gemini_client` but we are in telegram_bot.py.
+            # We'll use the orchestrator's LLM capability or local genai import if configured.
+            
+            try:
+                from google import genai
+                TRANSCRIPTION_MODEL = "gemini-2.0-flash-exp" # Faster for audio
+                if not os.getenv("GEMINI_API_KEY"):
+                    raise ValueError("No Gemini API Key")
+                
+                client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+                
+                # Upload/Process audio bytes directly
+                # Run file read in thread to avoid blocking event loop
+                def read_file_sync(path):
+                    with open(path, "rb") as f:
+                        return f.read()
+                
+                audio_bytes = await asyncio.to_thread(read_file_sync, file_path)
+                
+                # Prompt for transcription
+                response = client.models.generate_content(
+                    model=TRANSCRIPTION_MODEL,
+                    contents=[
+                        "Transcribe this audio exactly. Return ONLY the text, no preamble.",
+                        genai.types.Part.from_bytes(data=audio_bytes, mime_type="audio/ogg")
+                    ]
+                )
+                user_text = response.text.strip()
+                
+                if not user_text:
+                    await status_msg.edit_text("⚠️ Could not hear anything clearly. Please try again.")
+                    return
+                
+                # Show what was heard
+                await status_msg.edit_text(f"🗣️ You said: *\"{user_text}\"*", parse_mode=ParseMode.MARKDOWN)
+                
+                # 3. Route to Orchestrator
+                # Need mother context
+                mother = context.user_data.get("active_mother")
+                if not mother:
+                    # Try fetch default
+                    chat_id = str(update.effective_chat.id)
+                    mothers = await get_mothers_by_telegram_id(chat_id)
+                    if mothers:
+                        mother = mothers[0]
+                        context.user_data["active_mother"] = mother
+                
+                # route_message expects (message, mother_data, reports_context, chat_history)
+                # We interpret this as a general query
+                
+                reply_text = "I can only help if you have a registered profile. Type /register to start."
+                if mother:
+                    # Send thinking action
+                    await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
+                    
+                    # Call Orchestrator
+                    response_data = await route_message(
+                        message=user_text,
+                        mother_data=mother,
+                        reports_context=[], # Could inject recent reports here
+                        chat_history=[] # Could inject recent history
+                    )
+                    reply_text = response_data.get("response", "I'm not sure how to help with that.")
+                    
+                    # Update active mother data if changed (rare but possible)
+                    if response_data.get("mother_data"):
+                         context.user_data["active_mother"] = response_data["mother_data"]
+
+                # 4. Text-to-Speech (TTS)
+                await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="record_voice")
+                
+                tts = gTTS(reply_text, lang='en', tld='co.in') # Indian accent English
+                # Note: gTTS lang support is limited, for mixed Hindi code-switching 'en' often works best or 'hi'
+                
+                audio_io = BytesIO()
+                tts.write_to_fp(audio_io)
+                audio_io.seek(0)
+                
+                # 5. Send Audio Reply
+                await update.message.reply_message.reply_audio(
+                    audio=audio_io,
+                    title="MatruRaksha Assistant",
+                    performer="AI Doctor",
+                    caption=f"{reply_text[:200]}..." # Short caption
+                )
+                
+                # Send full text as backup
+                await update.message.reply_text(reply_text, parse_mode=ParseMode.MARKDOWN)
+
+            except Exception as e:
+                logger.error(f"Voice processing error: {e}", exc_info=True)
+                await status_msg.edit_text("❌ Sorry, I couldn't process your voice message. Please try typing.")
+
+    except Exception as e:
+        logger.error(f"Voice handler fatal error: {e}", exc_info=True)
+        await status_msg.edit_text("❌ Error processing voice.")
+
     await update.message.reply_text("Please enter your phone number (or type 'skip').")
     return AWAITING_PHONE
 

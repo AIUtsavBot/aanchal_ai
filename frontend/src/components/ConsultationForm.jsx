@@ -5,6 +5,7 @@ import {
     Pill, Apple, Heart, Plus, Trash2, Clock, Activity,
     Thermometer, Droplet, Scale
 } from 'lucide-react'
+import VoiceInput from './VoiceInput'
 
 export default function ConsultationForm({ motherId, doctorId, doctorName, onSave }) {
     const [loading, setLoading] = useState(false)
@@ -40,6 +41,52 @@ export default function ConsultationForm({ motherId, doctorId, doctorName, onSav
     const [consultationHistory, setConsultationHistory] = useState([])
     const [previousNutritionPlans, setPreviousNutritionPlans] = useState([])
     const [allVitalsHistory, setAllVitalsHistory] = useState([])
+
+    // Voice Data Handler
+    // Voice Data Handler (Memoized to prevent child re-renders)
+    const handleVoiceData = React.useCallback((data) => {
+        if (!data) return;
+
+        let filledCount = 0;
+        let newHealthStatus = '';
+
+        setSystolicBP(prev => { if (data.systolicBP) { filledCount++; return data.systolicBP; } return prev; });
+        setDiastolicBP(prev => { if (data.diastolicBP) { filledCount++; return data.diastolicBP; } return prev; });
+        setHeartRate(prev => { if (data.heartRate) { filledCount++; return data.heartRate; } return prev; });
+        setBloodSugar(prev => { if (data.bloodSugar) { filledCount++; return data.bloodSugar; } return prev; });
+        setHemoglobin(prev => { if (data.hemoglobin) { filledCount++; return data.hemoglobin; } return prev; });
+        setWeight(prev => { if (data.weight) { filledCount++; return data.weight; } return prev; });
+
+        if (data.healthStatus) {
+            setHealthStatus(prev => prev ? prev + "\n" + data.healthStatus : data.healthStatus);
+            filledCount++;
+        }
+
+        if (data.medications && data.medications.length > 0) {
+            setMedications(prevMeds => {
+                const cleanCurrent = prevMeds.filter(m => m.medication.trim() !== '');
+                const newMeds = data.medications.map(m => ({
+                    medication: m.medication || '',
+                    dosage: m.dosage || '',
+                    schedule: m.schedule || '',
+                    startDate: '',
+                    endDate: ''
+                }));
+                if (newMeds.length > 0) filledCount++;
+                return [...cleanCurrent, ...newMeds];
+            });
+        }
+
+        if (data.nextConsultation) {
+            if (data.nextConsultation.date) { setNextConsultationDate(data.nextConsultation.date); filledCount++; }
+            if (data.nextConsultation.time) { setNextConsultationTime(data.nextConsultation.time); filledCount++; }
+        }
+
+        if (filledCount > 0) {
+            setSuccess(`✨ AI Auto-filled ${filledCount} fields from voice!`);
+            setTimeout(() => setSuccess(''), 4000);
+        }
+    }, []) // Empty dependency array as setters are stable
 
     // Load previous data
     useEffect(() => {
@@ -297,19 +344,33 @@ export default function ConsultationForm({ motherId, doctorId, doctorName, onSav
     }
 
     return (
-        <div className="h-full overflow-y-auto p-6 bg-gray-50">
-            <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl mx-auto">
+        <div className="h-full overflow-y-auto p-6 bg-gray-50 bg-[url('https://as1.ftcdn.net/v2/jpg/04/83/87/46/1000_F_483874697_M7F7G2Kk6x93B6d2e6m78X7.jpg')] bg-repeat opacity-95">
+            {/* Sticky Heading with Voice Button */}
+            <div className="flex justify-between items-center mb-6 sticky top-0 bg-white/95 backdrop-blur-sm z-20 p-4 rounded-xl shadow-sm border border-gray-200">
+                <div>
+                    <h2 className="text-xl font-bold text-gray-800">New Consultation</h2>
+                    <p className="text-sm text-gray-500">Dr. {doctorName}</p>
+                </div>
+
+                {/* Voice Input Button */}
+                <div className="flex flex-col items-center">
+                    <VoiceInput onDataReceived={handleVoiceData} />
+                    <span className="text-[10px] text-gray-500 font-medium mt-1 uppercase tracking-wide">Tap to Speak</span>
+                </div>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl mx-auto pb-20">
 
                 {/* Success/Error Messages */}
                 {success && (
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3">
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
                         <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
                         <p className="text-green-800 font-medium">{success}</p>
                     </div>
                 )}
 
                 {error && (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-3">
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
                         <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
                         <p className="text-red-800">{error}</p>
                     </div>

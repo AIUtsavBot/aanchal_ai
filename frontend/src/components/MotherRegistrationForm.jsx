@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { UserPlus, Phone, MapPin, Calendar, Heart, Activity, Loader, CheckCircle, AlertCircle } from 'lucide-react'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
@@ -20,6 +20,33 @@ export default function MotherRegistrationForm({ onSuccess, assignerId, assigner
         telegram_chat_id: '',
         due_date: ''
     })
+
+    // Load draft from storage on mount
+    useEffect(() => {
+        const draft = localStorage.getItem('registration_form_draft');
+        if (draft) {
+            try {
+                const parsed = JSON.parse(draft);
+                // Simple validation to ensure it's not garbage
+                if (parsed && typeof parsed === 'object') {
+                    setFormData(prev => ({ ...prev, ...parsed }));
+                }
+            } catch (e) {
+                console.error("Error loading registration draft", e);
+            }
+        }
+    }, []);
+
+    // Save draft on change
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            // Only save if at least name or phone is entered
+            if (formData.name || formData.phone) {
+                localStorage.setItem('registration_form_draft', JSON.stringify(formData));
+            }
+        }, 1000);
+        return () => clearTimeout(timer);
+    }, [formData]);
 
     const handleChange = (e) => {
         const { name, value } = e.target
@@ -80,6 +107,9 @@ export default function MotherRegistrationForm({ onSuccess, assignerId, assigner
                 telegram_chat_id: '',
                 due_date: ''
             })
+
+            // Clear local storage draft
+            localStorage.removeItem('registration_form_draft')
 
             // Call parent callback if provided
             if (onSuccess) {

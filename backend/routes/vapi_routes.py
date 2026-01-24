@@ -338,6 +338,25 @@ async def initiate_outbound_call(call_request: InitiateCallRequest):
         raise HTTPException(status_code=500, detail="Vapi Phone Number ID not configured")
     
     try:
+        # Fetch mother details to determine system prompt context
+        # We need to know if she is pregnant or delivered
+        mother_context = {}
+        try:
+             # This requires internal import, or we just rely on metadata passed if we can't query DB
+             # For robustness, let's assume if we can query DB we do, else default to pregnancy
+             from backend.services.supabase_service import get_mother_by_id
+             mother = await get_mother_by_id(call_request.mother_id)
+             if mother:
+                 mother_context = mother
+        except Exception as e:
+            logger.warning(f"Could not fetch mother context for Vapi call: {e}")
+
+        # Choose prompt based on status
+        is_postnatal = mother_context.get("delivery_status") in ["delivered", "postnatal"] or \
+                       mother_context.get("active_system") == "santanraksha"
+        
+        system_prompt = get_postnatal_system_prompt() if is_postnatal else get_system_prompt()
+        
         # Prepare call payload
         payload = {
             "assistantId": VAPI_ASSISTANT_ID,
@@ -345,10 +364,18 @@ async def initiate_outbound_call(call_request: InitiateCallRequest):
             "customer": {
                 "number": call_request.phone_number
             },
+            "assistant": {
+                 "model": {
+                     "provider": "openai",
+                     "model": "gpt-4",
+                     "systemPrompt": system_prompt
+                 }
+            },
             "metadata": {
                 "mother_id": call_request.mother_id,
                 "mother_name": call_request.mother_name,
-                "initiated_at": datetime.now().isoformat()
+                "initiated_at": datetime.now().isoformat(),
+                "context": "postnatal" if is_postnatal else "prenatal"
             }
         }
         
@@ -368,7 +395,7 @@ async def initiate_outbound_call(call_request: InitiateCallRequest):
         if response.status_code == 201:
             result = response.json()
             call_id = result.get("id")
-            logger.info(f"📞 Call initiated: {call_id} to {call_request.phone_number[:6]}***")
+            logger.info(f"📞 Call initiated: {call_id} to {call_request.phone_number[:6]}*** (Postnatal: {is_postnatal})")
             return {
                 "status": "success",
                 "message": f"Call initiated to {call_request.phone_number[:6]}***",

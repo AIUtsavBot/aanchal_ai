@@ -255,7 +255,21 @@ class OrchestratorAgent:
             if not gemini_client:
                 return None
             
-            prompt = f"""
+            if is_postnatal:
+                 prompt = f"""
+Classify this postnatal/child health message into ONE category:
+- EMERGENCY: urgent issues for mother or baby, severe pain, bleeding, difficulty breathing
+- POSTNATAL: mother's recovery, breastfeeding, mental health, stitches, lochia
+- PEDIATRIC: baby's health, sickness, fever, rash, crying, sleep
+- VACCINE: immunizations, shots, schedule, side effects
+- GROWTH: baby's weight, height, feeding, milestones
+
+Message: "{message}"
+
+Respond with ONLY the category name (one word).
+"""
+            else:
+                prompt = f"""
 Classify this maternal health message into ONE category:
 - EMERGENCY: urgent medical issues, bleeding, severe pain, crisis
 - MEDICATION: medicines, drugs, supplements, prescriptions
@@ -282,10 +296,15 @@ Respond with ONLY the category name (one word).
                 'NUTRITION': AgentType.NUTRITION,
                 'RISK': AgentType.RISK,
                 'ASHA': AgentType.ASHA,
-                'CARE': AgentType.CARE
+                'CARE': AgentType.CARE,
+                # SantanRaksha mapping
+                'POSTNATAL': AgentType.POSTNATAL,
+                'PEDIATRIC': AgentType.PEDIATRIC,
+                'VACCINE': AgentType.VACCINE,
+                'GROWTH': AgentType.GROWTH
             }
             
-            return category_map.get(category, AgentType.CARE)
+            return category_map.get(category, AgentType.POSTNATAL if is_postnatal else AgentType.CARE)
             
         except Exception as e:
             logger.error(f"AI classification failed: {e}")

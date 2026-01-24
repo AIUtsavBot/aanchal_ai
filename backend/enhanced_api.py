@@ -21,9 +21,22 @@ from pydantic import BaseModel
 from supabase import create_client, Client
 from dotenv import load_dotenv
 try:
-    from backend.context_builder import build_holistic_context
+    from backend.context_builder import build_holistic_context_async
 except ImportError:
-    from context_builder import build_holistic_context
+    from context_builder import build_holistic_context_async
+
+# ==================== GEMINI AI INITIALIZATION ====================
+gemini_client = None
+try:
+    from google import genai
+    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+    if GEMINI_API_KEY:
+        gemini_client = genai.Client(api_key=GEMINI_API_KEY)
+        logger.info("✅ Gemini AI initialized in enhanced_api")
+    else:
+        logger.warning("⚠️  Gemini API key not set in enhanced_api")
+except ImportError:
+    pass
 
 # Load environment
 load_dotenv()
@@ -100,7 +113,63 @@ class QueryRequest(BaseModel):
     use_context: bool = True
     language: Optional[str] = "en"
 
-#
+
+class VitalsParseRequest(BaseModel):
+    text: str
+    language: Optional[str] = "en"  # "en", "hi", "mr", "gu" supported
+
+
+@router.post("/voice/parse-vitals")
+async def parse_voice_vitals(request: VitalsParseRequest):
+    """
+    Parse unstructured voice text into structured vitals JSON using Gemini.
+    """
+    try:
+        if not gemini_client:
+             raise HTTPException(status_code=503, detail="Gemini AI not available")
+
+        # Construct prompt
+        prompt = f"""
+        Extract medical vitals and notes from the following text (which may be in English, Hindi, or mixed Hinglish).
+        Return ONLY valid JSON.
+        
+        Text: "{request.text}"
+        
+        Output Schema:
+        {{
+            "systolicBP": int or null,
+            "diastolicBP": int or null,
+            "heartRate": int or null,
+            "bloodSugar": float or null,
+            "hemoglobin": float or null,
+            "weight": float or null,
+            "healthStatus": "string (symptoms, complaints, observations)",
+            "medications": [
+                {{ "medication": "name", "dosage": "dosage/frequency", "schedule": "notes" }}
+            ],
+            "nextConsultation": {{ "date": "YYYY-MM-DD", "time": "HH:MM" }} (if mentioned)
+        }}
+        """
+        
+        response = gemini_client.models.generate_content(
+            model='gemini-2.0-flash-exp', 
+            contents=prompt,
+            config={
+                'response_mime_type': 'application/json'
+            }
+        )
+        
+        # Clean response
+        text = response.text.strip()
+        if text.startswith("```json"):
+            text = text[7:-3]
+            
+        return json.loads(text)
+        
+    except Exception as e:
+        logger.error(f"Error parsing vitals: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 
 # ==================== HELPER FUNCTIONS ====================
@@ -434,7 +503,7 @@ async def query_agent_with_context(request: QueryRequest):
         context_items = []
         context_str = ""
         if request.use_context:
-            context_result = build_holistic_context(mother_id, supabase)
+            context_result = await build_holistic_context_async(mother_id, supabase)
             context_str = context_result.get("context_text", "")
             context_items = context_result.get("sources", [])
         # Query the agent if available
@@ -488,13 +557,36 @@ async def create_agent_for_mother(mother_id: int):
         mother_data = mother.data[0]
         name = mother_data['name']
         
+        # Check delivery status
+        is_postnatal = mother_data.get('active_system') == 'santanraksha' or mother_data.get('delivery_status') in ['delivered', 'postnatal']
+        
         # Create datastore
         datastore = contextual_client.datastores.create(
             name=f"matruraksha_{mother_id}_{name}"
         )
         
-        # Create agent with personalized prompt
-        system_prompt = f"""You are MatruRaksha AI, a personalized maternal health assistant for {name}.
+        # Dynamic System Prompt based on status
+        if is_postnatal:
+            system_prompt = f"""You are SantanRaksha AI, a personalized postnatal and child health assistant for {name}.
+
+Your role is to:
+1. Support {name} in her postnatal recovery (healing, nutrition, mental health)
+2. Monitor the health and development of her baby (breastfeeding, sleep, growth)
+3. Analyze medical reports for both mother and child
+4. Provide personalized advice based on the baby's age and mother's recovery status
+5. Alert about potential risks for both mother and baby
+
+Always be empathetic, supportive, and encouraging. Prioritize the wellbeing of both mother and child.
+Use the context provided from previous reports and conversations to give personalized responses.
+
+Mother's profile:
+- Age: {mother_data.get('age', 'N/A')}
+- Location: {mother_data.get('location', 'N/A')}
+- Status: Postnatal / Delivered
+"""
+        else:
+            # Pregnancy Prompt
+            system_prompt = f"""You are MatruRaksha AI, a personalized maternal health assistant for {name}.
 
 Your role is to:
 1. Analyze medical reports and extract key health information
