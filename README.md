@@ -148,6 +148,83 @@ graph TB
     API --> Resend
 ```
 
+### 🤰 MatruRaksha: Detailed Architecture (Pregnancy)
+
+MatruRaksha focuses on prenatal health monitoring and risk mitigation through a voice-first, AI-driven experience.
+
+```mermaid
+graph TB
+    %% Styles
+    classDef interface fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    classDef logic fill:#fff3e0,stroke:#e65100,stroke-width:2px;
+    classDef data fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+
+    subgraph INTERFACE [User Interfaces]
+        TBot(Telegram Bot):::interface
+        VoiceUI(🎤 Voice Consultation UI):::interface
+        RegForm(Registration Form):::interface
+    end
+
+    subgraph PREGNANCY_LOGIC [Pregnancy Care Logic]
+        RiskEng(Risk Assessment Engine):::logic
+        SymptomTracker(Symptom Analysis):::logic
+        MedAgent(Medication Safety Agent):::logic
+        NutriAgent(Prenatal Nutrition Agent):::logic
+    end
+
+    subgraph DATA_RESOURCES [Data & Knowledge]
+        RAG[Hybrid RAG: 1000+ Clinical Cases]:::data
+        Profiles(Mother Health Profiles):::data
+        Guidelines(WHO/NHM Prenatal Guidelines):::data
+    end
+
+    TBot --> RiskEng
+    VoiceUI --> RiskEng
+    RegForm --> Profiles
+    
+    RiskEng --> RAG
+    RiskEng --> Profiles
+    
+    SymptomTracker --> Guidelines
+    MedAgent --> RAG
+    NutriAgent --> Guidelines
+```
+
+### 🍼 SantanRaksha: Detailed Architecture (Postnatal & Child)
+
+SantanRaksha manages the transition to motherhood and infant care, ensuring timely vaccinations and growth milestones.
+
+```mermaid
+graph TB
+    %% Styles
+    classDef transition fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px;
+    classDef monitor fill:#e1f5fe,stroke:#0288d1,stroke-width:2px;
+    classDef standards fill:#fff9c4,stroke:#fbc02d,stroke-width:2px;
+
+    Transition{{"✨ Delivery Trigger"}}:::transition
+
+    subgraph CHILD_CARE [Postnatal & Child Care]
+        Vaccine(Vaccination Scheduler):::monitor
+        Growth(Growth Tracker):::monitor
+        Milestones(Milestone Monitor):::monitor
+        PedAgent(Pediatric Advisor):::monitor
+    end
+
+    subgraph STANDARDS [Clinical Standards]
+        IAP(IAP 2023 Schedule):::standards
+        WHOChart(WHO Growth Charts - Z-Scores):::standards
+        RBSK(RBSK 4Ds Screening):::standards
+    end
+
+    Transition --> Vaccine
+    Transition --> Growth
+    
+    Vaccine --> IAP
+    Growth --> WHOChart
+    Milestones --> RBSK
+    PedAgent --> WHOChart
+```
+
 ### AI Agent Orchestrator Flow
 
 ```mermaid
