@@ -7,6 +7,8 @@ export default function VoiceInput({ onDataReceived }) {
     const [isListening, setIsListening] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [transcript, setTranscript] = useState('');
+    const [error, setError] = useState('');
+
     const recognitionRef = React.useRef(null);
 
     useEffect(() => {

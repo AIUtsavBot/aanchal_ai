@@ -20,6 +20,11 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from supabase import create_client, Client
 from dotenv import load_dotenv
+
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 try:
     from backend.context_builder import build_holistic_context_async
 except ImportError:
@@ -40,9 +45,6 @@ except ImportError:
 
 # Load environment
 load_dotenv()
-
-# Setup logging
-logger = logging.getLogger(__name__)
 
 # Initialize router
 router = APIRouter(prefix="/api/v1", tags=["Enhanced Features"])
