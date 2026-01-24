@@ -1,0 +1,42 @@
+﻿============================================================
+.\venv\Scripts\python.exe : 
+Traceback (most recent call 
+last):
+At line:1 char:1
++ .\venv\Scripts\python.exe 
+fix_approved_users.py 2>&1 
+| Out-File -File ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          
+    : NotSpecified: (Trace  
+  back (most recent call    
+ last)::String) [], Remo    
+teException
+    + FullyQualifiedErrorId 
+    : NativeCommandError
+ 
+  File "D:\MatruRaksha_AI_Ev
+ent\backend\fix_approved_use
+rs.py", line 13, in <module>
+    print("\U0001f527 
+Fixing Approved Requests 
+Without Created Users")
+  File "C:\Program Files\Win
+dowsApps\PythonSoftwareFound
+ation.Python.3.12_3.12.2800.
+0_x64__qbz5n2kfra8p0\Lib\enc
+odings\cp1252.py", line 19, 
+in encode
+    return codecs.charmap_en
+code(input,self.errors,encod
+ing_table)[0]
+           ^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^
+UnicodeEncodeError: 
+'charmap' codec can't 
+encode character 
+'\U0001f527' in position 0: 
+character maps to 
+<undefined>

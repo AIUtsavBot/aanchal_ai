@@ -1,0 +1,105 @@
+# ============================================
+# MatruRaksha Docker Compose Configuration
+# ============================================
+# Complete development and production stack
+
+version: '3.8'
+
+services:
+  # ==========================================
+  # Frontend Service (Vite React + Nginx)
+  # ==========================================
+  frontend:
+    build:
+      context: ../../
+      dockerfile: infra/docker/Dockerfile.frontend
+    container_name: matruraksha-frontend
+    ports:
+      - "80:80"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - backend
+    networks:
+      - matruraksha-network
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ==========================================
+  # Backend Service (FastAPI + Telegram Bot)
+  # ==========================================
+  backend:
+    build:
+      context: ../../
+      dockerfile: infra/docker/Dockerfile.backend
+    container_name: matruraksha-backend
+    ports:
+      - "8000:8000"
+    environment:
+      # Supabase Configuration
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      # Telegram Configuration
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - USE_TELEGRAM_WEBHOOK=${USE_TELEGRAM_WEBHOOK:-true}
+      - BACKEND_URL=${BACKEND_URL}
+      # AI Configuration
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      # Server Configuration
+      - FASTAPI_ENV=${FASTAPI_ENV:-production}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:80}
+      - OAUTH_REDIRECT_URL=${OAUTH_REDIRECT_URL}
+    env_file:
+      - ../../backend/.env
+    volumes:
+      - backend-logs:/app/logs
+    networks:
+      - matruraksha-network
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8000/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ==========================================
+  # Redis (Optional - for caching/sessions)
+  # ==========================================
+  redis:
+    image: redis:7-alpine
+    container_name: matruraksha-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - matruraksha-network
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+# ==========================================
+# Networks
+# ==========================================
+networks:
+  matruraksha-network:
+    driver: bridge
+    name: matruraksha-network
+
+# ==========================================
+# Volumes
+# ==========================================
+volumes:
+  backend-logs:
+    name: matruraksha-backend-logs
+  redis-data:
+    name: matruraksha-redis-data

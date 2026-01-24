@@ -1,0 +1,68 @@
+/* ViewToggle.css - Compact Toggle for Header */
+
+.view-toggle-compact {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 4px;
+    gap: 2px;
+}
+
+.toggle-btn-compact {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.7);
+    white-space: nowrap;
+}
+
+.toggle-btn-compact:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+}
+
+.toggle-btn-compact.active {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+}
+
+/* For light backgrounds */
+.view-toggle-compact.light {
+    background: #f3f4f6;
+}
+
+.view-toggle-compact.light .toggle-btn-compact {
+    color: #6b7280;
+}
+
+.view-toggle-compact.light .toggle-btn-compact:hover {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.view-toggle-compact.light .toggle-btn-compact.active {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .toggle-btn-compact {
+        padding: 4px 8px;
+        font-size: 0.7rem;
+    }
+
+    .toggle-btn-compact span {
+        display: none;
+    }
+}
