@@ -485,6 +485,14 @@ try:
 except Exception as e:
     logger.warning(f"⚠️  Offline sync routes not available: {e}")
 
+# Mount SantanRaksha delivery routes
+try:
+    from routes.delivery import router as delivery_router
+    app.include_router(delivery_router)
+    logger.info("✅ SantanRaksha delivery routes loaded")
+except Exception as e:
+    logger.warning(f"⚠️  Delivery routes not available: {e}")
+
 # ==================== CORS SETUP ====================
 # Configure CORS to explicitly allow the frontend origin
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173").strip()

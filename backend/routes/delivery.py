@@ -12,11 +12,12 @@ import logging
 
 # Supabase client
 try:
-    from backend.services.supabase_service import DatabaseService
-    supabase = DatabaseService.supabase
-except:
-    from services.supabase_service import DatabaseService
-    supabase = DatabaseService.supabase
+    from services.supabase_service import supabase
+except ImportError:
+    try:
+        from backend.services.supabase_service import supabase
+    except ImportError:
+        supabase = None
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +53,7 @@ class DeliveryCompletionResponse(BaseModel):
     """Response after delivery completion"""
     success: bool
     message: str
-   mother_updated: bool
+    mother_updated: bool
     child_created: Optional[str] = None  # Child UUID if created
     vaccination_schedule_created: bool = False
     active_system: str  # 'santanraksha'
