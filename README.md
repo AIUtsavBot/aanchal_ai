@@ -72,17 +72,24 @@ graph TB
         SyncRoutes(Offline Sync Routes):::backend
     end
 
-    subgraph AI_AGENTS [🤖 AI AGENTS]
-        Risk(Risk Agent):::ai
-        Care(Care Agent):::ai
-        Nutrition(Nutrition Agent):::ai
-        Medication(Medication Agent):::ai
-        Emergency(Emergency Agent):::ai
-        ASHAAgent(ASHA Agent):::ai
-        Postnatal(Postnatal Agent):::ai
-        Pediatric(Pediatric Agent):::ai
-        Vaccine(Vaccine Agent):::ai
-        Growth(Growth Agent):::ai
+    subgraph AI_AGENTS [🤖 AI AGENTS SYSTEM]
+        subgraph PREG [🤰 MATRURAKSHA - Pregnancy]
+            style PREG fill:#fff3e0,stroke:#ff6f00,stroke-width:1px
+            Risk(Risk Agent):::ai
+            Care(Care Agent):::ai
+            Nutrition(Nutrition Agent):::ai
+            Medication(Medication Agent):::ai
+            Emergency(Emergency Agent):::ai
+            ASHAAgent(ASHA Agent):::ai
+        end
+
+        subgraph POST [🍼 SANTANRAKSHA - Postnatal]
+            style POST fill:#e1f5fe,stroke:#0277bd,stroke-width:1px
+            Postnatal(Postnatal Agent):::ai
+            Pediatric(Pediatric Agent):::ai
+            Vaccine(Vaccine Agent):::ai
+            Growth(Growth Agent):::ai
+        end
     end
 
     subgraph EXTERNAL [🔗 EXTERNAL SERVICES]
