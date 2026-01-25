@@ -154,10 +154,10 @@ async def get_admin_full_data(current_user: dict = Depends(require_admin)):
             "cached": False
         }
         
-        # Cache for 30 seconds
+        # Cache for 60 seconds (increased for better performance)
         if CACHE_AVAILABLE and cache:
-            cache.set("admin:full", result, ttl_seconds=30)
-            logger.info("📊 Admin full data cached for 30s")
+            cache.set("admin:full", result, ttl_seconds=60)
+            logger.info("📊 Admin full data cached for 60s")
         
         return result
     except Exception as e:
@@ -242,6 +242,9 @@ async def update_doctor(doctor_id: int, body: UpdateDoctorRequest, current_user:
         result = supabase_admin.table("doctors").update(update_data).eq("id", doctor_id).execute()
         if not result.data:
             raise HTTPException(status_code=404, detail="Doctor not found")
+        
+        # Invalidate admin cache
+        invalidate_dashboard_cache()
         
         logger.info(f"✅ Updated doctor {doctor_id}")
         return {"success": True, "doctor": result.data[0]}
@@ -429,6 +432,9 @@ async def assign_mother_to_asha(mother_id: str, body: AssignAshaRequest, current
         if not result.data:
             raise HTTPException(status_code=404, detail="Mother not found")
         
+        # Invalidate cache after assignment change
+        invalidate_dashboard_cache()
+        
         logger.info(f"✅ Assigned mother {mother_id} to ASHA worker {body.asha_worker_id}")
         return {"success": True, "message": "Assignment updated", "mother": result.data[0]}
     except HTTPException:
@@ -448,6 +454,9 @@ async def assign_mother_to_doctor(mother_id: str, body: AssignDoctorRequest, cur
         
         if not result.data:
             raise HTTPException(status_code=404, detail="Mother not found")
+        
+        # Invalidate cache after assignment change
+        invalidate_dashboard_cache()
         
         logger.info(f"✅ Assigned mother {mother_id} to doctor {body.doctor_id}")
         return {"success": True, "message": "Assignment updated", "mother": result.data[0]}
