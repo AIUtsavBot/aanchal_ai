@@ -9,11 +9,12 @@ Endpoints for:
 - Send telegram notifications for assessments
 """
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends, Header
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 from datetime import datetime, date
 import logging
+import json
 import math
 
 # Import Supabase client
@@ -40,8 +41,54 @@ try:
 except:
     send_assessment_notification = None
 
+# Import access control utilities
+try:
+    from utils.access_control import (
+        get_authorized_children,
+        verify_child_access,
+        verify_mother_access
+    )
+except ImportError as e:
+    logger.warning(f"Access control not available: {e}")
+    # Fallback functions
+    async def get_authorized_children(*args, **kwargs):
+        raise HTTPException(status_code=500, detail="Access control not configured")
+    async def verify_child_access(*args, **kwargs):
+        raise HTTPException(status_code=500, detail="Access control not configured")
+    async def verify_mother_access(*args, **kwargs):
+        raise HTTPException(status_code=500, detail="Access control not configured")
+
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/santanraksha", tags=["SantanRaksha"])
+
+
+# ==================== AUTHENTICATION HELPER ====================
+
+async def get_current_user(authorization: Optional[str] = Header(None)):
+    """
+    Extract user info from Authorization header
+    Expected format: Bearer {token} or user_id:{user_id},role:{role}
+    """
+    if not authorization:
+        # For backwards compatibility, return admin access if no auth
+        logger.warning("No authorization header, defaulting to ADMIN access")
+        return {"user_id": "system", "role": "ADMIN"}
+    
+    try:
+        # Try to parse custom format: user_id:xxx,role:yyy
+        if "user_id:" in authorization and "role:" in authorization:
+            parts = authorization.split(",")
+            user_id = parts[0].split(":")[1].strip()
+            role = parts[1].split(":")[1].strip()
+            return {"user_id": user_id, "role": role}
+        
+        # Otherwise assume it's a token and decode
+        # For now, return admin access
+        logger.warning("Token-based auth not implemented, defaulting to ADMIN")
+        return {"user_id": "system", "role": "ADMIN"}
+    except Exception as e:
+        logger.error(f"Error parsing authorization: {e}")
+        return {"user_id": "system", "role": "ADMIN"}
 
 
 # ==================== PYDANTIC MODELS ====================
@@ -204,13 +251,24 @@ def get_growth_status(wfa_z: float) -> Dict[str, Any]:
 # ==================== VACCINATION ENDPOINTS ====================
 
 @router.post("/vaccination/mark-done")
-async def mark_vaccination_done(data: VaccinationMarkDone):
+async def mark_vaccination_done(
+    data: VaccinationMarkDone,
+    current_user: dict = Depends(get_current_user)
+):
     """
     Mark a vaccination as completed
     Updates the vaccinations table with status='completed'
     Uses actual DB columns: administered_date, administered_by, administered_at_facility
     """
     try:
+        # Verify user has access to this child
+        await verify_child_access(
+            supabase_client=supabase,
+            user_id=current_user["user_id"],
+            user_role=current_user["role"],
+            child_id=data.child_id
+        )
+        
         logger.info(f"💉 Marking vaccine as done: {data.vaccine_name} for child {data.child_id}")
         
         administered_date = data.given_date or datetime.now().date().isoformat()
@@ -269,9 +327,19 @@ async def mark_vaccination_done(data: VaccinationMarkDone):
 
 
 @router.get("/vaccination/{child_id}")
-async def get_child_vaccinations(child_id: str):
+async def get_child_vaccinations(
+    child_id: str,
+    current_user: dict = Depends(get_current_user)
+):
     """Get all vaccination records for a child"""
     try:
+        # Verify user has access to this child
+        await verify_child_access(
+            supabase_client=supabase,
+            user_id=current_user["user_id"],
+            user_role=current_user["role"],
+            child_id=child_id
+        )
         result = supabase.table("vaccinations") \
             .select("*") \
             .eq("child_id", child_id) \
@@ -291,12 +359,23 @@ async def get_child_vaccinations(child_id: str):
 
 
 @router.post("/vaccination/{child_id}/initialize")
-async def initialize_vaccination_schedule(child_id: str):
+async def initialize_vaccination_schedule(
+    child_id: str,
+    current_user: dict = Depends(get_current_user)
+):
     """
     Initialize the IAP 2023 vaccination schedule for a child
     Creates pending vaccination records based on birth date
     """
     try:
+        # Verify user has access to this child
+        await verify_child_access(
+            supabase_client=supabase,
+            user_id=current_user["user_id"],
+            user_role=current_user["role"],
+            child_id=child_id
+        )
+        
         # Get child info
         child_result = supabase.table("children") \
             .select("id, name, birth_date") \
@@ -387,13 +466,24 @@ async def initialize_vaccination_schedule(child_id: str):
 # ==================== GROWTH MONITORING ENDPOINTS ====================
 
 @router.post("/growth/record")
-async def add_growth_record(data: GrowthRecordCreate):
+async def add_growth_record(
+    data: GrowthRecordCreate,
+    current_user: dict = Depends(get_current_user)
+):
     """
     Add a growth record and calculate z-scores automatically
     Returns growth assessment with recommendations
     Uses actual DB columns: weight_for_age_z_score, height_for_age_z_score, age_months, age_days
     """
     try:
+        # Verify user has access to this child
+        await verify_child_access(
+            supabase_client=supabase,
+            user_id=current_user["user_id"],
+            user_role=current_user["role"],
+            child_id=data.child_id
+        )
+        
         logger.info(f"📏 Adding growth record for child: {data.child_id}")
         
         # Get child info for age and gender (don't use .single() as it throws on empty result)
@@ -492,9 +582,20 @@ async def add_growth_record(data: GrowthRecordCreate):
 
 
 @router.get("/growth/{child_id}")
-async def get_child_growth_records(child_id: str, limit: int = 20):
+async def get_child_growth_records(
+    child_id: str,
+    limit: int = 20,
+    current_user: dict = Depends(get_current_user)
+):
     """Get growth history for a child with trend analysis"""
     try:
+        # Verify user has access to this child
+        await verify_child_access(
+            supabase_client=supabase,
+            user_id=current_user["user_id"],
+            user_role=current_user["role"],
+            child_id=child_id
+        )
         result = supabase.table("growth_records") \
             .select("*") \
             .eq("child_id", child_id) \
@@ -532,12 +633,23 @@ async def get_child_growth_records(child_id: str, limit: int = 20):
 # ==================== MILESTONE TRACKING ENDPOINTS ====================
 
 @router.post("/milestone/toggle")
-async def toggle_milestone(data: MilestoneToggle):
+async def toggle_milestone(
+    data: MilestoneToggle,
+    current_user: dict = Depends(get_current_user)
+):
     """
     Toggle a developmental milestone as achieved/not achieved
     Uses actual DB columns: category (not milestone_category), is_achieved, achieved_age_months, etc.
     """
     try:
+        # Verify user has access to this child
+        await verify_child_access(
+            supabase_client=supabase,
+            user_id=current_user["user_id"],
+            user_role=current_user["role"],
+            child_id=data.child_id
+        )
+        
         logger.info(f"🎯 Toggling milestone '{data.milestone_name}' for child {data.child_id}")
         
         # Check if milestone already exists for this child
@@ -663,9 +775,19 @@ async def toggle_milestone(data: MilestoneToggle):
 
 
 @router.get("/milestone/{child_id}")
-async def get_child_milestones(child_id: str):
+async def get_child_milestones(
+    child_id: str,
+    current_user: dict = Depends(get_current_user)
+):
     """Get all achieved milestones for a child"""
     try:
+        # Verify user has access to this child
+        await verify_child_access(
+            supabase_client=supabase,
+            user_id=current_user["user_id"],
+            user_role=current_user["role"],
+            child_id=child_id
+        )
         result = supabase.table("milestones") \
             .select("*") \
             .eq("child_id", child_id) \
@@ -696,12 +818,23 @@ async def get_child_milestones(child_id: str):
 # ==================== NOTIFICATION ENDPOINTS ====================
 
 @router.post("/notify/assessment")
-async def send_assessment_notification_telegram(data: AssessmentNotification):
+async def send_assessment_notification_telegram(
+    data: AssessmentNotification,
+    current_user: dict = Depends(get_current_user)
+):
     """
     Send assessment result to mother via Telegram
     Used after growth, vaccine, or milestone assessments
     """
     try:
+        # Verify user has access to this mother
+        await verify_mother_access(
+            supabase_client=supabase,
+            user_id=current_user["user_id"],
+            user_role=current_user["role"],
+            mother_id=data.mother_id
+        )
+        
         logger.info(f"📱 Sending {data.assessment_type} notification for mother: {data.mother_id}")
         
         # Get mother's telegram chat ID

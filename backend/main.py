@@ -430,6 +430,19 @@ async def lifespan(app: FastAPI):
         logger.warning("    ⚠️  Telegram Bot Token not set")
         logger.info("    🚀 Starting FastAPI Backend only...")
     
+    # Inject dependencies for health checks
+    try:
+        from routes.health import set_health_check_dependencies
+        set_health_check_dependencies(
+            supabase=supabase,
+            gemini=gemini_client,
+            bot_running=bot_running,
+            cache=cache if CACHE_AVAILABLE else None
+        )
+        logger.info("✅ Health check dependencies injected")
+    except ImportError:
+        logger.warning("⚠️  Health check routes not loaded")
+    
     yield
     
     # ==================== SHUTDOWN ====================
@@ -459,6 +472,23 @@ try:
     logger.info("✅ Vapi AI Calling routes loaded")
 except ImportError as e:
     logger.warning(f"⚠️  Vapi routes not available: {e}")
+
+# ==================== ERROR HANDLERS & HEALTH CHECKS ====================
+# Register custom exception handlers
+try:
+    from core.error_handlers import register_exception_handlers
+    register_exception_handlers(app)
+    logger.info("✅ Custom exception handlers registered")
+except ImportError as e:
+    logger.warning(f"⚠️  Error handlers not available: {e}")
+
+# Mount health check routes
+try:
+    from routes.health import router as health_router, set_health_check_dependencies
+    app.include_router(health_router)
+    logger.info("✅ Health check routes loaded")
+except ImportError as e:
+    logger.warning(f"⚠️  Health check routes not available: {e}")
 
 
 # Mount authentication router
@@ -550,6 +580,23 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ==================== SECURITY & RATE LIMITING ====================
+# Setup rate limiting
+try:
+    from core.rate_limiting import setup_rate_limiting
+    setup_rate_limiting(app)
+    logger.info("✅ Rate limiting configured")
+except ImportError as e:
+    logger.warning(f"⚠️  Rate limiting not available: {e}")
+
+# Setup security middleware
+try:
+    from middleware.security import setup_security_middleware
+    setup_security_middleware(app)
+    logger.info("✅ Security middleware configured")
+except ImportError as e:
+    logger.warning(f"⚠️  Security middleware not available: {e}")
 
 # ==================== TELEGRAM WEBHOOK ENDPOINT ====================
 # This endpoint receives updates from Telegram instead of polling
