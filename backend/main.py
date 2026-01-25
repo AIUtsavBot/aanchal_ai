@@ -1720,8 +1720,16 @@ def get_dashboard_analytics():
 
 @app.get("/analytics/asha/{asha_id}")
 def get_asha_analytics(asha_id: int):
-    """Get analytics for a specific ASHA worker"""
+    """Get analytics for a specific ASHA worker - CACHED"""
     try:
+        # Check cache first
+        cache_key = f"analytics:asha:{asha_id}"
+        if CACHE_AVAILABLE and cache:
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                logger.debug(f"📊 ASHA analytics served from cache for ID {asha_id}")
+                return cached_data
+        
         if not supabase:
             return {
                 "status": "success",
@@ -1738,7 +1746,7 @@ def get_asha_analytics(asha_id: int):
         total_mothers = len(mother_ids)
         
         if not mother_ids:
-            return {
+            result = {
                 "status": "success",
                 "total_mothers": 0,
                 "high_risk_count": 0,
@@ -1746,6 +1754,10 @@ def get_asha_analytics(asha_id: int):
                 "low_risk_count": 0,
                 "total_assessments": 0
             }
+            # Cache empty result for 30 seconds
+            if CACHE_AVAILABLE and cache:
+                cache.set(cache_key, result, ttl_seconds=30)
+            return result
         
         # Get latest risk assessment for each mother
         assessments_result = supabase.table("risk_assessments").select("mother_id, risk_level").in_("mother_id", mother_ids).order("created_at", desc=True).execute()
@@ -1761,7 +1773,7 @@ def get_asha_analytics(asha_id: int):
         moderate_risk = sum(1 for r in latest_risks.values() if r == "MODERATE")
         low_risk = total_mothers - high_risk - moderate_risk  # Remaining are LOW or unassessed
         
-        return {
+        result = {
             "status": "success",
             "total_mothers": total_mothers,
             "high_risk_count": high_risk,
@@ -1769,6 +1781,13 @@ def get_asha_analytics(asha_id: int):
             "low_risk_count": low_risk,
             "total_assessments": len(assessments)
         }
+        
+        # Cache for 60 seconds
+        if CACHE_AVAILABLE and cache:
+            cache.set(cache_key, result, ttl_seconds=60)
+            logger.info(f"📊 ASHA analytics cached for ID {asha_id}")
+        
+        return result
         
     except Exception as e:
         logger.error(f"❌ Error fetching ASHA analytics: {str(e)}")

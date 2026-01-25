@@ -280,11 +280,13 @@ export default function ASHAInterface() {
     setLoading(true);
     setError("");
     try {
+      // ✅ Show ALL mothers (pregnant, delivered, postnatal) assigned to this ASHA
       const { data, error: err } = await supabase
         .from("mothers")
         .select("*")
         .eq("asha_worker_id", Number(ashaWorkerId))
-        .in("status", ["pregnant", "high_risk"]); // ✨ Filter: Only show pregnant mothers in MatruRaksha
+        .order("status") // Show delivered first
+        .order("name");
 
       if (err) throw err;
       setMothers(data || []);
