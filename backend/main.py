@@ -560,8 +560,26 @@ except Exception as e:
     logger.warning(f"⚠️  SantanRaksha routes not available: {e}")
 
 
-# ==================== CORS SETUP ====================
+# ==================== SECURITY & RATE LIMITING ====================
+# Setup security middleware FIRST (will execute AFTER CORS)
+try:
+    from middleware.security import setup_security_middleware
+    setup_security_middleware(app)
+    logger.info("✅ Security middleware configured")
+except ImportError as e:
+    logger.warning(f"⚠️  Security middleware not available: {e}")
+
+# Setup rate limiting
+try:
+    from core.rate_limiting import setup_rate_limiting
+    setup_rate_limiting(app)
+    logger.info("✅ Rate limiting configured")
+except ImportError as e:
+    logger.warning(f"⚠️  Rate limiting not available: {e}")
+
+# ==================== CORS SETUP (MUST BE LAST) ====================
 # Configure CORS to explicitly allow the frontend origin
+# IMPORTANT: Add CORS middleware LAST so it executes FIRST (middleware runs in reverse)
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173").strip()
 ALLOWED_ORIGINS = [
     FRONTEND_URL,
@@ -577,28 +595,11 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],  # Explicitly include OPTIONS
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allow_headers=["*"],
     expose_headers=["*"],
-    max_age=3600,  # Cache preflight requests for 1 hour
+    max_age=3600,
 )
-
-# ==================== SECURITY & RATE LIMITING ====================
-# Setup rate limiting
-try:
-    from core.rate_limiting import setup_rate_limiting
-    setup_rate_limiting(app)
-    logger.info("✅ Rate limiting configured")
-except ImportError as e:
-    logger.warning(f"⚠️  Rate limiting not available: {e}")
-
-# Setup security middleware
-try:
-    from middleware.security import setup_security_middleware
-    setup_security_middleware(app)
-    logger.info("✅ Security middleware configured")
-except ImportError as e:
-    logger.warning(f"⚠️  Security middleware not available: {e}")
 
 # ==================== TELEGRAM WEBHOOK ENDPOINT ====================
 # This endpoint receives updates from Telegram instead of polling
