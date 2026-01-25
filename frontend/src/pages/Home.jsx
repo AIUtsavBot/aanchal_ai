@@ -77,7 +77,7 @@ export default function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
           <div>
             <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900">AI-Powered 24/7 Maternal Health Monitoring for Mothers in Low-Resource Settings.</h1>
-            <p className="mt-4 text-lg text-gray-700">MatruRaksha-AI automates maternal risk assessment, report analysis, and care coordination using multi-agent AI and chat-first interfaces—no app required.</p>
+            <p className="mt-4 text-lg text-gray-700">Aanchal AI automates maternal risk assessment, report analysis, and care coordination using multi-agent AI and chat-first interfaces—no app required.</p>
             <div className="mt-6 flex flex-wrap gap-4">
               <CTAButton href="https://t.me/MatruRaksha_AI_Bot">Start a Chat on Telegram</CTAButton>
               <CTAButton variant="secondary" href="/auth/login"><PlayCircle className="w-5 h-5" /> View Dashboard</CTAButton>
@@ -105,7 +105,7 @@ export default function Home() {
       </section>
 
       <section className="max-w-6xl mx-auto px-6 py-12">
-        <SectionTitle title="The Solution – MatruRaksha-AI" />
+        <SectionTitle title="The Solution – Aanchal AI" />
         <div className="bg-white rounded-xl shadow-sm p-8 border border-gray-200">
           <p className="text-gray-800">A multi-agent AI platform that detects maternal risk early, analyzes medical documents instantly, and coordinates care across Telegram, WhatsApp, and web dashboards.</p>
           <div className="mt-6">
@@ -159,7 +159,7 @@ export default function Home() {
       </section>
 
       <section className="max-w-6xl mx-auto px-6 py-12">
-        <SectionTitle title="Why MatruRaksha Wins (Competitive Advantage)" />
+        <SectionTitle title="Why Aanchal AI Wins (Competitive Advantage)" />
         <div className="bg-white rounded-xl shadow-sm p-8 border border-gray-200">
           <ul className="space-y-2 text-gray-800">
             <li className="flex items-center gap-2"><Workflow className="w-4 h-4 text-indigo-600" /> Multi-agent orchestration</li>
@@ -170,14 +170,14 @@ export default function Home() {
         </div>
       </section>
 
-      
+
 
       <footer id="contact" className="bg-white border-t border-gray-200">
         <div className="max-w-7xl mx-auto px-6 py-12">
           <div className="flex flex-col items-center text-center gap-4">
             <div className="flex items-center gap-2">
               <HeartPulse className="w-6 h-6 text-pink-600" />
-              <span className="font-bold text-gray-900">MatruRaksha AI</span>
+              <span className="font-bold text-gray-900">Aanchal AI</span>
             </div>
             <div className="text-sm text-gray-700">
               <Link to="/" className="hover:underline">Home</Link>
@@ -198,7 +198,7 @@ export default function Home() {
               <option value="hi">HI</option>
               <option value="mr">MR</option>
             </select> */}
-            <div className="text-xs text-gray-600">© 2025 MatruRaksha AI · React · FastAPI · Supabase · Gemini</div>
+            <div className="text-xs text-gray-600">© 2025 Aanchal AI · React · FastAPI · Supabase · Gemini</div>
           </div>
         </div>
       </footer>
