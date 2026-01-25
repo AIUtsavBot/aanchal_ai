@@ -7,6 +7,7 @@ import PatientChatHistory from "../components/PatientChatHistory.jsx";
 import DocumentManager from "../components/DocumentManager.jsx";
 import MotherRegistrationForm from "../components/MotherRegistrationForm.jsx";
 import { PostnatalDashboard } from "./postnatal/PostnatalDashboard.jsx";
+import { DeliveryCompletionModal } from "../components/DeliveryCompletionModal.jsx";
 import {
   Users,
   Search,
@@ -63,6 +64,7 @@ export default function ASHAInterface() {
   const [loadingMotherAssessments, setLoadingMotherAssessments] =
     useState(false);
   const [motherViewTab, setMotherViewTab] = useState("history"); // 'history' | 'chat'
+  const [nextVisit, setNextVisit] = useState(null);
 
   // Main content view: 'mother' | 'assess' | 'stats' | 'assessment-detail'
   const [mainView, setMainView] = useState("mother");
@@ -71,8 +73,13 @@ export default function ASHAInterface() {
   // Active tab management
   const [activeTab, setActiveTab] = useState("mothers"); // 'mothers', 'analytics', 'register'
 
+  // Delivery completion modal
+  const [showDeliveryModal, setShowDeliveryModal] = useState(false);
+  const [deliveryMother, setDeliveryMother] = useState(null);
+
   // Risk Assessment form state
-  const [riskFormData, setRiskFormData] = useState({
+  const [assessmentForm, setAssessmentForm] = useState({
+    mother_id: "",
     systolic_bp: "",
     diastolic_bp: "",
     heart_rate: "",
@@ -276,7 +283,9 @@ export default function ASHAInterface() {
       const { data, error: err } = await supabase
         .from("mothers")
         .select("*")
-        .eq("asha_worker_id", Number(ashaWorkerId));
+        .eq("asha_worker_id", Number(ashaWorkerId))
+        .in("status", ["pregnant", "high_risk"]); // ✨ Filter: Only show pregnant mothers in MatruRaksha
+
       if (err) throw err;
       setMothers(data || []);
 
@@ -338,6 +347,21 @@ export default function ASHAInterface() {
 
       if (!error) {
         setMotherAssessments(data || []);
+      }
+
+      // Fetch next visit date from postnatal assessments
+      const { data: pData } = await supabase
+        .from("postnatal_assessments")
+        .select("next_visit_date")
+        .eq("mother_id", motherId)
+        .not("next_visit_date", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (pData && pData.length > 0) {
+        setNextVisit(pData[0].next_visit_date);
+      } else {
+        setNextVisit(null);
       }
     } catch (err) {
       console.error("Error loading assessments:", err);
@@ -642,6 +666,11 @@ export default function ASHAInterface() {
                   <div className="flex items-center justify-between">
                     <div className="text-sm font-semibold text-gray-900">
                       {m.name}
+                      {['delivered', 'postnatal'].includes(m.delivery_status) && (
+                        <span className="ml-2 inline-block px-1.5 py-0.5 text-[10px] bg-purple-100 text-purple-800 rounded-full border border-purple-200">
+                          Delivered
+                        </span>
+                      )}
                     </div>
                     <span className="text-lg">
                       {getRiskIcon(riskMap[m.id] || "LOW")}
@@ -670,8 +699,13 @@ export default function ASHAInterface() {
             <div className="bg-white border-b px-8 py-6 shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">
+                  <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
                     {selected.name}
+                    {['delivered', 'postnatal'].includes(selected.delivery_status) && (
+                      <span className="px-3 py-1 text-sm bg-purple-100 text-purple-700 rounded-full border border-purple-200">
+                        Delivered
+                      </span>
+                    )}
                   </h2>
                   <p className="text-gray-600 mt-1 text-sm flex items-center gap-2">
                     <MapPin className="w-4 h-4" /> {selected.location} · Age{" "}
@@ -729,6 +763,17 @@ export default function ASHAInterface() {
                   </div>
                 </div>
 
+                {nextVisit && (
+                  <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-lg">
+                    <p className="text-xs text-blue-600 font-semibold mb-1 flex items-center gap-1">
+                      <Calendar className="w-3 h-3" /> Next Checkup
+                    </p>
+                    <p className="font-bold text-blue-900">
+                      {new Date(nextVisit).toLocaleDateString()}
+                    </p>
+                  </div>
+                )}
+
                 <button
                   onClick={() => {
                     setAssessmentForm({
@@ -742,6 +787,19 @@ export default function ASHAInterface() {
                   <Activity className="w-4 h-4 inline mr-2" />
                   New Assessment
                 </button>
+
+                {/* Complete Delivery Button - Only show for pregnant mothers */}
+                {!['delivered', 'postnatal'].includes(selected.status) && (
+                  <button
+                    onClick={() => {
+                      setDeliveryMother(selected);
+                      setShowDeliveryModal(true);
+                    }}
+                    className="w-full mt-3 py-2 bg-purple-600 text-white rounded-lg font-semibold text-sm hover:bg-purple-700 flex items-center justify-center gap-2"
+                  >
+                    🎉 Complete Delivery
+                  </button>
+                )}
               </div>
 
               {/* Main Content with Tabs */}
@@ -1304,6 +1362,23 @@ export default function ASHAInterface() {
           </div>
         )}
       </div>
+
+      {/* Delivery Completion Modal */}
+      {showDeliveryModal && deliveryMother && (
+        <DeliveryCompletionModal
+          mother={deliveryMother}
+          onClose={() => {
+            setShowDeliveryModal(false);
+            setDeliveryMother(null);
+          }}
+          onComplete={() => {
+            setShowDeliveryModal(false);
+            setDeliveryMother(null);
+            loadMothers(); // Reload mothers list
+            setSelected(null); // Clear selection
+          }}
+        />
+      )}
     </div>
   );
 }

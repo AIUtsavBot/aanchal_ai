@@ -119,14 +119,15 @@ export default function DoctorDashboard() {
             .from("doctors")
             .select("id, name, phone, assigned_area, email")
             .eq("user_profile_id", user.id)
-            .maybeSingle();
-          console.log(`📊 Query 1 completed in ${Date.now() - startTime}ms, data:`, data ? 'found' : 'not found', error ? `error: ${error.message}` : '');
+            .limit(1);
+          console.log(`📊 Query 1 completed in ${Date.now() - startTime}ms, data:`, data?.length ? 'found' : 'not found', error ? `error: ${error.message}` : '');
 
-          if (!error && data) {
+          if (!error && data && data.length > 0) {
+            const doc = data[0];
             if (isMounted) {
-              setDoctorId(data.id);
-              setDoctorInfo(data);
-              console.log("✅ Found doctor by user_profile_id:", data.name);
+              setDoctorId(doc.id);
+              setDoctorInfo(doc);
+              console.log("✅ Found doctor by user_profile_id:", doc.name);
               clearTimeout(timeoutId);
               setLoadingProfile(false);
             }
@@ -142,14 +143,15 @@ export default function DoctorDashboard() {
             .from("doctors")
             .select("id, name, phone, assigned_area, email")
             .eq("email", user.email)
-            .maybeSingle();
-          console.log(`📊 Query 2 completed in ${Date.now() - startTime}ms, data:`, data ? 'found' : 'not found', error ? `error: ${error.message}` : '');
+            .limit(1);
+          console.log(`📊 Query 2 completed in ${Date.now() - startTime}ms, data:`, data?.length ? 'found' : 'not found', error ? `error: ${error.message}` : '');
 
-          if (!error && data) {
+          if (!error && data && data.length > 0) {
+            const doc = data[0];
             if (isMounted) {
-              setDoctorId(data.id);
-              setDoctorInfo(data);
-              console.log("✅ Found doctor by email:", data.name);
+              setDoctorId(doc.id);
+              setDoctorInfo(doc);
+              console.log("✅ Found doctor by email:", doc.name);
               clearTimeout(timeoutId);
               setLoadingProfile(false);
             }

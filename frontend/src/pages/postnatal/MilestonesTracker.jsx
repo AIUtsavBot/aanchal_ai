@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../services/auth.js';
-import { Target, Check, Clock, AlertCircle, Baby, Brain, Hand, MessageCircle, Heart } from 'lucide-react';
+import { Target, Check, Clock, AlertCircle, Baby, Brain, Hand, MessageCircle, Heart, Loader } from 'lucide-react';
 import './PostnatalPages.css';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 // RBSK 4Ds Developmental Milestones
 const MILESTONES_BY_AGE = [
@@ -91,6 +93,7 @@ export const MilestonesTracker = ({ ashaWorkerId }) => {
     const [loading, setLoading] = useState(true);
     const [selectedChild, setSelectedChild] = useState(null);
     const [expandedAge, setExpandedAge] = useState(null);
+    const [togglingMilestone, setTogglingMilestone] = useState(null);
 
     useEffect(() => {
         loadData();
@@ -108,6 +111,7 @@ export const MilestonesTracker = ({ ashaWorkerId }) => {
             const { data: milestonesData } = await supabase
                 .from('milestones')
                 .select('*')
+                .eq('is_achieved', true)
                 .order('achieved_date', { ascending: false });
 
             if (childrenData) {
@@ -131,29 +135,110 @@ export const MilestonesTracker = ({ ashaWorkerId }) => {
     };
 
     const isMilestoneAchieved = (childId, milestoneName) => {
-        return milestoneRecords.some(m => m.child_id === childId && m.milestone_name === milestoneName);
+        return milestoneRecords.some(m =>
+            m.child_id === childId &&
+            m.milestone_name === milestoneName &&
+            m.is_achieved === true
+        );
     };
 
     const toggleMilestone = async (childId, milestone) => {
+        const key = `${childId}-${milestone.name}`;
+        setTogglingMilestone(key);
+
+        try {
+            // Use the new API endpoint
+            const response = await fetch(`${API_URL}/api/santanraksha/milestone/toggle`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    child_id: childId,
+                    milestone_name: milestone.name,
+                    milestone_category: milestone.category,
+                    notes: ''
+                })
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                console.log('Milestone toggled:', result);
+                // Force refresh data immediately
+                await loadData();
+            } else {
+                const errorData = await response.json();
+                console.error('API error:', errorData);
+                // Fallback to direct Supabase operation with correct column names
+                await fallbackToggleMilestone(childId, milestone);
+            }
+        } catch (err) {
+            console.error('Error toggling milestone:', err);
+            // Fallback to direct Supabase
+            await fallbackToggleMilestone(childId, milestone);
+        } finally {
+            setTogglingMilestone(null);
+        }
+    };
+
+    const fallbackToggleMilestone = async (childId, milestone) => {
         const isAchieved = isMilestoneAchieved(childId, milestone.name);
 
+        // Get child age for the record
+        const childData = children.find(c => c.id === childId);
+        let age_months = 0;
+        let age_days = 0;
+        if (childData?.birth_date) {
+            const birth = new Date(childData.birth_date);
+            const now = new Date();
+            age_days = Math.floor((now - birth) / (1000 * 60 * 60 * 24));
+            age_months = Math.floor(age_days / 30);
+        }
+
+        // Map category to DB enum
+        const categoryMap = {
+            'Motor': 'gross_motor',
+            'Fine Motor': 'fine_motor',
+            'Language': 'language',
+            'Cognitive': 'cognitive',
+            'Social': 'social_emotional',
+            'Sensory': 'cognitive',
+            'Self Care': 'self_care'
+        };
+        const dbCategory = categoryMap[milestone.category] || 'gross_motor';
+
         if (isAchieved) {
-            // Remove milestone
-            const record = milestoneRecords.find(m => m.child_id === childId && m.milestone_name === milestone.name);
+            // Find and update the record to is_achieved: false
+            const record = milestoneRecords.find(m =>
+                m.child_id === childId &&
+                m.milestone_name === milestone.name
+            );
             if (record) {
-                await supabase.from('milestones').delete().eq('id', record.id);
+                await supabase
+                    .from('milestones')
+                    .update({
+                        is_achieved: false,
+                        achieved_date: null,
+                        achieved_age_months: null,
+                        achieved_age_days: null
+                    })
+                    .eq('id', record.id);
             }
         } else {
-            // Add milestone
+            // Insert new milestone with correct columns
             await supabase.from('milestones').insert({
                 child_id: childId,
                 milestone_name: milestone.name,
-                milestone_category: milestone.category,
-                achieved_date: new Date().toISOString(),
+                category: dbCategory,
+                expected_age_months: age_months,
+                is_achieved: true,
+                achieved_date: new Date().toISOString().split('T')[0],
+                achieved_age_months: age_months,
+                achieved_age_days: age_days,
+                observation_method: 'parent_report',
                 notes: ''
             });
         }
-        loadData();
+        // Force refresh data
+        await loadData();
     };
 
     const getProgressPercent = (childId, ageMonths) => {
@@ -246,11 +331,17 @@ export const MilestonesTracker = ({ ashaWorkerId }) => {
                                                     return (
                                                         <div
                                                             key={mIdx}
-                                                            className={`milestone-item ${achieved ? 'achieved' : ''}`}
-                                                            onClick={() => toggleMilestone(selectedChild, milestone)}
+                                                            className={`milestone-item ${achieved ? 'achieved' : ''} ${togglingMilestone === `${selectedChild}-${milestone.name}` ? 'toggling' : ''}`}
+                                                            onClick={() => !togglingMilestone && toggleMilestone(selectedChild, milestone)}
                                                         >
                                                             <div className="milestone-check">
-                                                                {achieved ? <Check size={18} /> : <Clock size={18} />}
+                                                                {togglingMilestone === `${selectedChild}-${milestone.name}` ? (
+                                                                    <Loader size={18} className="animate-spin" />
+                                                                ) : achieved ? (
+                                                                    <Check size={18} />
+                                                                ) : (
+                                                                    <Clock size={18} />
+                                                                )}
                                                             </div>
                                                             <div className="milestone-icon">{milestone.icon}</div>
                                                             <div className="milestone-details">

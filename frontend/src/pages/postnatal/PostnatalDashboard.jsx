@@ -4,13 +4,30 @@ import { ChildrenList } from './ChildrenList.jsx';
 import { VaccinationCalendar } from './VaccinationCalendar.jsx';
 import { GrowthCharts } from './GrowthCharts.jsx';
 import { MilestonesTracker } from './MilestonesTracker.jsx';
+import { PostnatalAssessments } from './PostnatalAssessments.jsx';
 import {
-    Home, Baby, Syringe, TrendingUp, Target, MessageCircle,
-    Users, Calendar, Activity, AlertCircle
+    Home,
+    Baby,
+    Activity,
+    Syringe,
+    ClipboardList,
+    TrendingUp,
+    AlertTriangle,
+    CheckCircle,
+    ArrowLeft,
+    ClipboardCheck,
+    Target,
+    Calendar,
+    Users,
+    MessageCircle,
+    AlertCircle
 } from 'lucide-react';
+import { useView } from '../../contexts/ViewContext';
 import './PostnatalDashboard.css';
+import './PostnatalAssessments.css';
 
-export const PostnatalDashboard = ({ ashaWorkerId, userRole }) => {
+
+export const PostnatalDashboard = ({ ashaWorkerId, doctorId, userRole }) => {
     const [activeTab, setActiveTab] = useState('dashboard');
     const [stats, setStats] = useState({
         deliveredMothers: 0,
@@ -46,11 +63,17 @@ export const PostnatalDashboard = ({ ashaWorkerId, userRole }) => {
                 .select('id, status')
                 .in('status', ['due', 'overdue']);
 
-            // Get growth alerts
-            const { data: growth } = await supabase
-                .from('growth_records')
-                .select('id, weight_for_age_z')
-                .or('weight_for_age_z.lt.-2,weight_for_age_z.gt.2');
+            // Get growth alerts - use correct column name weight_for_age_z_score
+            let growthAlerts = 0;
+            try {
+                const { data: growth } = await supabase
+                    .from('growth_records')
+                    .select('id, weight_for_age_z_score')
+                    .or('weight_for_age_z_score.lt.-2,weight_for_age_z_score.gt.2');
+                growthAlerts = (growth || []).length;
+            } catch (err) {
+                console.log('Growth records query error (column may not exist):', err);
+            }
 
             const filteredChildren = ashaWorkerId
                 ? (children || []).filter(c => c.mothers?.asha_worker_id === ashaWorkerId)
@@ -64,7 +87,7 @@ export const PostnatalDashboard = ({ ashaWorkerId, userRole }) => {
                 deliveredMothers: filteredMothers.length,
                 childrenRegistered: filteredChildren.length,
                 vaccinesDue: (vaccines || []).length,
-                growthAlerts: (growth || []).length
+                growthAlerts: growthAlerts
             });
         } catch (err) {
             console.error('Error loading stats:', err);
@@ -75,6 +98,7 @@ export const PostnatalDashboard = ({ ashaWorkerId, userRole }) => {
 
     const tabs = [
         { id: 'dashboard', label: 'Dashboard', icon: Home },
+        { id: 'assessments', label: 'Assessments', icon: ClipboardCheck },
         { id: 'children', label: 'Children', icon: Baby },
         { id: 'vaccines', label: 'Vaccines', icon: Syringe },
         { id: 'growth', label: 'Growth', icon: TrendingUp },
@@ -83,6 +107,13 @@ export const PostnatalDashboard = ({ ashaWorkerId, userRole }) => {
 
     const renderContent = () => {
         switch (activeTab) {
+            case 'assessments':
+                return <PostnatalAssessments
+                    ashaWorkerId={ashaWorkerId}
+                    doctorId={doctorId}
+                    userRole={userRole}
+                    onUpdate={loadStats}
+                />;
             case 'children':
                 return <ChildrenList ashaWorkerId={ashaWorkerId} />;
             case 'vaccines':
@@ -162,7 +193,7 @@ export const PostnatalDashboard = ({ ashaWorkerId, userRole }) => {
                         <Target size={24} />
                         <span>Milestones</span>
                     </button>
-                    <button className="action-btn">
+                    <button className="action-btn" onClick={() => setActiveTab('assessments')}>
                         <Calendar size={24} />
                         <span>Postnatal Checkups</span>
                     </button>

@@ -30,6 +30,19 @@ except ImportError:
         def cached(*args, **kwargs): return lambda x: x
         def invalidate_mothers_cache(): pass
 
+# Import congratulations service
+try:
+    from services.congratulations_service import generate_congratulations_message, get_default_congratulations
+except ImportError:
+    try:
+        from backend.services.congratulations_service import generate_congratulations_message, get_default_congratulations
+    except ImportError:
+        # Fallback if service missing
+        async def generate_congratulations_message(*args, **kwargs): 
+            return "Congratulations on your delivery! Welcome to SantanRaksha! 🎉👶"
+        def get_default_congratulations(*args, **kwargs):
+            return "Congratulations on your delivery! Welcome to SantanRaksha! 🎉👶"
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/delivery", tags=["Delivery"])
@@ -153,15 +166,36 @@ async def complete_delivery(request: DeliveryCompletionRequest):
             days_postpartum = 0
 
         if mother_updated:
+            # Generate personalized congratulations message
+            try:
+                # Fetch mother details for personalized message
+                mother_details = supabase.table('mothers').select('name, preferred_language').eq('id', request.mother_id).single().execute()
+                mother_name = mother_details.data.get('name', 'Mother') if mother_details.data else 'Mother'
+                language = mother_details.data.get('preferred_language', 'en') if mother_details.data else 'en'
+                
+                # Generate congratulations
+                congratulations = await generate_congratulations_message(
+                    mother_name=mother_name,
+                    child_name=request.child.name if request.child else None,
+                    child_gender=request.child.gender if request.child else None,
+                    delivery_type=request.delivery_type,
+                    language=language
+                )
+                logger.info(f"✅ Generated congratulations for {mother_name}")
+            except Exception as e:
+                logger.warning(f"⚠️ Congratulations generation failed, using default: {e}")
+                congratulations = get_default_congratulations(mother_name if 'mother_name' in locals() else "Mother", 
+                                                              language if 'language' in locals() else "en")
+            
             # Invalidate cache so lists update immediately
             invalidate_mothers_cache()
             
             return DeliveryCompletionResponse(
                 success=True,
-                message="Delivery completed successfully!",
+                message=congratulations,  # ✨ Personalized congratulations message!
                 mother_updated=True,
                 child_created=child_created,
-                vaccination_schedule_created=True, # RPC handles this now
+                vaccination_schedule_created=True,
                 active_system='santanraksha',
                 days_postpartum=days_postpartum
             )

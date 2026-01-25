@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../services/auth.js';
-import { TrendingUp, Weight, Ruler, Activity, AlertTriangle, CheckCircle, Plus } from 'lucide-react';
+import { TrendingUp, Weight, Ruler, Activity, AlertTriangle, CheckCircle, Plus, Loader } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import './PostnatalPages.css';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 // WHO Z-score thresholds
 const Z_SCORE_CLASSIFICATIONS = {
@@ -20,6 +23,8 @@ export const GrowthCharts = ({ ashaWorkerId }) => {
     const [loading, setLoading] = useState(true);
     const [selectedChild, setSelectedChild] = useState(null);
     const [showAddForm, setShowAddForm] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [lastResult, setLastResult] = useState(null);
     const [newRecord, setNewRecord] = useState({
         weight_kg: '',
         height_cm: '',
@@ -82,26 +87,87 @@ export const GrowthCharts = ({ ashaWorkerId }) => {
     const handleAddRecord = async () => {
         if (!selectedChild || !newRecord.weight_kg) return;
 
+        setSaving(true);
+        setLastResult(null);
+
         try {
-            const { error } = await supabase
-                .from('growth_records')
-                .insert({
+            // Use the new API endpoint which calculates z-scores
+            const response = await fetch(`${API_URL}/api/santanraksha/growth/record`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                     child_id: selectedChild,
                     weight_kg: parseFloat(newRecord.weight_kg),
                     height_cm: newRecord.height_cm ? parseFloat(newRecord.height_cm) : null,
                     head_circumference_cm: newRecord.head_circumference_cm ? parseFloat(newRecord.head_circumference_cm) : null,
                     notes: newRecord.notes,
-                    measurement_date: new Date().toISOString(),
-                    measured_by: 'ASHA Worker'
-                });
+                    measured_by: 'ASHA Worker',
+                    measurement_date: new Date().toISOString().split('T')[0]
+                })
+            });
 
-            if (!error) {
-                setShowAddForm(false);
-                setNewRecord({ weight_kg: '', height_cm: '', head_circumference_cm: '', notes: '' });
-                loadData();
+            if (response.ok) {
+                const result = await response.json();
+                setLastResult(result);
+
+                // Show result for a moment then close and refresh
+                setTimeout(async () => {
+                    setShowAddForm(false);
+                    setNewRecord({ weight_kg: '', height_cm: '', head_circumference_cm: '', notes: '' });
+                    setLastResult(null);
+                    // Force refresh data immediately
+                    await loadData();
+                }, 2000);
+            } else {
+                console.warn('Backend API failed, using client-side fallback:', errorData);
+                // Trigger fallback
+                throw new Error('API_FALLBACK');
             }
         } catch (err) {
-            console.error('Error adding record:', err);
+            console.log('Attempting offline fallback save...');
+
+            // Fallback to direct Supabase insert
+            try {
+                const childData = children.find(c => c.id === selectedChild);
+                let age_months = 0;
+                let age_days = 0;
+
+                if (childData?.birth_date) {
+                    const birth = new Date(childData.birth_date);
+                    const now = new Date();
+                    const diffTime = Math.abs(now - birth);
+                    age_days = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                    age_months = Math.floor(age_days / 30.44);
+                }
+
+                const { data, error } = await supabase
+                    .from('growth_records')
+                    .insert({
+                        child_id: selectedChild,
+                        measurement_date: new Date().toISOString().split('T')[0],
+                        age_months: age_months,
+                        age_days: age_days,
+                        weight_kg: parseFloat(newRecord.weight_kg),
+                        height_cm: newRecord.height_cm ? parseFloat(newRecord.height_cm) : null,
+                        head_circumference_cm: newRecord.head_circumference_cm ? parseFloat(newRecord.head_circumference_cm) : null,
+                        notes: `${newRecord.notes || ''} | Offline Record`
+                    })
+                    .select();
+
+                if (error) throw error;
+
+                // Success
+                setShowAddForm(false);
+                setNewRecord({ weight_kg: '', height_cm: '', head_circumference_cm: '', notes: '' });
+                alert('Record saved successfully (Offline Mode)');
+                await loadData();
+
+            } catch (fallbackError) {
+                console.error('Fallback save failed:', fallbackError);
+                alert('Failed to save record: ' + (fallbackError.message || 'Unknown error'));
+            }
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -227,6 +293,26 @@ export const GrowthCharts = ({ ashaWorkerId }) => {
                                         ))}
                                     </div>
                                 )}
+
+                                {records.length > 0 && (
+                                    <div className="growth-chart-section" style={{ marginTop: '1rem', height: '200px' }}>
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <LineChart data={records.map(r => ({
+                                                date: new Date(r.measurement_date).toLocaleDateString(),
+                                                weight: r.weight_kg,
+                                                height: r.height_cm
+                                            })).reverse()}>
+                                                <CartesianGrid strokeDasharray="3 3" />
+                                                <XAxis dataKey="date" fontSize={10} />
+                                                <YAxis yAxisId="left" orientation="left" stroke="#8884d8" fontSize={10} domain={['auto', 'auto']} />
+                                                <YAxis yAxisId="right" orientation="right" stroke="#82ca9d" fontSize={10} domain={['auto', 'auto']} />
+                                                <Tooltip />
+                                                <Line yAxisId="left" type="monotone" dataKey="weight" stroke="#8884d8" dot={{ r: 3 }} activeDot={{ r: 5 }} name="Weight (kg)" />
+                                                <Line yAxisId="right" type="monotone" dataKey="height" stroke="#82ca9d" dot={{ r: 3 }} name="Height (cm)" />
+                                            </LineChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                )}
                             </div>
                         );
                     })}
@@ -234,59 +320,103 @@ export const GrowthCharts = ({ ashaWorkerId }) => {
             )}
 
             {/* Add Record Modal */}
-            {showAddForm && (
-                <div className="modal-overlay" onClick={() => setShowAddForm(false)}>
-                    <div className="modal-content" onClick={e => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <h2>📏 Add Growth Record</h2>
-                            <button onClick={() => setShowAddForm(false)}>×</button>
-                        </div>
-                        <div className="modal-body">
-                            <div className="form-group">
-                                <label>Weight (kg) *</label>
-                                <input
-                                    type="number"
-                                    step="0.1"
-                                    value={newRecord.weight_kg}
-                                    onChange={e => setNewRecord({ ...newRecord, weight_kg: e.target.value })}
-                                    placeholder="e.g., 5.5"
-                                />
+            {
+                showAddForm && (
+                    <div className="modal-overlay" onClick={() => setShowAddForm(false)}>
+                        <div className="modal-content" onClick={e => e.stopPropagation()}>
+                            <div className="modal-header">
+                                <h2>📏 Add Growth Record</h2>
+                                <button onClick={() => setShowAddForm(false)}>×</button>
                             </div>
-                            <div className="form-group">
-                                <label>Height/Length (cm)</label>
-                                <input
-                                    type="number"
-                                    step="0.1"
-                                    value={newRecord.height_cm}
-                                    onChange={e => setNewRecord({ ...newRecord, height_cm: e.target.value })}
-                                    placeholder="e.g., 55"
-                                />
+                            <div className="modal-body">
+                                {lastResult ? (
+                                    <div className={`growth-result ${lastResult.alert ? 'alert' : 'success'}`}>
+                                        <div className="result-icon">
+                                            {lastResult.alert ? (
+                                                <AlertTriangle size={48} color="#f59e0b" />
+                                            ) : (
+                                                <CheckCircle size={48} color="#10b981" />
+                                            )}
+                                        </div>
+                                        <h3>{lastResult.status_label}</h3>
+                                        <div className="z-score-display">
+                                            <span>Weight-for-Age Z-Score:</span>
+                                            <strong>{lastResult.z_scores?.weight_for_age_z?.toFixed(1) || 'N/A'}</strong>
+                                        </div>
+                                        {lastResult.recommendations?.length > 0 && (
+                                            <div className="recommendations">
+                                                <h4>Recommendations:</h4>
+                                                <ul>
+                                                    {lastResult.recommendations.map((rec, idx) => (
+                                                        <li key={idx}>{rec}</li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
+                                        <p className="closing-message">Closing in 3 seconds...</p>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="form-group">
+                                            <label>Weight (kg) *</label>
+                                            <input
+                                                type="number"
+                                                step="0.1"
+                                                value={newRecord.weight_kg}
+                                                onChange={e => setNewRecord({ ...newRecord, weight_kg: e.target.value })}
+                                                placeholder="e.g., 5.5"
+                                                disabled={saving}
+                                            />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Height/Length (cm)</label>
+                                            <input
+                                                type="number"
+                                                step="0.1"
+                                                value={newRecord.height_cm}
+                                                onChange={e => setNewRecord({ ...newRecord, height_cm: e.target.value })}
+                                                placeholder="e.g., 55"
+                                                disabled={saving}
+                                            />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Head Circumference (cm)</label>
+                                            <input
+                                                type="number"
+                                                step="0.1"
+                                                value={newRecord.head_circumference_cm}
+                                                onChange={e => setNewRecord({ ...newRecord, head_circumference_cm: e.target.value })}
+                                                placeholder="e.g., 35"
+                                                disabled={saving}
+                                            />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Notes</label>
+                                            <textarea
+                                                value={newRecord.notes}
+                                                onChange={e => setNewRecord({ ...newRecord, notes: e.target.value })}
+                                                placeholder="Any observations..."
+                                                disabled={saving}
+                                            />
+                                        </div>
+                                        <button
+                                            className="btn-primary full"
+                                            onClick={handleAddRecord}
+                                            disabled={saving || !newRecord.weight_kg}
+                                        >
+                                            {saving ? (
+                                                <><Loader size={16} className="animate-spin" /> Calculating Z-Score...</>
+                                            ) : (
+                                                'Save & Evaluate Growth'
+                                            )}
+                                        </button>
+                                    </>
+                                )}
                             </div>
-                            <div className="form-group">
-                                <label>Head Circumference (cm)</label>
-                                <input
-                                    type="number"
-                                    step="0.1"
-                                    value={newRecord.head_circumference_cm}
-                                    onChange={e => setNewRecord({ ...newRecord, head_circumference_cm: e.target.value })}
-                                    placeholder="e.g., 35"
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label>Notes</label>
-                                <textarea
-                                    value={newRecord.notes}
-                                    onChange={e => setNewRecord({ ...newRecord, notes: e.target.value })}
-                                    placeholder="Any observations..."
-                                />
-                            </div>
-                            <button className="btn-primary full" onClick={handleAddRecord}>
-                                Save Record
-                            </button>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 };

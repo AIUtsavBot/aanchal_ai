@@ -1017,3 +1017,258 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* ==================== NEW FEATURES STYLES ==================== */
+
+/* Spin Animation */
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+/* Completed Badge for vaccinations */
+.completed-badge {
+    color: #10b981;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* Button disabled state */
+.btn-mark:disabled,
+.btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Growth Result Modal */
+.growth-result {
+    text-align: center;
+    padding: 1.5rem;
+}
+
+.growth-result .result-icon {
+    margin-bottom: 1rem;
+}
+
+.growth-result h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: #1f2937;
+}
+
+.growth-result.success h3 {
+    color: #10b981;
+}
+
+.growth-result.alert h3 {
+    color: #f59e0b;
+}
+
+.z-score-display {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: #f9fafb;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.z-score-display span {
+    color: #6b7280;
+}
+
+.z-score-display strong {
+    font-size: 1.5rem;
+    color: #1f2937;
+}
+
+.growth-result .recommendations {
+    text-align: left;
+    background: #ecfdf5;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.growth-result.alert .recommendations {
+    background: #fef3c7;
+}
+
+.growth-result .recommendations h4 {
+    font-size: 0.875rem;
+    color: #374151;
+    margin-bottom: 0.75rem;
+}
+
+.growth-result .recommendations ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.growth-result .recommendations li {
+    padding: 0.25rem 0;
+    font-size: 0.875rem;
+    color: #4b5563;
+}
+
+.closing-message {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    margin-top: 1rem;
+}
+
+/* Milestone toggling state */
+.milestone-item.toggling {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.milestone-item.toggling .milestone-check {
+    border-color: #8b5cf6;
+    background: transparent;
+}
+
+/* Form disabled state */
+.form-group input:disabled,
+.form-group textarea:disabled {
+    background: #f3f4f6;
+    cursor: not-allowed;
+}
+
+/* Vaccination upcoming alert card */
+.upcoming-vaccines {
+    margin-bottom: 2rem;
+}
+
+.upcoming-vaccines h4 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #374151;
+    margin-bottom: 1rem;
+}
+
+.upcoming-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    background: white;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    border-left: 4px solid #f59e0b;
+}
+
+.upcoming-item.overdue {
+    border-left-color: #ef4444;
+    background: #fef2f2;
+}
+
+.upcoming-item .vaccine-info {
+    flex: 1;
+}
+
+.upcoming-item .vaccine-name {
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.upcoming-item .child-name {
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+.upcoming-item .due-date {
+    font-size: 0.875rem;
+    color: #f59e0b;
+    font-weight: 500;
+}
+
+.upcoming-item.overdue .due-date {
+    color: #ef4444;
+}
+
+/* Schedule reference box */
+.schedule-reference {
+    background: #f0fdf4;
+    border: 1px solid #86efac;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 2rem;
+}
+
+.schedule-reference h4 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #166534;
+    margin-bottom: 0.75rem;
+}
+
+.schedule-note p {
+    color: #15803d;
+    font-size: 0.875rem;
+    margin: 0.25rem 0;
+}
+
+/* Delay alert */
+.delay-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: #fef3c7;
+    border: 1px solid #fcd34d;
+    border-radius: 8px;
+    margin-top: 2rem;
+}
+
+.delay-alert svg {
+    color: #d97706;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.delay-alert p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: #92400e;
+}
+
+.delay-alert strong {
+    color: #78350f;
+}
+
+/* Select child prompt */
+.select-child-prompt {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    color: #9ca3af;
+    text-align: center;
+}
+
+.select-child-prompt svg {
+    margin-bottom: 1rem;
+    color: #d1d5db;
+}
+
+.select-child-prompt p {
+    font-size: 1rem;
+    color: #6b7280;
+}

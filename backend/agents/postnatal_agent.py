@@ -21,6 +21,19 @@ except ImportError:
 
 from .base_agent import BaseAgent
 
+# Import pregnancy history service
+try:
+    from services.pregnancy_history_service import get_pregnancy_history_context, format_history_for_prompt
+except ImportError:
+    try:
+        from backend.services.pregnancy_history_service import get_pregnancy_history_context, format_history_for_prompt
+    except ImportError:
+        # Fallback if service not available
+        async def get_pregnancy_history_context(mother_id): 
+            return {}
+        def format_history_for_prompt(history):
+            return "Pregnancy history not available."
+
 logger = logging.getLogger(__name__)
 
 
@@ -296,6 +309,104 @@ Empower mothers while ensuring safety."""
             'recommendations': recommendations,
             'referral_needed': risk_level in ['high', 'critical']
         }
+    
+    
+    async def process_query(
+        self,
+        query: str,
+        mother_context: Dict[str, Any],
+        reports_context: List[Dict[str, Any]],
+        language: str = 'en'
+    ) -> str:
+        """
+        Process postnatal query with PREGNANCY HISTORY CONTEXT
+        
+        This method enhances the base agent's process_query by adding
+        complete pregnancy history as context for more informed responses.
+        """
+        if not self.client:
+            return (
+                "⚠️ Postnatal Care Agent is currently unavailable. "
+                "Please try again later or contact support."
+            )
+        
+        try:
+            mother_id = mother_context.get('id')
+            
+            # ✨ NEW: Fetch pregnancy history for context
+            logger.info(f"📚 Fetching pregnancy history for mother {mother_id}")
+            pregnancy_history = await get_pregnancy_history_context(mother_id)
+            history_prompt = format_history_for_prompt(pregnancy_history)
+            
+            # Build enhanced system prompt with pregnancy history
+            system_prompt = self.get_system_prompt()
+            
+            # Context building
+            context_result = await self.build_context(mother_id)
+            context_info = context_result.get('context_text', '')
+            
+            preferred_language = language or mother_context.get('preferred_language', 'en')
+            
+            # Days postpartum for context
+            delivery_date = mother_context.get('delivery_date')
+            days_postpartum = "unknown"
+            if delivery_date:
+                try:
+                    from datetime import datetime
+                    delivery_dt = datetime.fromisoformat(delivery_date.replace('Z', ''))
+                    days_postpartum = (datetime.now() - delivery_dt).days
+                except:
+                    pass
+            
+            # Enhanced prompt with pregnancy history
+            full_prompt = f"""
+CRITICAL: Strictly follow WHO and NHM India guidelines. If High Risk, recommend hospital. Reply ONLY in {preferred_language}.
+
+{system_prompt}
+
+===============================
+PREGNANCY HISTORY (MatruRaksha)
+===============================
+{history_prompt}
+
+IMPORTANT: Use the pregnancy history above as CONTEXT to provide personalized 
+postnatal guidance. For example:
+- If gestational diabetes → monitor baby's 血sugar and mother's risk
+- If anemia during pregnancy → check if iron supplementation still needed
+- If high BP/preeclampsia → watch for postpartum hypertension
+- If previous complications → consider ongoing monitoring needs
+
+===============================
+CURRENT POSTNATAL STATUS
+===============================
+Days Postpartum: {days_postpartum}
+Delivery Type: {mother_context.get('delivery_type', 'unknown')}
+
+{context_info}
+
+===============================
+Mother's Question: {query}
+===============================
+
+Response:
+"""
+            
+            # Generate response
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=full_prompt
+            )
+            
+            cleaned_response = response.text.strip()
+            logger.info(f"✅ Postnatal Agent processed query with pregnancy history context")
+            return cleaned_response
+            
+        except Exception as e:
+            logger.error(f"❌ Postnatal Agent error: {e}")
+            return (
+                f"I apologize, but I encountered an issue processing your request. "
+                f"Please try rephrasing your question or contact your healthcare provider if urgent."
+            )
     
     def generate_response(
         self, 

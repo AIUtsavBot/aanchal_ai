@@ -513,6 +513,23 @@ try:
 except Exception as e:
     logger.warning(f"⚠️  Delivery routes not available: {e}")
 
+# Mount Postnatal assessment routes
+try:
+    from routes.postnatal import router as postnatal_router
+    app.include_router(postnatal_router)
+    logger.info("✅ Postnatal assessment routes loaded")
+except Exception as e:
+    logger.warning(f"⚠️  Postnatal routes not available: {e}")
+
+# Mount SantanRaksha child health routes (vaccinations, growth, milestones)
+try:
+    from routes.santanraksha import router as santanraksha_router
+    app.include_router(santanraksha_router)
+    logger.info("✅ SantanRaksha child health routes loaded (vaccinations, growth, milestones)")
+except Exception as e:
+    logger.warning(f"⚠️  SantanRaksha routes not available: {e}")
+
+
 # ==================== CORS SETUP ====================
 # Configure CORS to explicitly allow the frontend origin
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173").strip()

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../services/auth.js';
-import { Calendar, Check, AlertCircle, Clock, Syringe, ChevronRight, Info } from 'lucide-react';
+import { Calendar, Check, AlertCircle, Clock, Syringe, ChevronRight, Info, Loader } from 'lucide-react';
 import './PostnatalPages.css';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 // IAP 2023 Vaccination Schedule
 const IAP_SCHEDULE = [
@@ -32,6 +34,7 @@ export const VaccinationCalendar = ({ ashaWorkerId }) => {
     const [loading, setLoading] = useState(true);
     const [selectedChild, setSelectedChild] = useState(null);
     const [filter, setFilter] = useState('all'); // 'all', 'due', 'overdue', 'completed'
+    const [savingVaccine, setSavingVaccine] = useState(null); // Track which vaccine is being saved
 
     useEffect(() => {
         loadData();
@@ -71,6 +74,80 @@ export const VaccinationCalendar = ({ ashaWorkerId }) => {
         const record = vaccinations.find(v => v.child_id === childId && v.vaccine_name === vaccineName);
         if (!record) return 'pending';
         return record.status;
+    };
+
+    const markVaccineDone = async (childId, vaccineName) => {
+        setSavingVaccine(`${childId}-${vaccineName}`);
+        try {
+            const response = await fetch(`${API_URL}/api/santanraksha/vaccination/mark-done`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    child_id: childId,
+                    vaccine_name: vaccineName,
+                    given_date: new Date().toISOString().split('T')[0],
+                    given_by: 'ASHA Worker'
+                })
+            });
+
+            if (response.ok) {
+                // Force refresh data to show updated status
+                await loadData();
+            } else {
+                const errorData = await response.json();
+                console.error('Failed to mark vaccine as done:', errorData);
+                // Fallback to direct Supabase with correct columns
+                await fallbackMarkVaccineDone(childId, vaccineName);
+            }
+        } catch (err) {
+            console.error('Error marking vaccine done:', err);
+            // Fallback to direct Supabase
+            await fallbackMarkVaccineDone(childId, vaccineName);
+        } finally {
+            setSavingVaccine(null);
+        }
+    };
+
+    const fallbackMarkVaccineDone = async (childId, vaccineName) => {
+        const today = new Date().toISOString().split('T')[0];
+
+        // Check if there's an existing record
+        const { data: existing } = await supabase
+            .from('vaccinations')
+            .select('id')
+            .eq('child_id', childId)
+            .eq('vaccine_name', vaccineName)
+            .neq('status', 'completed')
+            .single();
+
+        if (existing) {
+            // Update existing record with correct column names
+            await supabase
+                .from('vaccinations')
+                .update({
+                    status: 'completed',
+                    administered_date: today,
+                    administered_by: 'ASHA Worker'
+                })
+                .eq('id', existing.id);
+        } else {
+            // Insert new record with correct column names
+            await supabase
+                .from('vaccinations')
+                .insert({
+                    child_id: childId,
+                    vaccine_name: vaccineName,
+                    vaccine_category: 'primary',
+                    recommended_age_days: 0,
+                    due_date: today,
+                    administered_date: today,
+                    administered_by: 'ASHA Worker',
+                    status: 'completed'
+                });
+        }
+
+        // Force refresh data
+        await loadData();
     };
 
     const getStatusColor = (status) => {
@@ -173,7 +250,23 @@ export const VaccinationCalendar = ({ ashaWorkerId }) => {
                                                     </div>
                                                     <div className="vaccine-action">
                                                         {status !== 'completed' && (
-                                                            <button className="btn-mark">Mark Done</button>
+                                                            <button
+                                                                className="btn-mark"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    markVaccineDone(child.id, vax.vaccine);
+                                                                }}
+                                                                disabled={savingVaccine === `${child.id}-${vax.vaccine}`}
+                                                            >
+                                                                {savingVaccine === `${child.id}-${vax.vaccine}` ? (
+                                                                    <><Loader size={14} className="animate-spin" /> Saving...</>
+                                                                ) : (
+                                                                    'Mark Done'
+                                                                )}
+                                                            </button>
+                                                        )}
+                                                        {status === 'completed' && (
+                                                            <span className="completed-badge">✅ Done</span>
                                                         )}
                                                     </div>
                                                 </div>
