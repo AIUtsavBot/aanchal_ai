@@ -82,3 +82,8 @@ httpx>=0.26.0  # For testing FastAPI
 
 # Retry logic
 tenacity>=8.2.3
+
+# Redis for distributed caching
+redis>=5.0.1
+hiredis>=2.3.2  # C parser for better performance
+

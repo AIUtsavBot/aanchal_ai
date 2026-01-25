@@ -1,4 +1,4 @@
-// MatruRaksha AI - Signup Page
+// Aanchal AI - Signup Page
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -140,11 +140,11 @@ const Signup = () => {
         {/* Header */}
         <div className="text-center">
           <h1 className="text-4xl font-bold text-purple-600 mb-2">
-            🤰 MatruRaksha
+            🤰 Aanchal AI
           </h1>
           <h2 className="text-2xl font-bold text-gray-900">Create Account</h2>
           <p className="mt-2 text-sm text-gray-600">
-            Join the MatruRaksha healthcare system
+            Join the Aanchal AI healthcare system
           </p>
         </div>
 
