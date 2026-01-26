@@ -509,22 +509,37 @@ except Exception as e1:
             logger.warning(f"⚠️  Authentication routes not available: {e1} | {e2} | {e3}")
 
 if auth_router:
-    app.include_router(auth_router)
-    logger.info("✅ Authentication routes loaded")
+# Mount authentication, admin, postnatal, streaming, and task routes
+try:
+    # Import routes
+    from routes.auth_routes import router as auth_router
+    from routes.admin_routes import router as admin_router
+    from routes.postnatal_routes import router as postnatal_router
+    
+    # Include routers
+    app.include_router(auth_router, prefix="/api")
+    app.include_router(admin_router, prefix="/api")
+    app.include_router(postnatal_router, prefix="/api")
+    
+    # Phase 2: Streaming and Task routes
+    try:
+        from routes.streaming import router as streaming_router
+        from routes.task_routes import router as task_router
+        app.include_router(streaming_router, prefix="/api")
+        app.include_router(task_router, prefix="/api")
+        logger.info("✅ Streaming and task routes loaded")
+    except ImportError as e:
+        logger.warning(f"⚠️  Streaming/task routes not available: {e}")
+    
+    logger.info("✅ All API routes configured (auth, admin, postnatal, streaming, tasks)")
     try:
         for r in app.router.routes:
             logger.info(f"🔗 {','.join(r.methods)} {getattr(r, 'path', '')}")
     except Exception:
         pass
-
-# Mount admin routes
-try:
-    from routes.admin_routes import router as admin_router
-    app.include_router(admin_router)
-    logger.info("✅ Admin routes loaded")
 except Exception as e:
     import traceback
-    logger.error(f"❌ Admin routes FAILED to load: {e}")
+    logger.error(f"❌ Routes FAILED to load: {e}")
     logger.error(traceback.format_exc())
 
 # Mount offline sync routes

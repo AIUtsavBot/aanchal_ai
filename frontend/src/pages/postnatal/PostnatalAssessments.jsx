@@ -110,43 +110,47 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
     const loadData = async (signal = null) => {
         setLoading(true);
         try {
-            // Load postnatal mothers (status = 'postnatal')
-            let query = supabase
-                .from('mothers')
-                .select('*')
-                .eq('status', 'postnatal');
+            // Use backend API instead of direct Supabase calls
+            const { postnatalAPI } = await import('../../services/api.js');
 
-            if (signal) query = query.abortSignal(signal);
-            if (ashaWorkerId) query = query.eq('asha_worker_id', ashaWorkerId);
-            if (doctorId) query = query.eq('doctor_id', doctorId);
+            // Load postnatal mothers via API (cached on backend)
+            const mothersResponse = await postnatalAPI.getMothers(ashaWorkerId, doctorId);
+            setMothers(mothersResponse.mothers || []);
 
-            const { data: mothersData, error: mothersError } = await query;
-            if (mothersError) throw mothersError;
-
-            setMothers(mothersData || []);
-
-            // Load children (if table exists)
-            try {
-                const motherIds = (mothersData || []).map(m => m.id);
-                if (motherIds.length > 0) {
-                    let childQuery = supabase
-                        .from('children')
-                        .select('*')
-                        .in('mother_id', motherIds);
-
-                    if (signal) childQuery = childQuery.abortSignal(signal);
-
-                    const { data: childrenData } = await childQuery;
-                    setChildren(childrenData || []);
+            // Load children if we have mothers
+            if (mothersResponse.mothers && mothersResponse.mothers.length > 0) {
+                try {
+                    const childrenResponse = await postnatalAPI.getChildren(
+                        null, // mother_id (get all)
+                        ashaWorkerId,
+                        doctorId
+                    );
+                    setChildren(childrenResponse.children || []);
+                } catch (childErr) {
+                    console.log('Children fetch error:', childErr);
+                    setChildren([]);
                 }
-            } catch (childErr) {
-                console.log('Children fetch error:', childErr);
-                setChildren([]);
             }
 
         } catch (err) {
             if (err.name !== 'AbortError') {
-                console.error('Error loading data:', err);
+                console.error('Error loading postnatal data:', err);
+                // Still try to load from Supabase as fallback
+                try {
+                    let query = supabase
+                        .from('mothers')
+                        .select('*')
+                        .eq('status', 'postnatal');
+
+                    if (signal) query = query.abortSignal(signal);
+                    if (ashaWorkerId) query = query.eq('asha_worker_id', ashaWorkerId);
+                    if (doctorId) query = query.eq('doctor_id', doctorId);
+
+                    const { data: mothersData } = await query;
+                    setMothers(mothersData || []);
+                } catch (fallbackErr) {
+                    console.error('Fallback error:', fallbackErr);
+                }
             }
         } finally {
             setLoading(false);
@@ -154,19 +158,30 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
     };
 
     const loadAssessments = async (motherId = null, childId = null) => {
+        if (!motherId) return;
+
         try {
-            // Try to load assessments from postnatal_assessments table
-            let query = supabase.from('postnatal_assessments').select('*');
+            // Use backend API for cached assessment history
+            const { postnatalAPI } = await import('../../services/api.js');
+            const response = await postnatalAPI.getAssessmentHistory(motherId, childId);
+            setAssessments(response.assessments || []);
+        } catch (err) {
+            console.error('Error loading assessments:', err);
+            // Fallback to direct Supabase query
+            try {
+                let query = supabase.from('postnatal_assessments').select('*');
 
-            if (motherId) query = query.eq('mother_id', motherId);
-            if (childId) query = query.eq('child_id', childId);
+                if (motherId) query = query.eq('mother_id', motherId);
+                if (childId) query = query.eq('child_id', childId);
 
-            query = query.order('assessment_date', { ascending: false });
+                query = query.order('assessment_date', { ascending: false });
 
-            const { data } = await query;
-            setAssessments(data || []);
-        } catch {
-            setAssessments([]);
+                const { data } = await query;
+                setAssessments(data || []);
+            } catch (fallbackErr) {
+                console.error('Fallback error:', fallbackErr);
+                setAssessments([]);
+            }
         }
     };
 
@@ -185,20 +200,21 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
 
         setLoading(true);
         try {
-            const assessmentData = cleanData({
+            // Use backend API for assessment creation
+            const { postnatalAPI } = await import('../../services/api.js');
+
+            const assessmentData = {
                 mother_id: selectedMother.id,
-                assessment_type: 'mother_postnatal',
                 assessor_id: ashaWorkerId || doctorId,
                 assessor_role: userRole,
                 ...motherAssessment
-            });
+            };
 
-            const { error } = await supabase.from('postnatal_assessments').insert(assessmentData);
-            if (error) throw error;
+            await postnatalAPI.createMotherAssessment(assessmentData);
 
             // Success notification (non-blocking)
             const notification = document.createElement('div');
-            notification.textContent = 'Assessment saved successfully!';
+            notification.textContent = '✅ Assessment saved successfully!';
             notification.style.cssText = 'position:fixed;top:20px;right:20px;padding:12px 24px;background:#10b981;color:white;border-radius:8px;z-index:10000';
             document.body.appendChild(notification);
             setTimeout(() => document.body.removeChild(notification), 3000);
@@ -211,7 +227,7 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
 
             // Error notification (non-blocking)
             const notification = document.createElement('div');
-            notification.textContent = `Failed to save: ${err.message || 'Unknown error'}`;
+            notification.textContent = `❌ Failed to save: ${err.message || 'Unknown error'}`;
             notification.style.cssText = 'position:fixed;top:20px;right:20px;padding:12px 24px;background:#ef4444;color:white;border-radius:8px;z-index:10000';
             document.body.appendChild(notification);
             setTimeout(() => document.body.removeChild(notification), 4000);

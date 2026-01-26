@@ -382,5 +382,79 @@ export const adminAPI = {
 }
 
 
+// ==================== NEW: POSTNATAL CARE API ====================
+
+export const postnatalAPI = {
+  /**
+   * Get list of postnatal mothers
+   * @param {number} ashaWorkerId - Filter by ASHA worker
+   * @param {number} doctorId - Filter by doctor
+   * @param {number} limit - Results per page (default: 50)
+   * @param {number} offset - Pagination offset (default: 0)
+   */
+  getMothers: async (ashaWorkerId = null, doctorId = null, limit = 50, offset = 0) => {
+    const params = new URLSearchParams();
+    if (ashaWorkerId) params.append('asha_worker_id', ashaWorkerId);
+    if (doctorId) params.append('doctor_id', doctorId);
+    params.append('limit', limit);
+    params.append('offset', offset);
+
+    const response = await api.get(`/api/postnatal/mothers?${params}`);
+    return response.data;
+  },
+
+  /**
+   * Get list of children
+   * @param {string} motherId - Filter by mother
+   * @param {number} ashaWorkerId - Filter by ASHA worker
+   * @param {number} doctorId - Filter by doctor
+   */
+  getChildren: async (motherId = null, ashaWorkerId = null, doctorId = null) => {
+    const params = new URLSearchParams();
+    if (motherId) params.append('mother_id', motherId);
+    if (ashaWorkerId) params.append('asha_worker_id', ashaWorkerId);
+    if (doctorId) params.append('doctor_id', doctorId);
+
+    const response = await api.get(`/api/postnatal/children?${params}`);
+    return response.data;
+  },
+
+  /**
+   * Create a mother postnatal assessment
+   * @param {object} assessmentData - Assessment data
+   */
+  createMotherAssessment: async (assessmentData) => {
+    const response = await api.post('/api/postnatal/assessments/mother', assessmentData);
+    return response.data;
+  },
+
+  /**
+   * Create a child health assessment
+   * @param {object} assessmentData - Assessment data
+   */
+  createChildAssessment: async (assessmentData) => {
+    const response = await api.post('/api/postnatal/assessments/child', assessmentData);
+    return response.data;
+  },
+
+  /**
+   * Get assessment history for a mother/child
+   * @param {string} motherId - Mother ID
+   * @param {string} childId - Optional child ID
+   * @param {number} limit - Number of assessments
+   */
+  getAssessmentHistory: async (motherId, childId = null, limit = 50) => {
+    const params = new URLSearchParams();
+    if (childId) params.append('child_id', childId);
+    params.append('limit', limit);
+
+    const response = await api.get(`/api/postnatal/assessments/${motherId}?${params}`);
+    return response.data;
+  }
+};
+
+// ==================== EXPORTS ====================
+
+
 export default api
 
