@@ -1,3 +1,7 @@
+class WhatsAppService:
+    def send_message(self, to, message):
+        return {"status": "mock_sent"}
+
 class NotificationService:
     """Centralized notification service"""
     

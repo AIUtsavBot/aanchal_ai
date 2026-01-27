@@ -17,10 +17,13 @@ import logging
 import json
 import math
 
-    supabase = create_client(
-        os.getenv("SUPABASE_URL"),
-        os.getenv("SUPABASE_SERVICE_KEY")
-    )
+import os
+from supabase import create_client
+
+supabase = create_client(
+    os.getenv("SUPABASE_URL", ""),
+    os.getenv("SUPABASE_SERVICE_KEY", "")
+)
 
 # Import cache service
 try:

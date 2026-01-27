@@ -7,7 +7,7 @@ File: services/document_analyzer.py
 import os
 import logging
 import io
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 from PIL import Image
 import PyPDF2
 from pdf2image import convert_from_bytes

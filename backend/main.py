@@ -508,7 +508,7 @@ except Exception as e1:
         except Exception as e3:
             logger.warning(f"⚠️  Authentication routes not available: {e1} | {e2} | {e3}")
 
-if auth_router:
+
 # Mount authentication, admin, postnatal, streaming, and task routes
 try:
     # Import routes
