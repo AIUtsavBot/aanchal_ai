@@ -55,39 +55,39 @@ Aanchal AI acts as the central brain, orchestrating data flow between users and 
 ```mermaid
 graph TD
     subgraph "Users & Touchpoints"
-        Mother[Mother / Family]
-        ASHA[ASHA Worker (Field)]
-        Doctor[Doctor (Hospital)]
-        Admin[Administrator]
+        Mother["Mother / Family"]
+        ASHA["ASHA Worker (Field)"]
+        Doctor["Doctor (Hospital)"]
+        Admin["Administrator"]
     end
 
     subgraph "Frontend Layer (PWA)"
-        WebPC[Web Portal]
-        Mobile[Mobile PWA (Offline)]
+        WebPC["Web Portal"]
+        Mobile["Mobile PWA (Offline)"]
     end
 
     subgraph "Aanchal AI Core Platform"
-        API[FastAPI Gateway]
-        Auth[Auth Service]
+        API["FastAPI Gateway"]
+        Auth["Auth Service"]
         
         subgraph "Products"
-            MR[MatruRaksha AI Service]
-            SR[SantanRaksha AI Service]
+            MR["MatruRaksha AI Service"]
+            SR["SantanRaksha AI Service"]
         end
         
-        Orch[Task Orchestrator (Celery)]
+        Orch["Task Orchestrator (Celery)"]
     end
 
     subgraph "Data & Knowledge"
-        DB[(Supabase PostgreSQL)]
-        Cache[(Redis Cache)]
-        Vector[Vector DB (Medical Context)]
+        DB[("Supabase PostgreSQL")]
+        Cache[("Redis Cache")]
+        Vector["Vector DB (Medical Context)"]
     end
 
     subgraph "External AI Services"
-        Gemini[Google Gemini 2.0 (Reasoning)]
-        Vapi[Vapi.ai (Voice Agents)]
-        SMS[Twilio / SMS Gateway]
+        Gemini["Google Gemini 2.0 (Reasoning)"]
+        Vapi["Vapi.ai (Voice Agents)"]
+        SMS["Twilio / SMS Gateway"]
     end
 
     %% Flows
