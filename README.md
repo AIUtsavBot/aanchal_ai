@@ -1,9 +1,14 @@
 
-# 🤰 MatruRaksha AI - Maternal & Child Health Platform
+# 🏥 Aanchal AI
 
 > **"Protecting Mothers, Nurturing Future"**
 
-**MatruRaksha AI** is an enterprise-grade digital health platform built to combat maternal and infant mortality. By leveraging Artificial Intelligence, real-time data analytics, and a resilient microservices architecture, it bridges the gap between rural healthcare workers (ASHAs) and medical specialists.
+**Aanchal AI** is a comprehensive digital health ecosystem designed to combat maternal and infant mortality. It serves as the umbrella platform for two specialized AI-driven products:
+
+1.  **MatruRaksha AI** 🤰 - Dedicated to **Maternal Health** (Pregnancy to Postpartum).
+2.  **SantanRaksha AI** 👶 - Dedicated to **Child Health** (Neonatal to Infant care).
+
+By leveraging Artificial Intelligence, real-time data analytics, and a resilient microservices architecture, Aanchal AI bridges the gap between rural healthcare workers (ASHAs) and medical specialists.
 
 ![Status](https://img.shields.io/badge/Status-Production_Ready-success)
 ![Version](https://img.shields.io/badge/Version-1.0.0-blue)
@@ -12,56 +17,102 @@
 
 ## 🌟 Solution Overview
 
-In many regions, maternal health data is fragmented, paper-based, and reactive. MatruRaksha transforms this into a **proactive, data-driven system**:
+In many regions, health data is fragmented and reactive. Aanchal AI transforms this into a **proactive, compassionate system**:
 
-1.  **For ASHA Workers**: A Progressive Web App (PWA) that works **offline**, allowing them to record vitals and vaccinations in remote villages.
-2.  **For Doctors**: An AI-powered dashboard that **auto-triage** high-risk cases and provides generated clinical summaries.
-3.  **For Administrators**: Real-time analytics on vaccination coverage, disease outbreaks, and worker performance.
+### 🤰 MatruRaksha AI (Maternal Focus)
+*   **For Mothers**: Personalized care plans, emergency alerts, and tracking of vital stats during pregnancy.
+*   **For ASHAs**: Offline-first data entry for prenatal checkups (ANC) and risk identification.
+*   **AI Engine**: Predicts risks like Preeclampsia utilizing clinical rules + ML trends.
+
+### 👶 SantanRaksha AI (Child Focus)
+*   **For Neonates**: Monitoring growth charts, vaccination schedules, and developmental milestones.
+*   **For Doctors**: AI-generated summaries of a child's health history to enable quick decision-making.
 
 ---
 
 ## 🚀 Key Capabilities
 
 ### 🧠 Phase 5: AI Health Intelligence
-- **Predictive Risk Engine**: Uses a hybrid model (Clinical Rules + ML Trends) to flag high-risk mothers (e.g., Preeclampsia risk).
-- **GenAI Summaries**: Google Gemini generates concise 3-line clinical summaries for busy doctors.
-- **Voice Agent**: Vapi.ai integration for automated follow-up calls in local languages.
+-   **Predictive Risk Engine**: Hybrid model for flagging high-risk cases.
+-   **GenAI Summaries**: Google Gemini generates concise clinical notes for doctors.
+-   **Voice Agent**: Vapi.ai integration for automated follow-up calls in local languages.
 
-### � Phase 6: Omni-Channel Access
-- **Offline PWA**: Field-ready mobile experience that caches data and syncs when online.
-- **Push Notifications**: Browser-based alerts for emergencies and upcoming visits.
+### 🌐 Phase 6: Omni-Channel Access
+-   **Offline PWA**: Field-ready mobile experience that caches data and syncs when online.
+-   **Push Notifications**: Browser-based alerts for emergencies and upcoming visits.
 
 ### 🛡️ Phase 4: Security & Observability
-- **Audit Trails**: Immutable logs of all data access and modifications (`audit_logs`).
-- **Deep Health Checks**: Real-time monitoring of Database, Cache, and AI APIs (`/health/ready`).
-- **Resilience**: Global Error Boundaries, API Retry logic, and formatting for "System Down" scenarios.
-
-### ⚡ Phase 2: High Performance
-- **Hybrid Caching**: Redis + In-Memory caching for <200ms API response times.
-- **Async Workers**: Celery/Redis for handling PDF generation and heavy AI tasks without blocking.
+-   **Audit Trails**: Immutable logs of all data access and modifications (`audit_logs`).
+-   **Deep Health Checks**: Real-time monitoring of Database, Cache, and AI APIs.
+-   **Resilience**: Global Error Boundaries, API Retry logic.
 
 ---
 
 ## 🏗️ System Architecture
 
-MatruRaksha follows a modular architecture designed for scalability.
+Aanchal AI acts as the central brain, orchestrating data flow between users and intelligent services.
 
 ```mermaid
 graph TD
-    Client[User (PWA/Mobile)] -->|HTTPS| CDN[CDN / Load Balancer]
-    CDN -->|React| Frontend[Frontend PWA]
-    
-    subgraph "Backend Infrastructure"
-        Frontend -->|REST / SSE| API[FastAPI Backend]
-        API -->|Auth & Data| DB[(Supabase Postgres)]
-        API -->|Cache| Redis[(Redis)]
-        API -->|Async Tasks| Worker[Celery Worker]
+    subgraph "Users & Touchpoints"
+        Mother[Mother / Family]
+        ASHA[ASHA Worker (Field)]
+        Doctor[Doctor (Hospital)]
+        Admin[Administrator]
     end
-    
-    subgraph "Intelligence Layer"
-        API -->|Inference| Gemini[Google Gemini AI]
-        API -->|Voice| Vapi[Vapi.ai]
+
+    subgraph "Frontend Layer (PWA)"
+        WebPC[Web Portal]
+        Mobile[Mobile PWA (Offline)]
     end
+
+    subgraph "Aanchal AI Core Platform"
+        API[FastAPI Gateway]
+        Auth[Auth Service]
+        
+        subgraph "Products"
+            MR[MatruRaksha AI Service]
+            SR[SantanRaksha AI Service]
+        end
+        
+        Orch[Task Orchestrator (Celery)]
+    end
+
+    subgraph "Data & Knowledge"
+        DB[(Supabase PostgreSQL)]
+        Cache[(Redis Cache)]
+        Vector[Vector DB (Medical Context)]
+    end
+
+    subgraph "External AI Services"
+        Gemini[Google Gemini 2.0 (Reasoning)]
+        Vapi[Vapi.ai (Voice Agents)]
+        SMS[Twilio / SMS Gateway]
+    end
+
+    %% Flows
+    Mother -->|SMS / Voice| Vapi
+    ASHA -->|Offline Entry| Mobile
+    Doctor -->|Dashboard| WebPC
+    Admin -->|Analytics| WebPC
+
+    Mobile -->|Sync| API
+    WebPC -->|HTTPS| API
+
+    API --> Auth
+    API --> MR
+    API --> SR
+    
+    MR --> Orch
+    SR --> Orch
+    
+    Orch -->|Risk Analysis| Gemini
+    Orch -->|Alerts| SMS
+    Orch -->|Schedule Call| Vapi
+    
+    API --> DB
+    API --> Cache
+    Gemini -.->|RAG| Vector
 ```
 
 ---
@@ -70,72 +121,55 @@ graph TD
 
 | Component | Technology | Description |
 |-----------|------------|-------------|
+| **Core AI** | **Aanchal AI Engine** | Central logic for risk assessment |
 | **Backend** | Python 3.12, FastAPI | High-performance async API |
 | **Frontend** | React 18, Vite, Tailwind | Responsive PWA with offline support |
 | **Database** | Supabase (PostgreSQL) | Relational data + Vector embeddings |
-| **Caching** | Redis (Upstash) | Distributed caching & Pub/Sub |
-| **Queue** | Celery | Background task processing |
-| **AI** | Google Gemini 2.0 | LLM for summarization & reasoning |
-| **DevOps** | Docker, GitHub Actions | CI/CD and Containerization |
+| **AI Services** | Google Gemini 2.0, Vapi.ai | LLM & Voice capabilities |
 
 ---
 
 ## ⚡ Quick Start Guide
 
 ### 1. Requirements
-- Docker & Docker Compose
-- *Or* Python 3.12+ & Node.js 18+ for local dev.
+-   Docker & Docker Compose
+-   *Or* Python 3.12+ & Node.js 18+ for local dev.
 
 ### 2. Environment Setup
 Create a `.env` file in `backend/` and `frontend/` (see `.env.example`).
 Required keys: `SUPABASE_URL`, `SUPABASE_KEY`, `GEMINI_API_KEY`.
 
 ### 3. Run with Docker (Recommended)
-Launch the entire stack (Backend, Frontend, Redis, Workers) with one command:
+Launch the entire Aanchal AI stack:
 ```bash
 docker-compose -f docker-compose.prod.yml up --build -d
 ```
-- **Frontend**: http://localhost
-- **Backend API**: http://localhost:8000/docs
+-   **Frontend**: http://localhost
+-   **Backend API**: http://localhost:8000/docs
 
 ### 4. Seed Demo Data
-Populate the system with realistic patients to see the AI in action:
+Populate the system with realistic patients:
 ```bash
 python scripts/seed_demo_data.py
 ```
 
 ### 5. Run Tests
-Verify system integrity:
 ```bash
-# Backend Tests
 pytest backend/tests/
-
-# Load Testing
-locust -f locustfile.py
 ```
 
 ---
 
 ## 📚 Documentation Links
-
-- [**Detailed Architecture**](docs/architecture.md): Deep dive into the system design.
-- [**Deployment Guide**](docs/deployment.md): Instructions for Vercel/Render/AWS.
-- [**Walkthrough**](walkthrough.md): Feature-by-feature proof of work.
-- [**Contributor Guide**](CONTRIBUTING.md): Standards for developers.
-
----
-
-## 🔮 Future Roadmap
-
-- [ ] **Mobile App**: Dedicated React Native app for smoother animations.
-- [ ] **Biometric Auth**: Fingerprint login for ASHA workers.
-- [ ] **Telemedicine**: Integrated video calls between Mothers and Doctors.
-- [ ] **Vernacular Voice**: Full conversational AI in Hindi/Tamil/Telugu.
+-   [**Detailed Architecture**](docs/architecture.md)
+-   [**Deployment Guide**](docs/deployment.md)
+-   [**Walkthrough**](walkthrough.md)
+-   [**Contributor Guide**](CONTRIBUTING.md)
 
 ---
 
 ## 🤝 Contact & License
 
-**Antigravity Team**  
-*Google Deepmind Agentic Coding*  
-icense: MIT
+**Antigravity Team**
+*Google Deepmind Agentic Coding*
+License: MIT
