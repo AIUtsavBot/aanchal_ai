@@ -97,3 +97,6 @@ reportlab>=4.0.0
 # Async HTTP client with connection pooling
 # httpx already included above
 
+
+# Structured Logging
+structlog>=24.1.0

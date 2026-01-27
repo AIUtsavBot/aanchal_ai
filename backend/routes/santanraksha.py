@@ -17,16 +17,19 @@ import logging
 import json
 import math
 
-# Import Supabase client
-try:
-    from services.supabase_service import supabase
-except ImportError:
-    from supabase import create_client
-    import os
     supabase = create_client(
         os.getenv("SUPABASE_URL"),
         os.getenv("SUPABASE_SERVICE_KEY")
     )
+
+# Import cache service
+try:
+    from services.cache_service import cache, cached
+    CACHE_AVAILABLE = True
+except ImportError:
+    CACHE_AVAILABLE = False
+    cache = None
+    cached = lambda *args, **kwargs: lambda func: func
 
 # Import growth agent for z-score calculations
 try:
@@ -333,6 +336,13 @@ async def get_child_vaccinations(
 ):
     """Get all vaccination records for a child"""
     try:
+        # Check cache
+        cache_key = f"santanraksha:vaccination:{child_id}"
+        if CACHE_AVAILABLE and cache:
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return cached_data
+
         # Verify user has access to this child
         await verify_child_access(
             supabase_client=supabase,
@@ -346,12 +356,18 @@ async def get_child_vaccinations(
             .order("due_date", desc=False) \
             .execute()
         
-        return {
+        response = {
             "child_id": child_id,
             "vaccinations": result.data or [],
             "completed_count": len([v for v in (result.data or []) if v.get('status') == 'completed']),
-            "pending_count": len([v for v in (result.data or []) if v.get('status') != 'completed'])
+            "pending_count": len([v for v in (result.data or []) if v.get('status') != 'completed']),
+            "cached": False
         }
+        
+        if CACHE_AVAILABLE and cache:
+            cache.set(cache_key, {**response, "cached": True}, ttl_seconds=60)
+            
+        return response
         
     except Exception as e:
         logger.error(f"Error fetching vaccinations: {e}")
@@ -461,6 +477,38 @@ async def initialize_vaccination_schedule(
     except Exception as e:
         logger.error(f"Error initializing vaccination schedule: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/vaccination/schedule/standard")
+@cached(ttl_seconds=3600, key_prefix="santanraksha")
+async def get_standard_schedule():
+    """Get the standard vaccination schedule (India NIS)"""
+    schedule = [
+        {"vaccine": "BCG", "dose": 1, "age_weeks": 0, "description": "At birth"},
+        {"vaccine": "OPV", "dose": 0, "age_weeks": 0, "description": "Zero dose at birth"},
+        {"vaccine": "Hepatitis B", "dose": 1, "age_weeks": 0, "description": "At birth"},
+        {"vaccine": "OPV", "dose": 1, "age_weeks": 6, "description": "6 weeks"},
+        {"vaccine": "Pentavalent", "dose": 1, "age_weeks": 6, "description": "6 weeks"},
+        {"vaccine": "Rotavirus", "dose": 1, "age_weeks": 6, "description": "6 weeks"},
+        {"vaccine": "PCV", "dose": 1, "age_weeks": 6, "description": "6 weeks"},
+        {"vaccine": "OPV", "dose": 2, "age_weeks": 10, "description": "10 weeks"},
+        {"vaccine": "Pentavalent", "dose": 2, "age_weeks": 10, "description": "10 weeks"},
+        {"vaccine": "Rotavirus", "dose": 2, "age_weeks": 10, "description": "10 weeks"},
+        {"vaccine": "OPV", "dose": 3, "age_weeks": 14, "description": "14 weeks"},
+        {"vaccine": "Pentavalent", "dose": 3, "age_weeks": 14, "description": "14 weeks"},
+        {"vaccine": "Rotavirus", "dose": 3, "age_weeks": 14, "description": "14 weeks"},
+        {"vaccine": "PCV", "dose": 2, "age_weeks": 14, "description": "14 weeks"},
+        {"vaccine": "IPV", "dose": 1, "age_weeks": 14, "description": "14 weeks"},
+        {"vaccine": "Measles/MR", "dose": 1, "age_weeks": 39, "description": "9 months"},
+        {"vaccine": "Vitamin A", "dose": 1, "age_weeks": 39, "description": "9 months"},
+        {"vaccine": "JE", "dose": 1, "age_weeks": 39, "description": "9 months (endemic areas)"},
+        {"vaccine": "DPT Booster", "dose": 1, "age_weeks": 78, "description": "16-24 months"},
+        {"vaccine": "MR", "dose": 2, "age_weeks": 78, "description": "16-24 months"},
+        {"vaccine": "OPV Booster", "dose": 1, "age_weeks": 78, "description": "16-24 months"},
+        {"vaccine": "Vitamin A", "dose": 2, "age_weeks": 78, "description": "16 months"},
+    ]
+    return {"schedule": schedule, "source": "India NIS (National Immunization Schedule)"}
+
 
 
 # ==================== GROWTH MONITORING ENDPOINTS ====================
@@ -589,6 +637,13 @@ async def get_child_growth_records(
 ):
     """Get growth history for a child with trend analysis"""
     try:
+        # Check cache
+        cache_key = f"santanraksha:growth:{child_id}:{limit}"
+        if CACHE_AVAILABLE and cache:
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return cached_data
+
         # Verify user has access to this child
         await verify_child_access(
             supabase_client=supabase,
@@ -781,6 +836,13 @@ async def get_child_milestones(
 ):
     """Get all achieved milestones for a child"""
     try:
+        # Check cache
+        cache_key = f"santanraksha:milestone:{child_id}"
+        if CACHE_AVAILABLE and cache:
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return cached_data
+
         # Verify user has access to this child
         await verify_child_access(
             supabase_client=supabase,

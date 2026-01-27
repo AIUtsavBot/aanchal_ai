@@ -5,7 +5,7 @@ Pydantic models for validating postnatal assessment data
 
 from pydantic import BaseModel, Field, validator
 from typing import Optional, List
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from enum import Enum
 
 
@@ -284,4 +284,154 @@ class AssessmentHistoryResponse(BaseModel):
     total: int
     mother_info: Optional[dict] = None
     child_info: Optional[dict] = None
+    cached: bool = False
+
+
+# ==================== VACCINATION MODELS ====================
+
+class VaccinationStatus(str, Enum):
+    SCHEDULED = "scheduled"
+    COMPLETED = "completed"
+    MISSED = "missed"
+    OVERDUE = "overdue"
+    CONTRAINDICATED = "contraindicated"
+
+
+class VaccinationCreate(BaseModel):
+    """Model for creating/updating a vaccination record"""
+    
+    child_id: str
+    vaccine_name: str = Field(..., min_length=2, max_length=100)
+    dose_number: int = Field(ge=1, le=10, description="Dose number (1, 2, 3...)")
+    scheduled_date: date
+    status: VaccinationStatus = Field(default=VaccinationStatus.SCHEDULED)
+    
+    # If administered
+    administered_date: Optional[date] = None
+    administered_by: Optional[str] = Field(None, max_length=100)
+    batch_number: Optional[str] = Field(None, max_length=50)
+    site: Optional[str] = Field(None, description="Injection site")
+    
+    # Reaction tracking
+    adverse_reaction: bool = Field(default=False)
+    reaction_details: Optional[str] = Field(None, max_length=500)
+    
+    # Notes
+    notes: Optional[str] = Field(None, max_length=1000)
+    next_dose_date: Optional[date] = None
+    
+    @validator('administered_date')
+    def validate_administered_date(cls, v, values):
+        if v and values.get('scheduled_date'):
+            if v < values['scheduled_date'] - timedelta(days=7):
+                raise ValueError("Administered date cannot be more than 7 days before scheduled date")
+        return v
+    
+    class Config:
+        use_enum_values = True
+
+
+class VaccinationResponse(VaccinationCreate):
+    """Response model for vaccination"""
+    id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    
+    class Config:
+        from_attributes = True
+
+
+class VaccinationSchedule(BaseModel):
+    """Standard vaccination schedule"""
+    vaccine_name: str
+    dose_number: int
+    recommended_age_weeks: int = Field(description="Age in weeks when vaccine is recommended")
+    description: Optional[str] = None
+
+
+# ==================== MILESTONE MODELS ====================
+
+class MilestoneCategory(str, Enum):
+    MOTOR_GROSS = "motor_gross"
+    MOTOR_FINE = "motor_fine"
+    COGNITIVE = "cognitive"
+    LANGUAGE = "language"
+    SOCIAL = "social"
+
+
+class MilestoneStatus(str, Enum):
+    NOT_ASSESSED = "not_assessed"
+    ACHIEVED = "achieved"
+    EMERGING = "emerging"
+    NOT_ACHIEVED = "not_achieved"
+    CONCERN = "concern"
+
+
+class DevelopmentalMilestoneCreate(BaseModel):
+    """Model for tracking developmental milestones"""
+    
+    child_id: str
+    assessment_date: date = Field(default_factory=date.today)
+    age_months: int = Field(ge=0, le=72, description="Age in months")
+    
+    # Milestone details
+    milestone_name: str = Field(..., min_length=2, max_length=200)
+    category: MilestoneCategory
+    expected_age_months: int = Field(ge=0, le=72)
+    status: MilestoneStatus = Field(default=MilestoneStatus.NOT_ASSESSED)
+    
+    # Assessment details
+    achieved_date: Optional[date] = None
+    assessor_notes: Optional[str] = Field(None, max_length=1000)
+    concerns: Optional[str] = Field(None, max_length=500)
+    follow_up_needed: bool = Field(default=False)
+    referral_made: bool = Field(default=False)
+    
+    # Assessor info
+    assessor_id: Optional[int] = None
+    assessor_role: Optional[str] = None
+    
+    class Config:
+        use_enum_values = True
+
+
+class DevelopmentalMilestoneResponse(DevelopmentalMilestoneCreate):
+    """Response model for developmental milestone"""
+    id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    
+    class Config:
+        from_attributes = True
+
+
+class MilestoneChecklistItem(BaseModel):
+    """Individual milestone checklist item"""
+    name: str
+    category: MilestoneCategory
+    expected_age_months: int
+    description: str
+    red_flags: Optional[str] = None
+
+
+# ==================== VACCINATION RESPONSE MODELS ====================
+
+class VaccinationListResponse(BaseModel):
+    """Response for vaccination list"""
+    success: bool = True
+    vaccinations: List[dict]
+    total: int
+    completed: int
+    pending: int
+    overdue: int
+    cached: bool = False
+
+
+class MilestoneListResponse(BaseModel):
+    """Response for milestone list"""
+    success: bool = True
+    milestones: List[dict]
+    total: int
+    achieved: int
+    concerns: int
     cached: bool = False

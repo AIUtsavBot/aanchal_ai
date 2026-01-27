@@ -5,12 +5,20 @@ Admin-only endpoints for managing doctors, ASHA workers, mothers, and assignment
 
 import logging
 from typing import Optional, List
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, Request
 from pydantic import BaseModel, Field
 
 from services.auth_service import supabase_admin
 from routes.auth_routes import get_current_user, require_admin
 from services.email_service import send_alert_email
+
+# Audit logging
+try:
+    from services.audit_service import audit_action
+except ImportError:
+    # Dummy decorator if service fails
+    def audit_action(action, resource):
+        return lambda f: f
 
 # Import cache service
 try:
@@ -232,7 +240,8 @@ async def get_doctor_details(doctor_id: int, current_user: dict = Depends(requir
 
 
 @router.put("/doctors/{doctor_id}")
-async def update_doctor(doctor_id: int, body: UpdateDoctorRequest, current_user: dict = Depends(require_admin)):
+@audit_action("UPDATE_DOCTOR", "doctors")
+async def update_doctor(doctor_id: int, body: UpdateDoctorRequest, request: Request = None, current_user: dict = Depends(require_admin)):
     """Update doctor information"""
     try:
         update_data = {k: v for k, v in body.dict().items() if v is not None}
@@ -256,7 +265,8 @@ async def update_doctor(doctor_id: int, body: UpdateDoctorRequest, current_user:
 
 
 @router.delete("/doctors/{doctor_id}")
-async def delete_doctor(doctor_id: int, current_user: dict = Depends(require_admin)):
+@audit_action("DELETE_DOCTOR", "doctors")
+async def delete_doctor(doctor_id: int, request: Request = None, current_user: dict = Depends(require_admin)):
     """Delete a doctor (unassigns all mothers first)"""
     try:
         # First unassign all mothers from this doctor
@@ -343,7 +353,8 @@ async def get_asha_worker_details(asha_id: int, current_user: dict = Depends(req
 
 
 @router.put("/asha-workers/{asha_id}")
-async def update_asha_worker(asha_id: int, body: UpdateAshaWorkerRequest, current_user: dict = Depends(require_admin)):
+@audit_action("UPDATE_ASHA", "asha_workers")
+async def update_asha_worker(asha_id: int, body: UpdateAshaWorkerRequest, request: Request = None, current_user: dict = Depends(require_admin)):
     """Update ASHA worker information"""
     try:
         update_data = {k: v for k, v in body.dict().items() if v is not None}
@@ -364,7 +375,8 @@ async def update_asha_worker(asha_id: int, body: UpdateAshaWorkerRequest, curren
 
 
 @router.delete("/asha-workers/{asha_id}")
-async def delete_asha_worker(asha_id: int, current_user: dict = Depends(require_admin)):
+@audit_action("DELETE_ASHA", "asha_workers")
+async def delete_asha_worker(asha_id: int, request: Request = None, current_user: dict = Depends(require_admin)):
     """Delete an ASHA worker (unassigns all mothers first)"""
     try:
         # First unassign all mothers from this ASHA worker
@@ -422,7 +434,8 @@ async def list_mothers(current_user: dict = Depends(require_admin)):
 
 
 @router.post("/mothers/{mother_id}/assign-asha")
-async def assign_mother_to_asha(mother_id: str, body: AssignAshaRequest, current_user: dict = Depends(require_admin)):
+@audit_action("ASSIGN_ASHA", "mothers")
+async def assign_mother_to_asha(mother_id: str, body: AssignAshaRequest, request: Request = None, current_user: dict = Depends(require_admin)):
     """Assign a mother to an ASHA worker"""
     try:
         result = supabase_admin.table("mothers").update({
@@ -445,7 +458,8 @@ async def assign_mother_to_asha(mother_id: str, body: AssignAshaRequest, current
 
 
 @router.post("/mothers/{mother_id}/assign-doctor")
-async def assign_mother_to_doctor(mother_id: str, body: AssignDoctorRequest, current_user: dict = Depends(require_admin)):
+@audit_action("ASSIGN_DOCTOR", "mothers")
+async def assign_mother_to_doctor(mother_id: str, body: AssignDoctorRequest, request: Request = None, current_user: dict = Depends(require_admin)):
     """Assign a mother to a doctor"""
     try:
         result = supabase_admin.table("mothers").update({

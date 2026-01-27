@@ -14,7 +14,6 @@ from typing import Optional, List, Dict, Any
 from datetime import datetime, date
 import logging
 
-# Import Supabase client
 try:
     from services.supabase_service import supabase
 except ImportError:
@@ -24,6 +23,15 @@ except ImportError:
         os.getenv("SUPABASE_URL"),
         os.getenv("SUPABASE_SERVICE_KEY")
     )
+
+# Import cache service
+try:
+    from services.cache_service import cache, cached
+    CACHE_AVAILABLE = True
+except ImportError:
+    CACHE_AVAILABLE = False
+    cache = None
+    cached = lambda *args, **kwargs: lambda func: func
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/postnatal", tags=["Postnatal Care"])
@@ -205,6 +213,13 @@ async def create_mother_assessment(assessment: MotherPostnatalAssessment):
 async def get_mother_assessments(mother_id: str, limit: int = 20):
     """Get all postnatal assessments for a mother"""
     try:
+        # Check cache first
+        cache_key = f"postnatal:mother:{mother_id}:assessments:{limit}"
+        if CACHE_AVAILABLE and cache:
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return cached_data
+
         assessments = []
         
         # Try postnatal_assessments table
@@ -240,11 +255,18 @@ async def get_mother_assessments(mother_id: str, limit: int = 20):
         except:
             pass
             
-        return {
+        response = {
             "mother_id": mother_id,
             "assessments": assessments,
-            "total": len(assessments)
+            "total": len(assessments),
+            "cached": False
         }
+        
+        # Cache result for 5 minutes
+        if CACHE_AVAILABLE and cache:
+            cache.set(cache_key, {**response, "cached": True}, ttl_seconds=300)
+            
+        return response
         
     except Exception as e:
         logger.error(f"Error fetching mother assessments: {e}")
@@ -369,6 +391,13 @@ async def get_child_healthchecks(child_id: str, limit: int = 20):
 async def get_postnatal_summary(mother_id: str):
     """Get complete postnatal summary for a mother and her children"""
     try:
+        # Check cache
+        cache_key = f"postnatal:summary:{mother_id}"
+        if CACHE_AVAILABLE and cache:
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return cached_data
+
         summary = {
             "mother_id": mother_id,
             "mother": None,
@@ -437,6 +466,9 @@ async def get_postnatal_summary(mother_id: str):
                         "message": f"Initial health check needed for {child.get('name')}"
                     })
         
+        if CACHE_AVAILABLE and cache:
+            cache.set(cache_key, {**summary, "cached": True}, ttl_seconds=300)
+            
         return summary
         
     except Exception as e:

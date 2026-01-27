@@ -514,12 +514,15 @@ try:
     # Import routes
     from routes.auth_routes import router as auth_router
     from routes.admin_routes import router as admin_router
-    from routes.postnatal_routes import router as postnatal_router
+    from routes.export_routes import router as export_router
+    from routes.webhook_routes import router as webhook_router
+    from routes.ai_routes import router as ai_router
     
-    # Include routers
     app.include_router(auth_router, prefix="/api")
     app.include_router(admin_router, prefix="/api")
-    app.include_router(postnatal_router, prefix="/api")
+    app.include_router(export_router, prefix="/api")
+    app.include_router(webhook_router, prefix="/api")
+    app.include_router(ai_router, prefix="/api")
     
     # Phase 2: Streaming and Task routes
     try:
@@ -576,11 +579,16 @@ except Exception as e:
 
 
 # ==================== SECURITY & RATE LIMITING ====================
-# Setup security middleware FIRST (will execute AFTER CORS)
+# Setup security middleware
 try:
     from middleware.security import setup_security_middleware
     setup_security_middleware(app)
-    logger.info("✅ Security middleware configured")
+    
+    # Add Security Headers (Phase 4)
+    from middleware.security_headers import setup_security_headers
+    setup_security_headers(app)
+    
+    logger.info("✅ Security middleware & headers configured")
 except ImportError as e:
     logger.warning(f"⚠️  Security middleware not available: {e}")
 
@@ -615,6 +623,16 @@ app.add_middleware(
     expose_headers=["*"],
     max_age=3600,
 )
+
+# ==================== METRICS (PHASE 4) ====================
+try:
+    from prometheus_fastapi_instrumentator import Instrumentator
+    
+    # Expose /metrics endpoint for Prometheus
+    Instrumentator().instrument(app).expose(app)
+    logger.info("✅ Prometheus metrics enabled at /metrics")
+except ImportError as e:
+    logger.warning(f"⚠️  Prometheus metrics not available: {e}")
 
 # ==================== TELEGRAM WEBHOOK ENDPOINT ====================
 # This endpoint receives updates from Telegram instead of polling

@@ -34,7 +34,7 @@ async def check_database(supabase_client) -> Dict[str, any]:
 async def check_gemini_api(gemini_client) -> Dict[str, any]:
     """Check Gemini API availability"""
     try:
-if not gemini_client:
+        if not gemini_client:
             return {
                 "status": "unavailable",
                 "message": "Gemini client not initialized"

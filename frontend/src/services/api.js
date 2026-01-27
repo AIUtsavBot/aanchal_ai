@@ -50,13 +50,42 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 )
 
-// Error handling interceptor
+// Rate limiting / Retry configuration
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1000; // 1s
+
+// Error handling interceptor with RETRY logic
 api.interceptors.response.use(
   response => response,
-  error => {
-    console.error('API Error:', error.response?.data || error.message)
-    console.error('Status:', error.response?.status)
-    return Promise.reject(error)
+  async error => {
+    const { config, response } = error;
+
+    // Check if we should retry (idempotent methods or specifically allowed)
+    // Retry on Network Errors or 5xx Server Errors
+    const shouldRetry = config && !config._retry && (
+      !response || // Network error
+      (response.status >= 500 && response.status < 600) // Server error
+    );
+
+    if (shouldRetry) {
+      config._retry = true;
+      config._retryCount = (config._retryCount || 0) + 1;
+
+      if (config._retryCount <= MAX_RETRIES) {
+        // Exponential backoff
+        const delay = RETRY_DELAY * Math.pow(2, config._retryCount - 1);
+        console.warn(`Attempt ${config._retryCount} failed. Retrying in ${delay}ms...`);
+
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return api(config);
+      }
+    }
+
+    // Global Error Logging / Toast could go here
+    console.error('API Error:', error.response?.data || error.message);
+    console.error('Status:', response?.status);
+
+    return Promise.reject(error);
   }
 )
 

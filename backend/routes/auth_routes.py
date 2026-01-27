@@ -5,7 +5,7 @@ API endpoints for user authentication and authorization
 
 import logging
 from typing import Optional
-from fastapi import APIRouter, HTTPException, status, Depends, UploadFile, File, Form
+from fastapi import APIRouter, HTTPException, status, Depends, UploadFile, File, Form, Request
 from pydantic import BaseModel, Field, EmailStr
 
 # Import auth service and middleware
@@ -15,6 +15,14 @@ try:
 except ImportError:
     from services.auth_service import auth_service, supabase_admin
     from middleware.auth import get_current_user, require_admin
+
+# Audit logging
+try:
+    from services.audit_service import AuditService, audit_action
+except ImportError:
+    # Dummy decorator if service fails
+    def audit_action(action, resource):
+        return lambda f: f
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +80,8 @@ class RegisterRequestDecision(BaseModel):
 # ==================== AUTHENTICATION ENDPOINTS ====================
 
 @router.post("/signup", response_model=AuthResponse, status_code=status.HTTP_201_CREATED)
-async def sign_up(request: SignUpRequest):
+@audit_action("SIGN_UP", "users")
+async def sign_up(request: SignUpRequest, req: Request = None):
     """
     Register a new user
     
@@ -109,7 +118,7 @@ async def sign_up(request: SignUpRequest):
 
 
 @router.post("/signin", response_model=AuthResponse)
-async def sign_in(request: SignInRequest):
+async def sign_in(request: SignInRequest, req: Request = None):
     """
     Sign in with email and password
     
@@ -121,10 +130,31 @@ async def sign_in(request: SignInRequest):
             password=request.password
         )
         
+        # Manually log successful login
+        if req:
+            user = result.get("user", {})
+            await AuditService.log_action(
+                action="USER_LOGIN",
+                request=req,
+                actor_id=user.get("id"),
+                actor_role=user.get("user_metadata", {}).get("role", "USER"),
+                status="SUCCESS"
+            )
+        
         return AuthResponse(**result, message="Signed in successfully")
     
     except Exception as e:
         logger.error(f"❌ Sign in error: {e}")
+        
+        # Log failed login attempt
+        if req:
+            await AuditService.log_action(
+                action="LOGIN_FAILED",
+                request=req,
+                details={"email": request.email, "error": str(e)},
+                status="FAILURE"
+            )
+            
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password"
