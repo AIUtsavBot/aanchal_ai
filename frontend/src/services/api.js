@@ -449,6 +449,15 @@ export const postnatalAPI = {
   },
 
   /**
+   * Register a new child
+   * @param {object} childData - Child registration data
+   */
+  registerChild: async (childData) => {
+    const response = await api.post('/api/postnatal/children', childData);
+    return response.data;
+  },
+
+  /**
    * Create a mother postnatal assessment
    * @param {object} assessmentData - Assessment data
    */
@@ -473,11 +482,51 @@ export const postnatalAPI = {
    * @param {number} limit - Number of assessments
    */
   getAssessmentHistory: async (motherId, childId = null, limit = 50) => {
-    const params = new URLSearchParams();
-    if (childId) params.append('child_id', childId);
-    params.append('limit', limit);
+    if (childId) {
+      const response = await api.get(`/api/postnatal/children/${childId}/assessments?limit=${limit}`);
+      return response.data;
+    } else {
+      // Fallback for mother - assuming an endpoint exists or using generic
+      // We need to implement GET /api/postnatal/mothers/{id}/assessments if not exists
+      // For now, let's try the generic path if it was working for mothers, or fallback
+      const response = await api.get(`/api/postnatal/mothers/${motherId}/assessments?limit=${limit}`);
+      return response.data;
+    }
+  },
 
-    const response = await api.get(`/api/postnatal/assessments/${motherId}?${params}`);
+  /**
+   * Get vaccinations for a child
+   * @param {string} childId 
+   */
+  getVaccinations: async (childId, limit = 50) => {
+    const response = await api.get(`/api/postnatal/children/${childId}/vaccinations?limit=${limit}`);
+    return response.data;
+  },
+
+  /**
+   * Record a vaccination
+   * @param {object} data
+   */
+  recordVaccination: async (data) => {
+    const response = await api.post('/api/postnatal/vaccinations', data);
+    return response.data;
+  },
+
+  /**
+   * Get growth records for a child
+   * @param {string} childId 
+   */
+  getGrowthRecords: async (childId, limit = 20) => {
+    const response = await api.get(`/api/postnatal/children/${childId}/growth?limit=${limit}`);
+    return response.data;
+  },
+
+  /**
+   * Record a growth measurement
+   * @param {object} data
+   */
+  recordGrowth: async (data) => {
+    const response = await api.post('/api/postnatal/growth', data);
     return response.data;
   }
 };

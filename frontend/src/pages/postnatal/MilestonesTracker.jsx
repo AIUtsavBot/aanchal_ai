@@ -198,7 +198,7 @@ export const MilestonesTracker = ({ ashaWorkerId }) => {
 
         try {
             // Use the new API endpoint
-            const response = await fetch(`${API_URL}/api/santanraksha/milestone/toggle`, {
+            const response = await fetch(`${API_URL}/api/postnatal/milestone/toggle`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

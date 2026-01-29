@@ -381,9 +381,21 @@ export default function ConsultationForm({ motherId, doctorId, doctorName, onSav
                         hemoglobin: hemoglobin ? parseFloat(hemoglobin) : null,
                         weight: weight ? parseFloat(weight) : null
                     },
-                    medications: validMedications.map(m => m.medication),
+                    // Save full medication objects, not just names
+                    medications: validMedications.map(m => ({
+                        name: m.medication,
+                        dosage: m.dosage,
+                        schedule: m.schedule,
+                        duration: m.startDate && m.endDate ? `${m.startDate} to ${m.endDate}` : null
+                    })),
+                    // Also keep simple list for backward compatibility if needed, using name only
+                    medication_names: validMedications.map(m => m.medication),
+
                     nutrition_plan: nutritionPlan.trim() || null,
-                    next_consultation: nextConsultationDate || null,
+                    next_consultation: nextConsultationDate ? {
+                        date: nextConsultationDate,
+                        time: nextConsultationTime
+                    } : null,
                     recorded_at: new Date().toISOString()
                 },
                 concerns: null
@@ -433,7 +445,7 @@ export default function ConsultationForm({ motherId, doctorId, doctorName, onSav
     }
 
     return (
-        <div className="h-full overflow-y-auto p-6 bg-gray-50 bg-[url('https://as1.ftcdn.net/v2/jpg/04/83/87/46/1000_F_483874697_M7F7G2Kk6x93B6d2e6m78X7.jpg')] bg-repeat opacity-95">
+        <div className="h-full overflow-y-auto p-6 bg-gray-50">
             {/* Sticky Heading with Voice Button */}
             <div className="flex justify-between items-center mb-6 sticky top-0 bg-white/95 backdrop-blur-sm z-20 p-4 rounded-xl shadow-sm border border-gray-200">
                 <div>

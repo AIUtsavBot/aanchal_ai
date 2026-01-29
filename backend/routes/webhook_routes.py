@@ -4,7 +4,10 @@ import uuid
 from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, HttpUrl
-from services.auth_service import get_current_user
+try:
+    from middleware.auth import get_current_user
+except ImportError:
+    from backend.middleware.auth import get_current_user
 try:
     from services.supabase_service import supabase
 except ImportError:

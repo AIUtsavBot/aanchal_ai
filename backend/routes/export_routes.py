@@ -3,7 +3,10 @@ import logging
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import StreamingResponse
 from typing import Optional
-from services.auth_service import get_current_user
+try:
+    from middleware.auth import get_current_user
+except ImportError:
+    from backend.middleware.auth import get_current_user
 from services.export_service import ExportService
 # Use cache service if available, though exports might be fresh
 try:

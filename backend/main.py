@@ -277,9 +277,14 @@ def run_telegram_bot():
         application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_message))
         
         # Initialize the application
-        loop.run_until_complete(application.initialize())
-        
-        logger.info("✅ Telegram Bot initialized successfully")
+        try:
+            loop.run_until_complete(application.initialize())
+            logger.info("✅ Telegram Bot initialized successfully")
+        except Exception as e:
+            logger.error(f"❌ Telegram Bot initialization failed: {e}")
+            # Don't return, just mark as failed so we don't try to start it later
+            logger.warning("⚠️  Telegram Bot will NOT start due to initialization failure")
+            return
         
         # Store globally
         telegram_bot_app = application
@@ -517,9 +522,11 @@ try:
     from routes.export_routes import router as export_router
     from routes.webhook_routes import router as webhook_router
     from routes.ai_routes import router as ai_router
+    from routes.postnatal_routes import router as postnatal_router
     
     app.include_router(auth_router, prefix="/api")
     app.include_router(admin_router, prefix="/api")
+    app.include_router(postnatal_router, prefix="/api")
     app.include_router(export_router, prefix="/api")
     app.include_router(webhook_router, prefix="/api")
     app.include_router(ai_router, prefix="/api")
@@ -561,13 +568,7 @@ try:
 except Exception as e:
     logger.warning(f"⚠️  Delivery routes not available: {e}")
 
-# Mount Postnatal assessment routes
-try:
-    from routes.postnatal import router as postnatal_router
-    app.include_router(postnatal_router)
-    logger.info("✅ Postnatal assessment routes loaded")
-except Exception as e:
-    logger.warning(f"⚠️  Postnatal routes not available: {e}")
+
 
 # Mount SantanRaksha child health routes (vaccinations, growth, milestones)
 try:
@@ -2158,5 +2159,6 @@ if __name__ == "__main__":
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
-        port=port
+        port=port,
+        reload=True
     )

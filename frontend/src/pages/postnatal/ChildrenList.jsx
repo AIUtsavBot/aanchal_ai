@@ -1,56 +1,76 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../../services/auth.js';
-import { Search, Plus, User, Calendar, Weight, Ruler, Activity, ChevronRight, Baby } from 'lucide-react';
+import { postnatalAPI } from '../../services/api';
+import { Search, Plus, User, Calendar, Weight, Ruler, Activity, ChevronRight, Baby, UserPlus, X } from 'lucide-react';
 import './PostnatalPages.css';
 
 export const ChildrenList = ({ ashaWorkerId }) => {
     const [children, setChildren] = useState([]);
+    const [mothers, setMothers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedChild, setSelectedChild] = useState(null);
     const [showAddForm, setShowAddForm] = useState(false);
 
+    // New Child State
+    const [newChild, setNewChild] = useState({
+        name: '',
+        birth_date: new Date().toISOString().split('T')[0],
+        gender: 'male',
+        birth_weight_kg: '',
+        mother_id: ''
+    });
+
     useEffect(() => {
-        let isMounted = true;
-
-        const fetchChildren = async () => {
-            try {
-                setLoading(true);
-                // Get children through their mothers assigned to this ASHA worker
-                const { data, error } = await supabase
-                    .from('children')
-                    .select(`
-          *,
-          mothers:mother_id (
-            id, name, phone, location, asha_worker_id
-          )
-        `)
-                    .order('birth_date', { ascending: false });
-
-                if (isMounted) {
-                    if (!error && data) {
-                        // Filter by ASHA worker if needed
-                        const filteredChildren = ashaWorkerId
-                            ? data.filter(c => c.mothers?.asha_worker_id === ashaWorkerId)
-                            : data;
-                        setChildren(filteredChildren);
-                    }
-                    setLoading(false);
-                }
-            } catch (err) {
-                if (isMounted) {
-                    console.error('Error loading children:', err);
-                    setLoading(false);
-                }
-            }
-        };
-
-        fetchChildren();
-
-        return () => {
-            isMounted = false;
-        };
+        loadChildren();
+        loadMothers();
     }, [ashaWorkerId]);
+
+    const loadChildren = async () => {
+        try {
+            setLoading(true);
+            const response = await postnatalAPI.getChildren(null, ashaWorkerId);
+            setChildren(response.children || []);
+        } catch (err) {
+            console.error('Error loading children:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const loadMothers = async () => {
+        try {
+            const response = await postnatalAPI.getMothers(ashaWorkerId);
+            setMothers(response.mothers || []);
+        } catch (err) {
+            console.error('Error loading mothers:', err);
+        }
+    };
+
+    const handleRegisterChild = async () => {
+        if (!newChild.name || !newChild.mother_id || !newChild.birth_date) {
+            alert('Please fill in all required fields');
+            return;
+        }
+
+        try {
+            const response = await postnatalAPI.registerChild(newChild);
+            if (response) {
+                alert('Child registered successfully!');
+                setShowAddForm(false);
+                setNewChild({
+                    name: '',
+                    birth_date: new Date().toISOString().split('T')[0],
+                    gender: 'male',
+                    birth_weight_kg: '',
+                    mother_id: ''
+                });
+                loadChildren(); // Reload list
+            }
+        } catch (err) {
+            console.error('Error registering child:', err);
+            alert('Failed to register child. Please try again.');
+        }
+    };
 
     const calculateAge = (birthDate) => {
         const birth = new Date(birthDate);
@@ -85,7 +105,7 @@ export const ChildrenList = ({ ashaWorkerId }) => {
                     />
                 </div>
                 <button className="btn-primary" onClick={() => setShowAddForm(true)}>
-                    <Plus className="icon" /> Register Child
+                    <UserPlus className="icon" size={16} /> Register Child
                 </button>
             </div>
 
@@ -96,21 +116,11 @@ export const ChildrenList = ({ ashaWorkerId }) => {
                     <Baby size={64} className="empty-icon" />
                     <h3>No Children Registered</h3>
                     <p>When a delivery is completed and a child is registered, they will appear here.</p>
-                    <button className="btn-primary" onClick={() => setShowAddForm(true)}>
-                        <Plus className="icon" /> Register First Child
-                    </button>
                 </div>
             ) : (
                 <div className="children-grid">
                     {filteredChildren.map(child => (
-                        <div
-                            key={child.id}
-                            className="child-card"
-                            onClick={() => setSelectedChild(child)}
-                            onKeyDown={(e) => e.key === 'Enter' && setSelectedChild(child)}
-                            role="button"
-                            tabIndex={0}
-                        >
+                        <div key={child.id} className="child-card" onClick={() => setSelectedChild(child)}>
                             <div className="child-avatar">
                                 {child.gender === 'female' ? '👧' : '👦'}
                             </div>
@@ -135,7 +145,7 @@ export const ChildrenList = ({ ashaWorkerId }) => {
                 </div>
             )}
 
-            {/* Child Detail Modal would go here */}
+            {/* Child Details Modal */}
             {selectedChild && (
                 <div className="modal-overlay" onClick={() => setSelectedChild(null)}>
                     <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -171,9 +181,89 @@ export const ChildrenList = ({ ashaWorkerId }) => {
                                 </div>
                             </div>
                             <div className="quick-actions">
-                                <button className="btn-secondary">📈 View Growth</button>
-                                <button className="btn-secondary">💉 Vaccinations</button>
-                                <button className="btn-secondary">🎯 Milestones</button>
+                                {/* Actions will navigate to respective tabs in future update */}
+                                <button className="btn-secondary" disabled>📈 View Growth (Use Tabs)</button>
+                                <button className="btn-secondary" disabled>💉 Vaccinations (Use Tabs)</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Register Child Modal */}
+            {showAddForm && (
+                <div className="modal-overlay" onClick={() => setShowAddForm(false)}>
+                    <div className="modal-content assessment-panel" onClick={e => e.stopPropagation()}>
+                        <div className="panel-header">
+                            <h4>👶 Register New Child</h4>
+                            <button className="btn-secondary" onClick={() => setShowAddForm(false)}>
+                                <X size={16} />
+                            </button>
+                        </div>
+                        <div className="assessment-form">
+                            <div className="form-section">
+                                <h6>Child Details</h6>
+                                <div className="form-row">
+                                    <div className="form-field full">
+                                        <label>Select Mother *</label>
+                                        <select
+                                            value={newChild.mother_id}
+                                            onChange={e => setNewChild({ ...newChild, mother_id: e.target.value })}
+                                        >
+                                            <option value="">-- Select Mother --</option>
+                                            {mothers.map(m => (
+                                                <option key={m.id} value={m.id}>{m.name} (ID: {m.id.substring(0, 6)}...)</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className="form-row">
+                                    <div className="form-field">
+                                        <label>Child Name *</label>
+                                        <input
+                                            type="text"
+                                            value={newChild.name}
+                                            onChange={e => setNewChild({ ...newChild, name: e.target.value })}
+                                            placeholder="Enter child name"
+                                        />
+                                    </div>
+                                    <div className="form-field">
+                                        <label>Birth Date *</label>
+                                        <input
+                                            type="date"
+                                            max={new Date().toISOString().split('T')[0]}
+                                            value={newChild.birth_date}
+                                            onChange={e => setNewChild({ ...newChild, birth_date: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="form-row">
+                                    <div className="form-field">
+                                        <label>Gender *</label>
+                                        <select
+                                            value={newChild.gender}
+                                            onChange={e => setNewChild({ ...newChild, gender: e.target.value })}
+                                        >
+                                            <option value="male">Male</option>
+                                            <option value="female">Female</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div className="form-field">
+                                        <label>Birth Weight (kg)</label>
+                                        <input
+                                            type="number"
+                                            step="0.1"
+                                            value={newChild.birth_weight_kg}
+                                            onChange={e => setNewChild({ ...newChild, birth_weight_kg: e.target.value })}
+                                            placeholder="e.g. 3.2"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="form-actions">
+                                    <button className="btn-secondary" onClick={() => setShowAddForm(false)}>Cancel</button>
+                                    <button className="btn-primary" onClick={handleRegisterChild}>Register Child</button>
+                                </div>
                             </div>
                         </div>
                     </div>
