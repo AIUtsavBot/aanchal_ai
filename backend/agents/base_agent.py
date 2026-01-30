@@ -83,7 +83,7 @@ class BaseAgent(ABC):
         reports_context: List[Dict[str, Any]],
         language: str = 'en'
     ) -> str:
-        """Process a query and return response"""
+        """Process a query and return validated response"""
         if not self.client:
             return (
                 f"⚠️ {self.agent_name} is currently unavailable. "
@@ -91,7 +91,7 @@ class BaseAgent(ABC):
             )
         
         try:
-            # Build full prompt
+            # Build full prompt with citation requirements
             system_prompt = self.get_system_prompt()
             
             # Context building is now async and returns a dict
@@ -100,8 +100,16 @@ class BaseAgent(ABC):
             
             preferred_language = language or mother_context.get('preferred_language', 'en')
             
+            # Enhanced prompt with citation requirements
             full_prompt = f"""
 CRITICAL: Strictly follow WHO and NHM India guidelines. If High Risk, recommend hospital. Reply ONLY in {preferred_language}.
+
+CITATION REQUIREMENT:
+When making clinical recommendations, you MUST cite the source guideline using format: [SOURCE: guideline_name]
+Examples:
+- "Give ORS 75ml/kg over 4 hours [SOURCE: WHO ORS Plan B]"
+- "Seek immediate care for fever in infants <3 months [SOURCE: IMNCI]"
+Valid sources: IMNCI, IAP 2023, WHO, WHO Growth Standards, WHO ORS, NHM SUMAN, WHO IYCF, EPDS, RBSK
 
 {system_prompt}
 
@@ -109,7 +117,7 @@ CRITICAL: Strictly follow WHO and NHM India guidelines. If High Risk, recommend 
 
 User Question: {query}
 
-Response:
+Response (include citations for medical advice):
 """
             
             # Generate response using new client API
@@ -121,6 +129,57 @@ Response:
             # Clean response
             cleaned_response = response.text.strip()
             
+            # ==================== POST-VALIDATION ====================
+            # Validate response against clinical rules before returning
+            try:
+                try:
+                    from backend.services.response_validator import validate_response, ValidationSeverity
+                except ImportError:
+                    from services.response_validator import validate_response, ValidationSeverity
+                
+                # Build validation context
+                validation_context = {
+                    'query': query,
+                    'age_months': mother_context.get('child_age_months', 12),
+                    'mother_id': mother_context.get('id'),
+                    'agent_type': self.agent_name
+                }
+                
+                validation_result = validate_response(
+                    cleaned_response, 
+                    validation_context, 
+                    self.agent_name
+                )
+                
+                if validation_result.severity == ValidationSeverity.CRITICAL:
+                    # Block response, use safe fallback
+                    logger.warning(
+                        f"🚨 {self.agent_name} response BLOCKED: {validation_result.issues}"
+                    )
+                    return validation_result.modified_response
+                
+                elif validation_result.severity == ValidationSeverity.WARNING:
+                    # Add disclaimer to response
+                    logger.info(
+                        f"⚠️ {self.agent_name} response has warnings: {validation_result.issues}"
+                    )
+                    cleaned_response = validation_result.modified_response or cleaned_response
+                
+                # Log citation status
+                if validation_result.citations_missing:
+                    logger.info(f"📚 {self.agent_name}: No citations found in response")
+                else:
+                    logger.info(
+                        f"📚 {self.agent_name}: Citations found: {validation_result.citations_found}"
+                    )
+                    
+            except ImportError as ie:
+                # Validator not available - log and continue
+                logger.warning(f"Response validator not available: {ie}")
+            except Exception as ve:
+                # Validation error - log but don't fail the response
+                logger.error(f"Response validation error: {ve}")
+            
             logger.info(f"✅ {self.agent_name} processed query successfully")
             return cleaned_response
             
@@ -130,3 +189,4 @@ Response:
                 f"I apologize, but I encountered an issue processing your request. "
                 f"Please try rephrasing your question or contact your healthcare provider if urgent."
             )
+
