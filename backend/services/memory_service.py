@@ -305,7 +305,7 @@ class MemoryService:
                                         if value:
                                             reports_text += f"{key}={value}, "
                                     reports_text += "\n"
-                            except:
+                            except Exception:
                                 pass
                     
                     context_parts.append(reports_text)

@@ -321,7 +321,7 @@ async def get_mother_children_details(mother_id: str):
         # Try both 'children' and 'child' table names just in case, but migration said 'children'
         try:
             children_res = supabase.table('children').select('*').eq('mother_id', mother_id).execute()
-        except:
+        except Exception:
              # Fallback if table name differs
              children_res = supabase.table('child').select('*').eq('mother_id', mother_id).execute()
              
@@ -376,7 +376,7 @@ async def get_mother_children_details(mother_id: str):
                                 "weight": float(rec['weight_kg']),
                                 "date": rec['measurement_date']
                             })
-                        except:
+                        except Exception:
                             pass
                             
                 # Sort by age

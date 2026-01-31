@@ -355,7 +355,7 @@ Empower mothers while ensuring safety."""
                     from datetime import datetime
                     delivery_dt = datetime.fromisoformat(delivery_date.replace('Z', ''))
                     days_postpartum = (datetime.now() - delivery_dt).days
-                except:
+                except Exception:
                     pass
             
             # Enhanced prompt with pregnancy history

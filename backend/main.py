@@ -369,7 +369,7 @@ def run_telegram_bot():
                 loop.run_until_complete(telegram_bot_app.updater.stop())
                 loop.run_until_complete(telegram_bot_app.stop())
                 loop.run_until_complete(telegram_bot_app.shutdown())
-        except:
+        except Exception:
             pass
         loop.close()
 
@@ -778,7 +778,7 @@ def calculate_pregnancy_week(registration_date: str) -> int:
         reg_date = datetime.fromisoformat(registration_date.replace('Z', '+00:00'))
         days_since = (datetime.now() - reg_date).days
         return 8 + (days_since // 7)
-    except:
+    except Exception:
         return 20
 
 

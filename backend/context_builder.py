@@ -167,7 +167,7 @@ async def build_holistic_context_async(mother_id: str, supabase: Client, limits:
         try:
             if not recent_bp and e.get("blood_pressure"):
                 recent_bp = str(e.get("blood_pressure"))
-        except: pass
+        except Exception: pass
         if not recent_hb: recent_hb = e.get("hemoglobin")
         if not recent_weight: recent_weight = e.get("weight")
         if not recent_sugar:

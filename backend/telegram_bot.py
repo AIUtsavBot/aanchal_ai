@@ -246,7 +246,7 @@ async def send_home_dashboard(
                 else:
                     age_text = f"{days_diff // 30} months old"
                 lines.append(f"👶 *Baby Age:* {age_text}")
-            except:
+            except Exception:
                 lines.append(f"📅 *Delivery Date:* {delivery_date}")
         
         lines.append("💉 *Next Vaccine:* Check 'Health Reports'")
@@ -1279,6 +1279,6 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
         logger.error(f"Error sending reply: {reply_error}", exc_info=True)
         try:
             await update.message.reply_text("I'm here to help. Please try rephrasing your question or use /start for the menu.")
-        except:
+        except Exception:
             pass
 

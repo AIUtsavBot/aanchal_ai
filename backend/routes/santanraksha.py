@@ -41,13 +41,13 @@ except ImportError:
 try:
     from agents.growth_agent import GrowthAgent
     growth_agent = GrowthAgent()
-except:
+except Exception:
     growth_agent = None
 
 # Import telegram service for notifications
 try:
     from services.telegram_service import send_assessment_notification
-except:
+except Exception:
     send_assessment_notification = None
 
 # Import access control utilities
@@ -169,7 +169,7 @@ def get_child_age_months(birth_date_str: str) -> int:
         now = datetime.now()
         months = (now.year - birth_date.year) * 12 + (now.month - birth_date.month)
         return max(0, months)
-    except:
+    except Exception:
         return 0
 
 
@@ -559,7 +559,7 @@ async def add_growth_record(
             total_days = (now - birth_date).days
             age_months = total_days // 30
             age_days = total_days
-        except:
+        except Exception:
             age_months = 0
             age_days = 0
         
@@ -755,7 +755,7 @@ async def toggle_milestone(
                         now = datetime.now()
                         achieved_age_days = (now - birth_date).days
                         achieved_age_months = achieved_age_days // 30
-                    except:
+                    except Exception:
                         pass
                 
                 # Mark as achieved (toggle on)
@@ -792,7 +792,7 @@ async def toggle_milestone(
                     now = datetime.now()
                     achieved_age_days = (now - birth_date).days
                     achieved_age_months = achieved_age_days // 30
-                except:
+                except Exception:
                     pass
             
             # Map milestone category to DB enum values

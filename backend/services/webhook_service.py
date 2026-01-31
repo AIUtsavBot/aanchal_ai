@@ -100,7 +100,7 @@ class WebhookService:
                         "response": response_text,
                         "payload": data
                     }).execute()
-                except:
+                except Exception:
                     pass
                     
                 if status_code >= 400:
@@ -119,5 +119,5 @@ class WebhookService:
                     "response": str(e),
                     "payload": data
                 }).execute()
-            except:
+            except Exception:
                 pass

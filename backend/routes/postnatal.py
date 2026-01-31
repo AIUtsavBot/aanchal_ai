@@ -195,7 +195,7 @@ async def create_mother_assessment(assessment: MotherPostnatalAssessment):
                     "message": "Assessment stored (fallback mode)",
                     "risk_level": assessment_data["risk_level"]
                 }
-            except:
+            except Exception:
                 pass
                 
         return {
@@ -232,7 +232,7 @@ async def get_mother_assessments(mother_id: str, limit: int = 20):
                 .limit(limit) \
                 .execute()
             assessments = result.data or []
-        except:
+        except Exception:
             pass
         
         # Also check risk_assessments as fallback
@@ -252,7 +252,7 @@ async def get_mother_assessments(mother_id: str, limit: int = 20):
                     "notes": r.get("notes"),
                     "source": "risk_assessments"
                 })
-        except:
+        except Exception:
             pass
             
         response = {
@@ -371,7 +371,7 @@ async def get_child_healthchecks(child_id: str, limit: int = 20):
                 .limit(limit) \
                 .execute()
             assessments = result.data or []
-        except:
+        except Exception:
             pass
             
         return {
@@ -416,7 +416,7 @@ async def get_postnatal_summary(mother_id: str):
                 .execute()
             if mother_result.data:
                 summary["mother"] = mother_result.data
-        except:
+        except Exception:
             pass
         
         # Get children
@@ -426,7 +426,7 @@ async def get_postnatal_summary(mother_id: str):
                 .eq("mother_id", mother_id) \
                 .execute()
             summary["children"] = children_result.data or []
-        except:
+        except Exception:
             pass
         
         # Get recent assessments
@@ -443,7 +443,7 @@ async def get_postnatal_summary(mother_id: str):
                     summary["mother_assessments"].append(a)
                 elif a.get("assessment_type") == "child_checkup":
                     summary["child_assessments"].append(a)
-        except:
+        except Exception:
             pass
         
         # Generate next actions based on data
