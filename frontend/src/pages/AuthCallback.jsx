@@ -50,10 +50,10 @@ export default function AuthCallback() {
 
       const role = currentUser?.role?.toUpperCase();
 
-      // If user has no role, show role selection
+      // If user has no role, redirect to /auth/signup for profile completion
+      // The Signup page will detect the authenticated session and show the complete profile form
       if (!role) {
-        setPendingEmail(currentUser?.email || "");
-        setStage("role_selection");
+        navigate("/auth/signup", { replace: true });
         return;
       }
 
@@ -65,9 +65,8 @@ export default function AuthCallback() {
       } else if (role === "ASHA_WORKER") {
         navigate("/asha/dashboard", { replace: true });
       } else {
-        // Unknown role - show pending
-        setPendingEmail(currentUser?.email || "");
-        setStage("pending");
+        // Unknown role (shouldn't happen if we redirect above, but fallback)
+        navigate("/auth/signup", { replace: true });
       }
     };
 
@@ -143,9 +142,8 @@ export default function AuthCallback() {
       // Upload file to Supabase Storage if it's a doctor
       let uploadedFileUrl = null;
       if (file && role === "DOCTOR") {
-        const fileName = `doctor_registrations/${
-          currentUser.id
-        }/${Date.now()}_${file.name}`;
+        const fileName = `doctor_registrations/${currentUser.id
+          }/${Date.now()}_${file.name}`;
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from("certifications")
           .upload(fileName, file);
@@ -357,10 +355,9 @@ export default function AuthCallback() {
               <div
                 onClick={() => fileInputRef.current?.click()}
                 className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all
-                  ${
-                    uploadedFile
-                      ? "border-green-400 bg-green-50"
-                      : "border-gray-300 hover:border-purple-400 hover:bg-purple-50"
+                  ${uploadedFile
+                    ? "border-green-400 bg-green-50"
+                    : "border-gray-300 hover:border-purple-400 hover:bg-purple-50"
                   }
                   ${uploadError ? "border-red-400 bg-red-50" : ""}
                 `}

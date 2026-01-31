@@ -714,7 +714,7 @@ async def fallback_decide_register_request(request_id: int, body: RegisterDecisi
 
 class RegisterRequestPayload(BaseModel):
     email: str
-    password: str
+    password: Optional[str] = None
     full_name: str
     role: str
     phone: Optional[str] = None

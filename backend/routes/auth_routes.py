@@ -65,7 +65,7 @@ class AuthResponse(BaseModel):
 
 class RegisterRequest(BaseModel):
     email: str = Field(..., pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-    password: str = Field(..., min_length=8, description="Password for the account")
+    password: Optional[str] = Field(None, min_length=8, description="Password for the account (optional for OAuth)")
     full_name: str = Field(..., min_length=1)
     role: str = Field(..., pattern="^(DOCTOR|ASHA_WORKER)$")
     phone: Optional[str] = None
