@@ -145,12 +145,23 @@ const Signup = () => {
         setNameMatch(null);
       }
     } catch (err) {
+      // Handle Rate Limit / Quota Exceeded Gracefully
       const errorMsg = err.response?.data?.detail || err.message || "Failed to validate ID";
-      setIdValidation({
-        valid: false,
-        message: errorMsg
-      });
-      setError(errorMsg);
+
+      if (errorMsg.includes('429') || errorMsg.includes('RESOURCE_EXHAUSTED') || errorMsg.includes('Quota')) {
+        setIdValidation({
+          valid: true, // Allow submission!
+          info: null,
+          message: "⚠️ Automatic verification unavailable (Server Busy). Admin will verify manually."
+        });
+        setError(""); // Clear error to allow submit
+      } else {
+        setIdValidation({
+          valid: false,
+          message: errorMsg
+        });
+        setError(errorMsg);
+      }
       setNameMatch(null);
     } finally {
       setValidatingId(false);
