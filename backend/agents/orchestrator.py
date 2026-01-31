@@ -393,10 +393,30 @@ Recent Reports: {len(reports_context)}
                         risk = analysis.get('risk_level', 'unknown')
                         context_info += f"Report {i}: Risk Level - {risk}\n"
             
+            # Add conversation memory context for follow-up questions
+            follow_up_prompt = mother_context.get('follow_up_prompt', '')
+            past_symptoms = mother_context.get('past_symptoms', [])
+            past_advice = mother_context.get('past_advice', [])
+            
+            memory_context = ""
+            if follow_up_prompt:
+                memory_context = follow_up_prompt
+            elif past_symptoms:
+                memory_context = f"\nPast symptoms discussed: {', '.join(past_symptoms[:5])}"
+                if past_advice:
+                    memory_context += f"\nPrevious advice given: {past_advice[0][:200]}"
+            
             prompt = f"""
 You are a maternal health assistant for {mother_context.get('name')}.
 
 {context_info}
+{memory_context}
+
+IMPORTANT INSTRUCTIONS:
+1. If you see past conversation history above, ACKNOWLEDGE IT
+2. Ask if current issue is related to previous discussions
+3. Do NOT immediately prescribe - ask 2-4 clarifying questions first
+4. Gather information about duration, severity, triggers before advising
 
 User Question: {message}
 

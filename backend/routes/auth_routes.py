@@ -71,6 +71,7 @@ class RegisterRequest(BaseModel):
     phone: Optional[str] = None
     assigned_area: Optional[str] = None
     degree_cert_url: Optional[str] = Field(None, description="Doctor certification file URL in storage")
+    id_info: Optional[dict] = Field(None, description="Metadata from parsed ID document (ASHA workers)")
 
 class RegisterRequestDecision(BaseModel):
     approved: bool
@@ -262,7 +263,9 @@ async def create_register_request(request: RegisterRequest):
             role=request.role,
             phone=request.phone,
             assigned_area=request.assigned_area,
-            degree_cert_url=request.degree_cert_url
+            assigned_area=request.assigned_area,
+            degree_cert_url=request.degree_cert_url,
+            id_info=request.id_info
         )
         return {"success": True, "request": result}
     except Exception as e:

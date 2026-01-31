@@ -101,6 +101,16 @@ class BaseAgent(ABC):
             preferred_language = language or mother_context.get('preferred_language', 'en')
             
             # Enhanced prompt with citation requirements
+            # Include conversation memory context if available
+            follow_up_prompt = mother_context.get('follow_up_prompt', '')
+            past_symptoms = mother_context.get('past_symptoms', [])
+            
+            memory_section = ""
+            if follow_up_prompt:
+                memory_section = f"\n{follow_up_prompt}\n"
+            elif past_symptoms:
+                memory_section = f"\n⚠️ PAST HISTORY: This mother previously reported: {', '.join(past_symptoms[:5])}\n"
+            
             full_prompt = f"""
 CRITICAL: Strictly follow WHO and NHM India guidelines. If High Risk, recommend hospital. Reply ONLY in {preferred_language}.
 
@@ -110,6 +120,15 @@ Examples:
 - "Give ORS 75ml/kg over 4 hours [SOURCE: WHO ORS Plan B]"
 - "Seek immediate care for fever in infants <3 months [SOURCE: IMNCI]"
 Valid sources: IMNCI, IAP 2023, WHO, WHO Growth Standards, WHO ORS, NHM SUMAN, WHO IYCF, EPDS, RBSK
+{memory_section}
+QUESTIONING PROTOCOL (IMPORTANT):
+1. If past history is shown above, ACKNOWLEDGE it and ask if current issue is related
+2. Before prescribing or advising, ask 1-2 clarifying questions:
+   - Duration: "कितने दिन से?" / "किती दिवसांपासून?"
+   - Severity: "कितना तेज़?" / "किती तीव्र?"
+   - Triggers: What makes it better/worse?
+3. If this is a recurring issue, ask if previous advice helped
+4. Gather information FIRST, then provide advice
 
 {system_prompt}
 
@@ -117,7 +136,7 @@ Valid sources: IMNCI, IAP 2023, WHO, WHO Growth Standards, WHO ORS, NHM SUMAN, W
 
 User Question: {query}
 
-Response (include citations for medical advice):
+Response (ask clarifying questions if needed, include citations for medical advice):
 """
             
             # Generate response using new client API

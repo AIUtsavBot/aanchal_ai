@@ -51,6 +51,19 @@ except ImportError:
     from services.memory_service import save_chat_history
     from services.email_service import send_alert_email
 
+# Try to import conversation memory service
+try:
+    from services.conversation_memory import get_follow_up_context, save_conversation, extract_message_info
+    CONVERSATION_MEMORY_AVAILABLE = True
+except ImportError:
+    CONVERSATION_MEMORY_AVAILABLE = False
+    async def get_follow_up_context(mother_id, message, mother_name=""): 
+        return None
+    async def save_conversation(*args, **kwargs): 
+        return False
+    async def extract_message_info(message): 
+        return {}
+
 logger = logging.getLogger(__name__)
 
 # States for registration (aligned with main.py)
@@ -455,11 +468,35 @@ async def action_summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"<b>🆔 Mother ID:</b> <code>{html.escape(mother_id)}</code>",
     ]
 
-    pregnancy_status = _calculate_pregnancy_status(mother.get("due_date"))
-    if pregnancy_status:
-        summary_lines.append(f"<b>🤰 Pregnancy:</b> {html.escape(pregnancy_status)}")
-    if mother.get("due_date"):
-        summary_lines.append(f"<b>📅 Due Date:</b> {html.escape(_format_date(mother.get('due_date')))}")
+    # Only show pregnancy info if NOT delivered
+    delivery_status = mother.get("delivery_status", "pregnant")
+    is_postnatal = delivery_status in ["delivered", "postnatal"]
+    
+    if is_postnatal:
+        # Show postnatal/SantanRaksha info
+        summary_lines.append(f"<b>👶 Status:</b> Delivered (SantanRaksha)")
+        if mother.get("delivery_date"):
+            summary_lines.append(f"<b>📅 Delivery Date:</b> {html.escape(_format_date(mother.get('delivery_date')))}")
+        # Calculate baby age
+        try:
+            from datetime import datetime
+            delivery_date = mother.get("delivery_date")
+            if delivery_date:
+                if isinstance(delivery_date, str):
+                    delivery_date = datetime.fromisoformat(delivery_date.replace('Z', '+00:00'))
+                days_old = (datetime.now(delivery_date.tzinfo) - delivery_date).days if delivery_date.tzinfo else (datetime.now() - delivery_date).days
+                if days_old >= 0:
+                    summary_lines.append(f"<b>👶 Baby Age:</b> {days_old} days old")
+        except Exception:
+            pass
+    else:
+        # Show pregnancy info
+        pregnancy_status = _calculate_pregnancy_status(mother.get("due_date"))
+        if pregnancy_status:
+            summary_lines.append(f"<b>🤰 Pregnancy:</b> {html.escape(pregnancy_status)}")
+        if mother.get("due_date"):
+            summary_lines.append(f"<b>📅 Due Date:</b> {html.escape(_format_date(mother.get('due_date')))}")
+    
     if mother.get("location"):
         summary_lines.append(f"<b>📍 Location:</b> {html.escape(mother.get('location'))}")
     # Use a plain newline separator instead of unsupported <br>
@@ -1147,6 +1184,34 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
     text_lower = text.lower()
     is_emergency = any(keyword in text_lower for keyword in emergency_keywords)
     
+    # Greeting detection - give SHORT responses for simple greetings
+    greeting_keywords = [
+        # English
+        'hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening',
+        'good night', 'thanks', 'thank you', 'bye', 'goodbye', 'ok', 'okay',
+        # Hindi/Marathi
+        'नमस्कार', 'नमस्ते', 'namaste', 'namaskar', 'धन्यवाद', 'शुभ', 'जय',
+        'हाय', 'हेलो', 'ठीक', 'अच्छा', 'बाय',
+    ]
+    # Check if message is ONLY a greeting (short message, no other content)
+    is_greeting = (
+        len(text.split()) <= 3 and  # Very short message
+        any(keyword in text_lower for keyword in greeting_keywords)
+    )
+    
+    if is_greeting and not is_emergency:
+        # Give a short, friendly response based on language
+        name = mother.get('name', '') if mother else ''
+        greeting_responses = {
+            'mr': f"🙏 नमस्कार{', ' + name if name else ''}! मी तुमच्या मदतीसाठी येथे आहे. काही प्रश्न असल्यास विचारा.",
+            'hi': f"🙏 नमस्ते{', ' + name if name else ''}! मैं आपकी मदद के लिए यहाँ हूँ। कोई भी सवाल पूछें।",
+            'en': f"🙏 Hello{', ' + name if name else ''}! I'm here to help. Feel free to ask any questions."
+        }
+        lang = mother.get('preferred_language', 'en') if mother else 'en'
+        reply = greeting_responses.get(lang, greeting_responses['en'])
+        await update.message.reply_text(reply)
+        return
+    
     # Keywords that indicate mother wants to talk to doctor/ASHA (not AI)
     doctor_keywords = [
         'doctor', 'dr.', 'dr ', 'asha', 'nurse', 'didi',  # Common terms
@@ -1256,15 +1321,47 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
             pass
         return
     
-    # Normal AI agent flow
+    # Normal AI agent flow with INTELLIGENT MEMORY
     try:
         reports = await get_recent_reports_for_mother(mother.get('id')) if (mother and callable(get_recent_reports_for_mother)) else []
     except Exception:
         reports = []
     
+    # Get conversation context with past history for follow-up questions
+    conversation_context = None
+    extracted_info = {}
+    try:
+        if CONVERSATION_MEMORY_AVAILABLE:
+            mother_name = mother.get('name', '') if mother else ''
+            conversation_context = await get_follow_up_context(mother_id, text, mother_name)
+            extracted_info = await extract_message_info(text)
+            
+            if conversation_context and conversation_context.has_history:
+                logger.info(f"🧠 Found {len(conversation_context.similar_conversations)} relevant past conversations")
+                # Add follow-up context to mother_context for routing
+                mother_context['follow_up_prompt'] = conversation_context.follow_up_prompt
+                mother_context['past_symptoms'] = conversation_context.past_symptoms
+                mother_context['past_advice'] = conversation_context.past_advice
+    except Exception as mem_err:
+        logger.warning(f"Could not get conversation memory: {mem_err}")
+    
     try:
         reply = await route_message(text, mother_context, reports)
         logger.info(f"✅ Agent reply generated successfully for: {text[:50]}")
+        
+        # Store conversation for future memory (async, non-blocking)
+        try:
+            if CONVERSATION_MEMORY_AVAILABLE and extracted_info:
+                await save_conversation(
+                    mother_id=str(mother_id),
+                    messages=[{"role": "user", "content": text}, {"role": "assistant", "content": reply}],
+                    topics=extracted_info.get('topics', []),
+                    symptoms=extracted_info.get('symptoms', []),
+                    advice=reply[:500] if reply else None
+                )
+        except Exception:
+            pass
+            
     except Exception as e:
         logger.error(f"Routing error for message '{text}': {e}", exc_info=True)
         reply = f"I'm having trouble processing that right now. Please try again."

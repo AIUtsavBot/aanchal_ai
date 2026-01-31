@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
-import { ShieldCheck, XCircle, FileText, UserPlus, Users, CheckCircle, Clock, ExternalLink } from 'lucide-react'
+import { ShieldCheck, XCircle, FileText, UserPlus, Users, CheckCircle, Clock, ExternalLink, ChevronDown, ChevronUp, CreditCard, User, MapPin, Calendar, Phone, Mail, Building } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
-import { authAPI } from '../services/api'
+import { authAPI, certificateAPI } from '../services/api'
 
 export default function AdminApprovals() {
   const { user } = useAuth()
@@ -11,6 +11,8 @@ export default function AdminApprovals() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [expandedDetails, setExpandedDetails] = useState({})  // Track which cards are expanded
+  const [documentInfo, setDocumentInfo] = useState({})         // Store parsed document info
 
   const loadData = async () => {
     try {
@@ -95,6 +97,149 @@ export default function AdminApprovals() {
     } catch (e) {
       const errorMsg = e.response?.data?.detail || e.response?.data?.message || e.message || 'Failed to reject request'
       setError(errorMsg)
+    }
+  }
+
+  // Toggle expanded details for a request
+  const toggleDetails = (requestId) => {
+    setExpandedDetails(prev => ({
+      ...prev,
+      [requestId]: !prev[requestId]
+    }))
+  }
+
+  // Component to render formatted document details
+  const DocumentDetailsSection = ({ request }) => {
+    const isDoctor = request.role_requested === 'DOCTOR'
+
+    // Parse any metadata from the request (if stored)
+    const metadata = request.document_metadata || request.id_info || {}
+
+    if (isDoctor) {
+      // Doctor Certificate Details
+      return (
+        <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
+          <h4 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
+            <FileText className="w-4 h-4" /> Doctor Certificate Details
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+            <div className="flex items-center gap-2">
+              <User className="w-4 h-4 text-blue-600" />
+              <span className="text-gray-600">Name:</span>
+              <span className="font-medium">{request.full_name || 'Not provided'}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Mail className="w-4 h-4 text-blue-600" />
+              <span className="text-gray-600">Email:</span>
+              <span className="font-medium">{request.email}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Phone className="w-4 h-4 text-blue-600" />
+              <span className="text-gray-600">Phone:</span>
+              <span className="font-medium">{request.phone || 'Not provided'}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-blue-600" />
+              <span className="text-gray-600">Area:</span>
+              <span className="font-medium">{request.assigned_area || 'Not specified'}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Building className="w-4 h-4 text-blue-600" />
+              <span className="text-gray-600">Registration:</span>
+              <span className="font-medium">{metadata.registration_number || 'Pending verification'}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-blue-600" />
+              <span className="text-gray-600">Applied:</span>
+              <span className="font-medium">{new Date(request.created_at).toLocaleDateString('en-IN', {
+                day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+              })}</span>
+            </div>
+          </div>
+          {metadata.qualification && (
+            <div className="mt-3 p-2 bg-white rounded border border-blue-100">
+              <span className="text-gray-600 text-sm">Qualification:</span>
+              <span className="ml-2 font-medium text-blue-700">{metadata.qualification}</span>
+            </div>
+          )}
+          {metadata.council && (
+            <div className="mt-2 p-2 bg-white rounded border border-blue-100">
+              <span className="text-gray-600 text-sm">Medical Council:</span>
+              <span className="ml-2 font-medium text-blue-700">{metadata.council}</span>
+            </div>
+          )}
+        </div>
+      )
+    } else {
+      // ASHA Worker ID Details
+      return (
+        <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-100">
+          <h4 className="font-semibold text-green-800 mb-3 flex items-center gap-2">
+            <CreditCard className="w-4 h-4" /> ASHA Worker Details
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+            <div className="flex items-center gap-2">
+              <User className="w-4 h-4 text-green-600" />
+              <span className="text-gray-600">Name:</span>
+              <span className="font-medium">{request.full_name || metadata.full_name || 'Not provided'}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Mail className="w-4 h-4 text-green-600" />
+              <span className="text-gray-600">Email:</span>
+              <span className="font-medium">{request.email}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Phone className="w-4 h-4 text-green-600" />
+              <span className="text-gray-600">Phone:</span>
+              <span className="font-medium">{request.phone || 'Not provided'}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-green-600" />
+              <span className="text-gray-600">Assigned Area:</span>
+              <span className="font-medium">{request.assigned_area || 'Not specified'}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CreditCard className="w-4 h-4 text-green-600" />
+              <span className="text-gray-600">ID Type:</span>
+              <span className="font-medium capitalize">{metadata.document_type?.replace('_', ' ') || 'Not verified'}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CreditCard className="w-4 h-4 text-green-600" />
+              <span className="text-gray-600">ID Number:</span>
+              <span className="font-medium">{metadata.id_number || 'Not provided'}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-green-600" />
+              <span className="text-gray-600">Date of Birth:</span>
+              <span className="font-medium">{metadata.date_of_birth || 'Not extracted'}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-green-600" />
+              <span className="text-gray-600">Age:</span>
+              <span className="font-medium">{metadata.age ? `${metadata.age} years` : 'Not calculated'}</span>
+            </div>
+          </div>
+          {metadata.address && (
+            <div className="mt-3 p-2 bg-white rounded border border-green-100">
+              <div className="flex items-start gap-2">
+                <MapPin className="w-4 h-4 text-green-600 mt-0.5" />
+                <div>
+                  <span className="text-gray-600 text-sm">Address from ID:</span>
+                  <p className="font-medium text-green-700 text-sm mt-1">{metadata.address}</p>
+                </div>
+              </div>
+            </div>
+          )}
+          <div className="mt-3 p-2 bg-white rounded border border-green-100">
+            <span className="text-gray-600 text-sm">Applied:</span>
+            <span className="ml-2 font-medium text-green-700">
+              {new Date(request.created_at).toLocaleDateString('en-IN', {
+                day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+              })}
+            </span>
+          </div>
+        </div>
+      )
     }
   }
 
@@ -214,6 +359,29 @@ export default function AdminApprovals() {
                           </button>
                         </div>
                       </div>
+
+                      {/* View Details Toggle Button */}
+                      <button
+                        onClick={() => toggleDetails(req.id)}
+                        className="mt-4 w-full flex items-center justify-center gap-2 py-2 px-4 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                      >
+                        {expandedDetails[req.id] ? (
+                          <>
+                            <ChevronUp className="w-4 h-4" />
+                            Hide Details
+                          </>
+                        ) : (
+                          <>
+                            <ChevronDown className="w-4 h-4" />
+                            View Full Details
+                          </>
+                        )}
+                      </button>
+
+                      {/* Expandable Details Section */}
+                      {expandedDetails[req.id] && (
+                        <DocumentDetailsSection request={req} />
+                      )}
                     </div>
                   ))}
                 </div>

@@ -189,6 +189,58 @@ export const authAPI = {
   }
 }
 
+// ==================== CERTIFICATE VERIFICATION API ====================
+export const certificateAPI = {
+  // Verify doctor certificate (multilingual - any language)
+  verifyDoctorCertificate: async (file) => {
+    const form = new FormData()
+    form.append('file', file)
+    const res = await api.post('/api/v1/certificates/verify', form, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    return res
+  },
+
+  // Parse certificate only (no verification)
+  parseCertificate: async (file) => {
+    const form = new FormData()
+    form.append('file', file)
+    const res = await api.post('/api/v1/certificates/parse', form, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    return res
+  },
+
+  // Parse ID document (PAN/Aadhaar/DL - any language)
+  parseIDDocument: async (file) => {
+    const form = new FormData()
+    form.append('file', file)
+    const res = await api.post('/api/v1/certificates/id-document/parse', form, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    return res
+  },
+
+  // Validate ASHA worker ID (includes hidden age validation)
+  validateAshaID: async (file) => {
+    const form = new FormData()
+    form.append('file', file)
+    const res = await api.post('/api/v1/certificates/id-document/validate-asha', form, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    return res
+  },
+
+  // Get NMC lookup guidance
+  getNMCLookup: async (registrationNumber, doctorName = null) => {
+    const params = new URLSearchParams()
+    params.append('registration_number', registrationNumber)
+    if (doctorName) params.append('doctor_name', doctorName)
+    const res = await api.get(`/api/v1/certificates/nmc-lookup?${params}`)
+    return res
+  }
+}
+
 export { api }
 
 // ==================== RISK ASSESSMENT API ====================

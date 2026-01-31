@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { authAPI } from "../services/api";
+import { authAPI, certificateAPI } from "../services/api";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -18,8 +18,11 @@ const Signup = () => {
     assignedArea: "",
   });
   const [degreeFile, setDegreeFile] = useState(null);
+  const [idFile, setIdFile] = useState(null);      // ASHA ID document
+  const [idValidation, setIdValidation] = useState(null);  // ID validation result
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [validatingId, setValidatingId] = useState(false);
   const [success, setSuccess] = useState(false);
   const [countdown, setCountdown] = useState(5);
 
@@ -48,6 +51,43 @@ const Signup = () => {
     setError("");
   };
 
+  // Handle ASHA ID document upload and validation
+  const handleIdFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIdFile(file);
+    setIdValidation(null);
+    setValidatingId(true);
+    setError("");
+
+    try {
+      // Validate ID document (includes hidden age check on backend)
+      const res = await certificateAPI.validateAshaID(file);
+      if (res?.data?.success && res?.data?.eligible) {
+        setIdValidation({
+          valid: true,
+          info: res.data.id_info,
+          message: `✅ ID verified: ${res.data.id_info?.full_name}`
+        });
+      } else {
+        setIdValidation({
+          valid: false,
+          message: res?.data?.error || "ID validation failed"
+        });
+      }
+    } catch (err) {
+      const errorMsg = err.response?.data?.detail || err.message || "Failed to validate ID";
+      setIdValidation({
+        valid: false,
+        message: errorMsg
+      });
+      setError(errorMsg);
+    } finally {
+      setValidatingId(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -64,6 +104,20 @@ const Signup = () => {
       setError("Password must be at least 8 characters");
       setLoading(false);
       return;
+    }
+
+    // ASHA worker requires valid ID document
+    if (formData.role === "ASHA_WORKER") {
+      if (!idFile) {
+        setError("Please upload your ID document (PAN/Aadhaar/Driving License)");
+        setLoading(false);
+        return;
+      }
+      if (!idValidation?.valid) {
+        setError("ID document validation failed. Please upload a valid document.");
+        setLoading(false);
+        return;
+      }
     }
 
     try {
@@ -89,6 +143,8 @@ const Signup = () => {
         phone: formData.phone,
         assigned_area: formData.assignedArea,
         degree_cert_url: degreeUrl,
+        // Include parsed ID info for admin review (ASHA workers)
+        id_info: formData.role === "ASHA_WORKER" && idValidation?.info ? idValidation.info : null,
       };
 
       const res = await authAPI.createRegisterRequest(payload);
@@ -225,6 +281,35 @@ const Signup = () => {
               </p>
             </div>
 
+            {/* ASHA Worker ID Document Upload */}
+            {formData.role === "ASHA_WORKER" && (
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  ID Document * (PAN Card / Aadhaar / Driving License)
+                </label>
+                <input
+                  type="file"
+                  accept="application/pdf,image/*"
+                  onChange={handleIdFileChange}
+                  className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+                {validatingId && (
+                  <p className="mt-2 text-sm text-blue-600 flex items-center gap-2">
+                    <span className="animate-spin">⏳</span> Validating ID document...
+                  </p>
+                )}
+                {idValidation && (
+                  <p className={`mt-2 text-sm ${idValidation.valid ? 'text-green-600' : 'text-red-600'}`}>
+                    {idValidation.message}
+                  </p>
+                )}
+                <p className="mt-1 text-xs text-gray-500">
+                  Upload your government ID for verification (any language)
+                </p>
+              </div>
+            )}
+
+            {/* Doctor Degree Certificate */}
             {formData.role === "DOCTOR" && (
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">

@@ -577,6 +577,14 @@ try:
 except Exception as e:
     logger.warning(f"⚠️  SantanRaksha routes not available: {e}")
 
+# Mount Certificate verification routes (multilingual document parsing + NMC verification)
+try:
+    from routes.certificate_routes import router as certificate_router
+    app.include_router(certificate_router)
+    logger.info("✅ Certificate verification routes loaded (multilingual + NMC)")
+except Exception as e:
+    logger.warning(f"⚠️  Certificate routes not available: {e}")
+
 
 # ==================== SECURITY & RATE LIMITING ====================
 # Setup security middleware

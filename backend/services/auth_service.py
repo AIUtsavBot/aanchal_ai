@@ -115,7 +115,9 @@ class AuthService:
         role: str,
         phone: Optional[str] = None,
         assigned_area: Optional[str] = None,
-        degree_cert_url: Optional[str] = None
+        assigned_area: Optional[str] = None,
+        degree_cert_url: Optional[str] = None,
+        id_info: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
         Create a pending registration request with encrypted password
@@ -146,6 +148,7 @@ class AuthService:
                 "phone": phone,
                 "assigned_area": assigned_area,
                 "degree_cert_url": degree_cert_url,
+                "document_metadata": id_info,  # Store parsed ID info here
                 "password_hash": encrypted_password,  # Actually encrypted, not hashed
                 "status": "PENDING"
             }
@@ -623,3 +626,55 @@ class AuthService:
 
 # Create singleton instance
 auth_service = AuthService()
+
+
+# ============= FastAPI Dependency for Protected Routes =============
+from fastapi import Request, HTTPException, Header, Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+
+security = HTTPBearer(auto_error=False)
+
+async def get_current_user(
+    request: Request,
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    authorization: str = Header(None)
+) -> Dict[str, Any]:
+    """
+    FastAPI dependency to get current authenticated user.
+    Can be used as: current_user: dict = Depends(get_current_user)
+    
+    Extracts token from:
+    1. HTTPBearer credential
+    2. Authorization header
+    3. Request state (if set by middleware)
+    """
+    token = None
+    
+    # Try to get token from various sources
+    if credentials:
+        token = credentials.credentials
+    elif authorization:
+        # Handle "Bearer xxx" format
+        if authorization.startswith("Bearer "):
+            token = authorization[7:]
+        else:
+            token = authorization
+    elif hasattr(request.state, "access_token"):
+        token = request.state.access_token
+    
+    if not token:
+        raise HTTPException(
+            status_code=401,
+            detail="Not authenticated. Please provide a valid access token.",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+    
+    try:
+        result = await auth_service.get_user(token)
+        if result.get("success") and result.get("user"):
+            return result["user"]
+        else:
+            raise HTTPException(status_code=401, detail="Invalid or expired token")
+    except Exception as e:
+        logger.error(f"Auth error: {e}")
+        raise HTTPException(status_code=401, detail=f"Authentication failed: {str(e)}")

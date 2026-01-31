@@ -58,11 +58,16 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 try:
     from contextual import ContextualAI
     CONTEXTUAL_API_KEY = os.getenv("CONTEXTUAL_API_KEY")
-    contextual_client = ContextualAI(api_key=CONTEXTUAL_API_KEY)
-    CONTEXTUAL_AVAILABLE = True
-    logger.info("✅ Contextual AI available in enhanced_api")
-except Exception as e:
-    logger.warning(f"⚠️  Contextual AI not available: {e}")
+    if CONTEXTUAL_API_KEY:
+        contextual_client = ContextualAI(api_key=CONTEXTUAL_API_KEY)
+        CONTEXTUAL_AVAILABLE = True
+        logger.info("✅ Contextual AI available in enhanced_api")
+    else:
+        logger.warning("⚠️  Contextual AI: CONTEXTUAL_API_KEY not set in .env")
+        contextual_client = None
+        CONTEXTUAL_AVAILABLE = False
+except ImportError as e:
+    logger.warning(f"⚠️  Contextual AI not available: {e}. Install with: pip install contextual-client")
     contextual_client = None
     CONTEXTUAL_AVAILABLE = False
 
