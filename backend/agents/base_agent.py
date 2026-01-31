@@ -34,6 +34,21 @@ GEMINI_MODEL_NAME = (
 )
 
 
+class _GeminiModelWrapper:
+    """Wrapper to provide backwards-compatible generate_content() interface"""
+
+    def __init__(self, client, model_name: str):
+        self._client = client
+        self._model_name = model_name
+
+    def generate_content(self, prompt: str):
+        """Generate content using the new client API but old-style interface"""
+        return self._client.models.generate_content(
+            model=self._model_name,
+            contents=prompt
+        )
+
+
 class BaseAgent(ABC):
     """Base class for all specialized agents"""
     
@@ -41,11 +56,14 @@ class BaseAgent(ABC):
         self.agent_name = agent_name
         self.agent_role = agent_role
         self.client = None
+        self.model = None  # For backwards compatibility with agents using self.model
         self.model_name = GEMINI_MODEL_NAME
-        
+
         if GEMINI_AVAILABLE and gemini_client:
             try:
                 self.client = gemini_client
+                # Create a model wrapper for agents that use self.model directly
+                self.model = _GeminiModelWrapper(gemini_client, GEMINI_MODEL_NAME)
                 logger.info(f"✅ {agent_name} initialized with Gemini model: {GEMINI_MODEL_NAME}")
             except Exception as e:
                 logger.error(f"❌ {agent_name} failed to initialize: {e}")
