@@ -3,48 +3,55 @@
 
 > **"Protecting Mothers, Nurturing Future"**
 
-**Aanchal AI** is a comprehensive digital health ecosystem designed to combat maternal and infant mortality. It serves as the umbrella platform for two specialized AI-driven products:
+**Aanchal AI** is a comprehensive digital health ecosystem designed to combat maternal and infant mortality by bridging the gap between rural healthcare workers (ASHAs), doctors, and families. It powers two specialized AI-driven products in one unified platform:
 
 1.  **MatruRaksha AI** 🤰 - Dedicated to **Maternal Health** (Pregnancy to Postpartum).
 2.  **SantanRaksha AI** 👶 - Dedicated to **Child Health** (Neonatal to Infant care).
 
-By leveraging Artificial Intelligence, real-time data analytics, and a resilient microservices architecture, Aanchal AI bridges the gap between rural healthcare workers (ASHAs) and medical specialists.
+By leveraging Artificial Intelligence (Google Gemini 2.5 Flash), real-time data analytics, and a multi-channel approach (Web + Telegram + Voice), Aanchal AI ensures no mother or child is left behind.
 
 ![Status](https://img.shields.io/badge/Status-Production_Ready-success)
-![Version](https://img.shields.io/badge/Version-1.0.0-blue)
+![Version](https://img.shields.io/badge/Version-1.1.0-blue)
 ![License](https://img.shields.io/badge/License-MIT-purple)
-![Tech](https://img.shields.io/badge/Stack-FastAPI%20|%20React%20|%20Supabase-orange)
-
-## 🌟 Solution Overview
-
-In many regions, health data is fragmented and reactive. Aanchal AI transforms this into a **proactive, compassionate system**:
-
-### 🤰 MatruRaksha AI (Maternal Focus)
-*   **For Mothers**: Personalized care plans, emergency alerts, and tracking of vital stats during pregnancy.
-*   **For ASHAs**: Offline-first data entry for prenatal checkups (ANC) and risk identification.
-*   **AI Engine**: Predicts risks like Preeclampsia utilizing clinical rules + ML trends.
-
-### 👶 SantanRaksha AI (Child Focus)
-*   **For Neonates**: Monitoring growth charts, vaccination schedules, and developmental milestones.
-*   **For Doctors**: AI-generated summaries of a child's health history to enable quick decision-making.
+![Stack](https://img.shields.io/badge/Stack-FastAPI%20|%20React%20|%20Supabase%20|%20Gemini-orange)
 
 ---
 
-## 🚀 Key Capabilities
+## 🌟 Key Features
 
-### 🧠 Phase 5: AI Health Intelligence
--   **Predictive Risk Engine**: Hybrid model for flagging high-risk cases.
--   **GenAI Summaries**: Google Gemini generates concise clinical notes for doctors.
--   **Voice Agent**: Vapi.ai integration for automated follow-up calls in local languages.
+### 🔐 Secure & Flexible Access
+*   **Role-Based Access Control**: specialized dashboards for **Doctors**, **ASHA Workers**, and **Admin**.
+*   **Google OAuth Integration**: Seamless one-tap sign-up/login.
+*   **Profile Completion Flow**: Intelligent flow for new social logins to capture critical medical/role details.
+*   **Admin Approval Strategy**: Strict verification process for healthcare professionals (Id & Certificate checks).
 
-### 🌐 Phase 6: Omni-Channel Access
--   **Offline PWA**: Field-ready mobile experience that caches data and syncs when online.
--   **Push Notifications**: Browser-based alerts for emergencies and upcoming visits.
+### 🤖 Intelligent AI Agents (Powered by Gemini)
+The system employs a swarm of specialized agents orchestrated to handle specific domains:
+*   **Care Agent**: General pregnancy advice and wellness.
+*   **Emergency Agent**: Detects urgent symptoms (bleeding, pain) and triggers alerts.
+*   **Nutrition Agent**: Personalized diet plans and anaemia management.
+*   **Risk Agent**: Assesses complications like Preeclampsia or Gestational Diabetes.
+*   **Pediatric Agent**: Consults on child illnesses (IMNCI protocols), fever, and development.
+*   **Vaccination Agent**: Tracks schedules and answers immunization queries.
+*   **Growth Agent**: Monitors WHO growth standards (Z-scores) and feeding advice.
 
-### 🛡️ Phase 4: Security & Observability
--   **Audit Trails**: Immutable logs of all data access and modifications (`audit_logs`).
--   **Deep Health Checks**: Real-time monitoring of Database, Cache, and AI APIs.
--   **Resilience**: Global Error Boundaries, API Retry logic.
+### 📱 Telegram Bot & Voice Assistance
+*   **Conversational AI**: Mothers can chat naturally in their local language (Hindi, Marathi, English).
+*   **Voice-First Interface**:
+    *   **Speech-to-Text**: Users can send voice notes which are transcribed by Gemini.
+    *   **Text-to-Speech**: AI Doctors reply with audio messages (and captions) for accessibility.
+*   **Document Analysis**: Upload medical reports (PDF/Images) directly in chat for instant AI summarization and risk flagging.
+*   **Multi-Profile Management**: ASHAs can manage multiple mothers from a single Telegram account.
+
+### 📊 Comprehensive Dashboards
+*   **Admin Panel**:
+    *   **Mothers Tab**: Track delivery status, risk levels, and due dates.
+    *   **Children Tab**: Manage pediatric records, growth charts, and vaccinations.
+    *   **User Management**: Approve/Reject doctor and ASHA registrations.
+    *   **Analytics**: Overview stats on total registered patients and high-risk cases.
+*   **Assessment Tools**:
+    *   **Postnatal & Growth**: Digital tools to record and visualize baby's weight/height over time.
+    *   **Risk Evaluation**: Automated colouring of high-risk metrics.
 
 ---
 
@@ -61,58 +68,44 @@ graph TD
         Admin["Administrator"]
     end
 
-    subgraph "Frontend Layer (PWA)"
-        WebPC["Web Portal"]
-        Mobile["Mobile PWA (Offline)"]
+    subgraph "Frontend Layer"
+        WebPC["React Web Portal"]
+        Telegram["Telegram Bot (Voice/Chat)"]
     end
 
-    subgraph "Aanchal AI Core Platform"
+    subgraph "Aanchal AI Core"
         API["FastAPI Gateway"]
-        Auth["Auth Service"]
+        Orch["Agent Orchestrator"]
         
-        subgraph "Products"
-            MR["MatruRaksha AI Service"]
-            SR["SantanRaksha AI Service"]
+        subgraph "AI Agents"
+            Maternal["MatruRaksha Agents"]
+            Child["SantanRaksha Agents"]
         end
-        
-        Orch["Task Orchestrator (Celery)"]
     end
 
-    subgraph "Data & Knowledge"
+    subgraph "Data & AI Services"
         DB[("Supabase PostgreSQL")]
-        Cache[("Redis Cache")]
-        Vector["Vector DB (Medical Context)"]
-    end
-
-    subgraph "External AI Services"
-        Gemini["Google Gemini 2.0 (Reasoning)"]
-        Vapi["Vapi.ai (Voice Agents)"]
-        SMS["Twilio / SMS Gateway"]
+        Gemini["Google Gemini 2.5 Flash"]
+        Vapi["Vapi.ai (Voice Calls)"]
     end
 
     %% Flows
-    Mother -->|SMS / Voice| Vapi
-    ASHA -->|Offline Entry| Mobile
+    Mother -->|Voice/Text| Telegram
+    ASHA -->|Web/Mobile| WebPC
     Doctor -->|Dashboard| WebPC
-    Admin -->|Analytics| WebPC
-
-    Mobile -->|Sync| API
-    WebPC -->|HTTPS| API
-
-    API --> Auth
-    API --> MR
-    API --> SR
     
-    MR --> Orch
-    SR --> Orch
+    Telegram --> API
+    WebPC --> API
     
-    Orch -->|Risk Analysis| Gemini
-    Orch -->|Alerts| SMS
-    Orch -->|Schedule Call| Vapi
+    API --> Orch
+    Orch --> Maternal
+    Orch --> Child
+    
+    Maternal --> Gemini
+    Child --> Gemini
     
     API --> DB
-    API --> Cache
-    Gemini -.->|RAG| Vector
+    Orch --> Vapi
 ```
 
 ---
@@ -121,50 +114,55 @@ graph TD
 
 | Component | Technology | Description |
 |-----------|------------|-------------|
-| **Core AI** | **Aanchal AI Engine** | Central logic for risk assessment |
-| **Backend** | Python 3.12, FastAPI | High-performance async API |
-| **Frontend** | React 18, Vite, Tailwind | Responsive PWA with offline support |
-| **Database** | Supabase (PostgreSQL) | Relational data + Vector embeddings |
-| **AI Services** | Google Gemini 2.0, Vapi.ai | LLM & Voice capabilities |
+| **AI Core** | **Google Gemini 2.5 Flash** | Multimodal LLM for reasoning, voice, and vision |
+| **Backend** | Python 3.12, FastAPI | High-performance async API with Pydantic validation |
+| **Frontend** | React 18, Vite, Tailwind | Responsive dashboard with Recharts for data viz |
+| **Database** | Supabase (PostgreSQL) | Managed DB with Auth, Storage, and Vector capabilities |
+| **Messaging** | Telegram Bot API | Accessible interface for rural adoption |
+| **Voice** | gTTS / Vapi.ai | Voice synthesis and telephony integration |
 
 ---
 
 ## ⚡ Quick Start Guide
 
 ### 1. Requirements
--   Docker & Docker Compose
--   *Or* Python 3.12+ & Node.js 18+ for local dev.
+-   Python 3.12+
+-   Node.js 18+
+-   Supabase Account
+-   Google Gemini API Key
 
 ### 2. Environment Setup
-Create a `.env` file in `backend/` and `frontend/` (see `.env.example`).
-Required keys: `SUPABASE_URL`, `SUPABASE_KEY`, `GEMINI_API_KEY`.
-
-### 3. Run with Docker (Recommended)
-Launch the entire Aanchal AI stack:
-```bash
-docker-compose -f docker-compose.prod.yml up --build -d
-```
--   **Frontend**: http://localhost
--   **Backend API**: http://localhost:8000/docs
-
-### 4. Seed Demo Data
-Populate the system with realistic patients:
-```bash
-python scripts/seed_demo_data.py
+Create `.env` files in `backend/` and `frontend/` directories.
+**Backend (.env):**
+```env
+SUPABASE_URL=your_url
+SUPABASE_KEY=your_key
+GEMINI_API_KEY=your_gemini_key
+TELEGRAM_BOT_TOKEN=your_bot_token
 ```
 
-### 5. Run Tests
+### 3. Run Locally
+
+**Backend:**
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate  # or venv\Scripts\activate on Windows
+pip install -r requirements.txt
+python main.py
+```
+
+**Frontend:**
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+### 4. Running Tests
 ```bash
 pytest backend/tests/
 ```
-
----
-
-## 📚 Documentation Links
--   [**Detailed Architecture**](docs/architecture.md)
--   [**Deployment Guide**](docs/deployment.md)
--   [**Walkthrough**](walkthrough.md)
--   [**Contributor Guide**](CONTRIBUTING.md)
 
 ---
 

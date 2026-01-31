@@ -18,6 +18,7 @@ from io import BytesIO
 
 from gtts import gTTS
 import aiohttp
+import asyncio
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.constants import ParseMode
 from telegram.ext import (
@@ -909,8 +910,8 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                     await status_msg.edit_text("⚠️ Could not hear anything clearly. Please try again.")
                     return
                 
-                # Show what was heard
-                await status_msg.edit_text(f"🗣️ You said: *\"{user_text}\"*", parse_mode=ParseMode.MARKDOWN)
+                await status_msg.edit_text(f"🗣️ *You said:*\n_{user_text}_\n\n⏳ Generating response... please wait.", parse_mode=ParseMode.MARKDOWN)
+                
                 
                 # 3. Route to Orchestrator
                 # Need mother context
@@ -932,17 +933,15 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                     await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
                     
                     # Call Orchestrator
-                    response_data = await route_message(
+                    # Call Orchestrator
+                    response_text = await route_message(
                         message=user_text,
-                        mother_data=mother,
-                        reports_context=[], # Could inject recent reports here
-                        chat_history=[] # Could inject recent history
+                        mother_context=mother,
+                        reports_context=[]
                     )
-                    reply_text = response_data.get("response", "I'm not sure how to help with that.")
+                    reply_text = response_text
                     
-                    # Update active mother data if changed (rare but possible)
-                    if response_data.get("mother_data"):
-                         context.user_data["active_mother"] = response_data["mother_data"]
+                    # Note: Orchestrator currently returns string only, so no mother_data update check needed here.
 
                 # 4. Text-to-Speech (TTS)
                 await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="record_voice")
@@ -955,16 +954,14 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                 audio_io.seek(0)
                 
                 # 5. Send Audio Reply
-                await update.message.reply_message.reply_audio(
+                await update.message.reply_audio(
                     audio=audio_io,
                     title="MatruRaksha Assistant",
                     performer="AI Doctor",
                     caption=f"{reply_text[:200]}..." # Short caption
                 )
                 
-                # Send full text as backup
-                await update.message.reply_text(reply_text, parse_mode=ParseMode.MARKDOWN)
-
+                
             except Exception as e:
                 logger.error(f"Voice processing error: {e}", exc_info=True)
                 await status_msg.edit_text("❌ Sorry, I couldn't process your voice message. Please try typing.")
@@ -973,8 +970,7 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
         logger.error(f"Voice handler fatal error: {e}", exc_info=True)
         await status_msg.edit_text("❌ Error processing voice.")
 
-    await update.message.reply_text("Please enter your phone number (or type 'skip').")
-    return AWAITING_PHONE
+
 
 async def receive_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = (update.message.text or "").strip()
