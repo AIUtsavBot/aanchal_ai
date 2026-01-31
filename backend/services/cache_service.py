@@ -318,3 +318,15 @@ def invalidate_risk_cache():
     cache.invalidate_pattern("risk:*")
     cache.invalidate_pattern("dashboard:*")
     cache.invalidate_pattern("analytics:*")
+
+
+def invalidate_admin_cache():
+    """Invalidate all admin panel cache keys"""
+    cache.delete("admin:full")
+    cache.delete("admin:doctors")
+    cache.delete("admin:asha-workers")
+    cache.delete("admin:mothers")
+    cache.delete("admin:children")
+    cache.delete("admin:stats")
+    logger.info("🗑️ Admin cache invalidated")
+

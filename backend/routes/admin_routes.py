@@ -22,12 +22,13 @@ except ImportError:
 
 # Import cache service
 try:
-    from services.cache_service import cache, invalidate_dashboard_cache
+    from services.cache_service import cache, invalidate_dashboard_cache, invalidate_admin_cache
     CACHE_AVAILABLE = True
 except ImportError:
     CACHE_AVAILABLE = False
     cache = None
     def invalidate_dashboard_cache(): pass
+    def invalidate_admin_cache(): pass
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -56,6 +57,16 @@ class AssignAshaRequest(BaseModel):
 
 class AssignDoctorRequest(BaseModel):
     doctor_id: Optional[int] = None
+
+
+class UpdateChildRequest(BaseModel):
+    name: Optional[str] = None
+    gender: Optional[str] = None
+    birth_date: Optional[str] = None
+    birth_weight_kg: Optional[float] = None
+    birth_height_cm: Optional[float] = None
+    blood_group: Optional[str] = None
+    notes: Optional[str] = None
 
 
 # ==================== Stats ====================
@@ -436,7 +447,7 @@ async def list_mothers(current_user: dict = Depends(require_admin)):
 @router.post("/mothers/{mother_id}/assign-asha")
 @audit_action("ASSIGN_ASHA", "mothers")
 async def assign_mother_to_asha(mother_id: str, body: AssignAshaRequest, request: Request = None, current_user: dict = Depends(require_admin)):
-    """Assign a mother to an ASHA worker"""
+    """Assign a mother to an ASHA worker - also updates all children of this mother"""
     try:
         result = supabase_admin.table("mothers").update({
             "asha_worker_id": body.asha_worker_id
@@ -445,11 +456,19 @@ async def assign_mother_to_asha(mother_id: str, body: AssignAshaRequest, request
         if not result.data:
             raise HTTPException(status_code=404, detail="Mother not found")
         
-        # Invalidate cache after assignment change
+        # Also update all children of this mother to have the same ASHA worker
+        children_result = supabase_admin.table("children").update({
+            "asha_worker_id": body.asha_worker_id
+        }).eq("mother_id", mother_id).execute()
+        
+        children_updated = len(children_result.data) if children_result.data else 0
+        
+        # Invalidate all admin cache after assignment change
+        invalidate_admin_cache()
         invalidate_dashboard_cache()
         
-        logger.info(f"✅ Assigned mother {mother_id} to ASHA worker {body.asha_worker_id}")
-        return {"success": True, "message": "Assignment updated", "mother": result.data[0]}
+        logger.info(f"✅ Assigned mother {mother_id} to ASHA worker {body.asha_worker_id} (also updated {children_updated} children)")
+        return {"success": True, "message": f"Assignment updated. {children_updated} children also updated.", "mother": result.data[0]}
     except HTTPException:
         raise
     except Exception as e:
@@ -460,7 +479,7 @@ async def assign_mother_to_asha(mother_id: str, body: AssignAshaRequest, request
 @router.post("/mothers/{mother_id}/assign-doctor")
 @audit_action("ASSIGN_DOCTOR", "mothers")
 async def assign_mother_to_doctor(mother_id: str, body: AssignDoctorRequest, request: Request = None, current_user: dict = Depends(require_admin)):
-    """Assign a mother to a doctor"""
+    """Assign a mother to a doctor - also updates all children of this mother"""
     try:
         result = supabase_admin.table("mothers").update({
             "doctor_id": body.doctor_id
@@ -469,11 +488,19 @@ async def assign_mother_to_doctor(mother_id: str, body: AssignDoctorRequest, req
         if not result.data:
             raise HTTPException(status_code=404, detail="Mother not found")
         
-        # Invalidate cache after assignment change
+        # Also update all children of this mother to have the same doctor
+        children_result = supabase_admin.table("children").update({
+            "doctor_id": body.doctor_id
+        }).eq("mother_id", mother_id).execute()
+        
+        children_updated = len(children_result.data) if children_result.data else 0
+        
+        # Invalidate all admin cache after assignment change
+        invalidate_admin_cache()
         invalidate_dashboard_cache()
         
-        logger.info(f"✅ Assigned mother {mother_id} to doctor {body.doctor_id}")
-        return {"success": True, "message": "Assignment updated", "mother": result.data[0]}
+        logger.info(f"✅ Assigned mother {mother_id} to doctor {body.doctor_id} (also updated {children_updated} children)")
+        return {"success": True, "message": f"Assignment updated. {children_updated} children also updated.", "mother": result.data[0]}
     except HTTPException:
         raise
     except Exception as e:
@@ -548,3 +575,184 @@ async def send_mother_alert(mother_id: str, body: SendAlertRequest, current_user
     except Exception as e:
         logger.error(f"❌ Send alert error: {e}")
         raise HTTPException(status_code=400, detail=str(e))
+
+
+# ==================== Children (SantanRaksha) ====================
+
+@router.get("/children")
+async def list_children(current_user: dict = Depends(require_admin)):
+    """List all children with mother info for admin management"""
+    try:
+        # Check cache first
+        if CACHE_AVAILABLE and cache:
+            cached_data = cache.get("admin:children")
+            if cached_data:
+                cached_data["cached"] = True
+                return cached_data
+        
+        # Get all children with mother info
+        children_result = supabase_admin.table("children").select(
+            "*, mothers:mother_id(id, name, phone, status, asha_worker_id, doctor_id)"
+        ).order("created_at", desc=True).execute()
+        children = children_result.data or []
+        
+        # Get doctors and ASHA workers for assignment display
+        doctors = {d["id"]: d for d in (supabase_admin.table("doctors").select("id, name").execute().data or [])}
+        asha_workers = {a["id"]: a for a in (supabase_admin.table("asha_workers").select("id, name").execute().data or [])}
+        
+        # Enrich children data with names
+        for child in children:
+            mother = child.get("mothers") or {}
+            child["mother_name"] = mother.get("name", "Unknown")
+            child["mother_phone"] = mother.get("phone", "")
+            child["mother_status"] = mother.get("status", "")
+            child["doctor_name"] = doctors.get(mother.get("doctor_id"), {}).get("name", "Unassigned")
+            child["asha_worker_name"] = asha_workers.get(mother.get("asha_worker_id"), {}).get("name", "Unassigned")
+            
+            # Calculate age in months
+            if child.get("birth_date"):
+                from datetime import datetime, date
+                try:
+                    birth_date = datetime.fromisoformat(child["birth_date"].replace("Z", "")).date() if isinstance(child["birth_date"], str) else child["birth_date"]
+                    today = date.today()
+                    age_days = (today - birth_date).days
+                    age_months = age_days // 30
+                    child["age_months"] = age_months
+                    child["age_display"] = f"{age_months}m" if age_months < 24 else f"{age_months // 12}y {age_months % 12}m"
+                except Exception:
+                    child["age_months"] = 0
+                    child["age_display"] = "N/A"
+        
+        # Get counts for SantanRaksha stats
+        total_children = len(children)
+        
+        result = {
+            "success": True, 
+            "children": children,
+            "total": total_children,
+            "cached": False
+        }
+        
+        # Cache for 30 seconds
+        if CACHE_AVAILABLE and cache:
+            cache.set("admin:children", result, ttl_seconds=30)
+        
+        return result
+    except Exception as e:
+        logger.error(f"❌ List children error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.put("/children/{child_id}")
+@audit_action("UPDATE_CHILD", "children")
+async def update_child(child_id: str, body: UpdateChildRequest, request: Request = None, current_user: dict = Depends(require_admin)):
+    """Update child information"""
+    try:
+        update_data = {k: v for k, v in body.dict().items() if v is not None}
+        if not update_data:
+            return {"success": True, "message": "No changes to update"}
+        
+        result = supabase_admin.table("children").update(update_data).eq("id", child_id).execute()
+        if not result.data:
+            raise HTTPException(status_code=404, detail="Child not found")
+        
+        # Invalidate admin cache
+        if CACHE_AVAILABLE and cache:
+            cache.delete("admin:children")
+            cache.delete("admin:full")
+        
+        logger.info(f"✅ Updated child {child_id}")
+        return {"success": True, "child": result.data[0]}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Update child error: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.delete("/children/{child_id}")
+@audit_action("DELETE_CHILD", "children")
+async def delete_child(child_id: str, request: Request = None, current_user: dict = Depends(require_admin)):
+    """Delete a child record"""
+    try:
+        # First check if child exists
+        child_result = supabase_admin.table("children").select("id, name").eq("id", child_id).single().execute()
+        if not child_result.data:
+            raise HTTPException(status_code=404, detail="Child not found")
+        
+        child_name = child_result.data.get("name", "Unknown")
+        
+        # Delete associated records first (vaccinations, growth_records, milestones)
+        supabase_admin.table("vaccinations").delete().eq("child_id", child_id).execute()
+        supabase_admin.table("growth_records").delete().eq("child_id", child_id).execute()
+        supabase_admin.table("milestones").delete().eq("child_id", child_id).execute()
+        supabase_admin.table("postnatal_assessments").delete().eq("child_id", child_id).execute()
+        
+        # Delete the child
+        result = supabase_admin.table("children").delete().eq("id", child_id).execute()
+        
+        # Invalidate cache
+        if CACHE_AVAILABLE and cache:
+            cache.delete("admin:children")
+            cache.delete("admin:full")
+            cache.delete_pattern("postnatal:*")
+        
+        logger.info(f"✅ Deleted child {child_id} ({child_name})")
+        return {"success": True, "message": f"Child '{child_name}' deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Delete child error: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/santanraksha-stats")
+async def get_santanraksha_stats(current_user: dict = Depends(require_admin)):
+    """Get SantanRaksha (child health) statistics"""
+    try:
+        # Check cache
+        if CACHE_AVAILABLE and cache:
+            cached_data = cache.get("admin:santanraksha_stats")
+            if cached_data:
+                cached_data["cached"] = True
+                return cached_data
+        
+        # Get counts
+        children = supabase_admin.table("children").select("id", count="exact").execute()
+        vaccinations = supabase_admin.table("vaccinations").select("id, status", count="exact").execute()
+        growth_records = supabase_admin.table("growth_records").select("id", count="exact").execute()
+        postnatal_assessments = supabase_admin.table("postnatal_assessments").select("id", count="exact").execute()
+        
+        # Postnatal mothers count
+        postnatal_mothers = supabase_admin.table("mothers").select("id", count="exact").eq("status", "postnatal").execute()
+        
+        # Count vaccination stats
+        vacc_data = vaccinations.data or []
+        vacc_completed = sum(1 for v in vacc_data if v.get("status") == "completed")
+        vacc_pending = sum(1 for v in vacc_data if v.get("status") in ["pending", "scheduled"])
+        vacc_overdue = sum(1 for v in vacc_data if v.get("status") == "overdue")
+        
+        result = {
+            "success": True,
+            "stats": {
+                "total_children": children.count or 0,
+                "postnatal_mothers": postnatal_mothers.count or 0,
+                "total_vaccinations": len(vacc_data),
+                "vaccinations_completed": vacc_completed,
+                "vaccinations_pending": vacc_pending,
+                "vaccinations_overdue": vacc_overdue,
+                "growth_records": growth_records.count or 0,
+                "postnatal_assessments": postnatal_assessments.count or 0
+            },
+            "cached": False
+        }
+        
+        # Cache for 60 seconds
+        if CACHE_AVAILABLE and cache:
+            cache.set("admin:santanraksha_stats", result, ttl_seconds=60)
+        
+        return result
+    except Exception as e:
+        logger.error(f"❌ Get SantanRaksha stats error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+

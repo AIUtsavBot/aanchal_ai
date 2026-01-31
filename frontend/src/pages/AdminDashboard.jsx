@@ -5,16 +5,19 @@ import { adminAPI } from '../services/api'
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null)
+  const [santanStats, setSantanStats] = useState(null) // SantanRaksha stats
   const [doctors, setDoctors] = useState([])
   const [ashaWorkers, setAshaWorkers] = useState([])
   const [mothers, setMothers] = useState([])
+  const [children, setChildren] = useState([]) // Children from SantanRaksha
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [activeTab, setActiveTab] = useState('overview')
   const [searchTerm, setSearchTerm] = useState('')
+  const [motherStatusFilter, setMotherStatusFilter] = useState('all') // Filter mothers by status
 
-  // For editing doctors/asha
+  // For editing doctors/asha/children
   const [editingId, setEditingId] = useState(null)
   const [editData, setEditData] = useState({})
 
@@ -38,6 +41,20 @@ export default function AdminDashboard() {
           setAshaWorkers(fullData.asha_workers || [])
           setMothers(fullData.mothers || [])
           setPendingChanges({})
+
+          // Also fetch SantanRaksha data (children + stats) - NOT included in /admin/full
+          try {
+            const [childrenRes, santanStatsRes] = await Promise.all([
+              adminAPI.getChildren().catch(() => ({ data: { children: [] } })),
+              adminAPI.getSantanRakshaStats().catch(() => ({ data: { stats: {} } }))
+            ])
+            setChildren(childrenRes.data?.children || [])
+            setSantanStats(santanStatsRes.data?.stats || {})
+          } catch (childErr) {
+            console.warn('Children data not loaded:', childErr.message)
+          }
+
+          setLoading(false)
           return
         }
       } catch (combinedError) {
@@ -57,6 +74,18 @@ export default function AdminDashboard() {
       setAshaWorkers(ashaRes.data?.asha_workers || [])
       setMothers(mothersRes.data?.mothers || [])
       setPendingChanges({}) // Clear pending changes on reload
+
+      // Fetch SantanRaksha data (children + stats)
+      try {
+        const [childrenRes, santanStatsRes] = await Promise.all([
+          adminAPI.getChildren().catch(() => ({ data: { children: [] } })),
+          adminAPI.getSantanRakshaStats().catch(() => ({ data: { stats: {} } }))
+        ])
+        setChildren(childrenRes.data?.children || [])
+        setSantanStats(santanStatsRes.data?.stats || {})
+      } catch (childErr) {
+        console.warn('Children data not loaded:', childErr.message)
+      }
     } catch (e) {
       setError(e.message || 'Failed to load data')
     } finally {
@@ -233,11 +262,57 @@ export default function AdminDashboard() {
     }
   }
 
-  // Filter mothers based on search
-  const filteredMothers = mothers.filter(m =>
-    m.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    m.phone?.includes(searchTerm) ||
-    m.location?.toLowerCase().includes(searchTerm.toLowerCase())
+  // ==================== Children Handlers ====================
+  const handleEditChild = (child) => {
+    setEditingId(`child-${child.id}`)
+    setEditData({
+      name: child.name || '',
+      gender: child.gender || '',
+      birth_date: child.birth_date?.split('T')[0] || '',
+      birth_weight_kg: child.birth_weight_kg || '',
+      blood_group: child.blood_group || '',
+      notes: child.notes || ''
+    })
+  }
+
+  const saveChild = async (id) => {
+    try {
+      await adminAPI.updateChild(id, editData)
+      setSuccess('Child updated successfully')
+      setEditingId(null)
+      await loadData()
+    } catch (e) {
+      setError(e.response?.data?.detail || 'Failed to update child')
+    }
+  }
+
+  const deleteChild = async (id, name) => {
+    if (!window.confirm(`Are you sure you want to delete ${name}? This will also delete their vaccinations, growth records, and assessments.`)) {
+      return
+    }
+    try {
+      await adminAPI.deleteChild(id)
+      setSuccess('Child deleted successfully')
+      await loadData()
+    } catch (e) {
+      setError(e.response?.data?.detail || 'Failed to delete child')
+    }
+  }
+
+  // Filter mothers based on search and status
+  const filteredMothers = mothers.filter(m => {
+    const matchesSearch = m.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      m.phone?.includes(searchTerm) ||
+      m.location?.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesStatus = motherStatusFilter === 'all' || m.status === motherStatusFilter
+    return matchesSearch && matchesStatus
+  })
+
+  // Filter children based on search
+  const filteredChildren = children.filter(c =>
+    c.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    c.mother_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    c.mother_phone?.includes(searchTerm)
   )
 
   const pendingChangesCount = Object.keys(pendingChanges).length
@@ -299,11 +374,15 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        {/* Stats Overview - MatruRaksha + SantanRaksha */}
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
           <div className="bg-white rounded-xl shadow-sm p-5 border-l-4 border-pink-500">
             <p className="text-sm text-gray-500">Total Mothers</p>
             <p className="text-3xl font-bold text-gray-900">{stats?.total_mothers ?? '-'}</p>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm p-5 border-l-4 border-cyan-500">
+            <p className="text-sm text-gray-500">Total Children</p>
+            <p className="text-3xl font-bold text-gray-900">{santanStats?.total_children ?? children.length}</p>
           </div>
           <div className="bg-white rounded-xl shadow-sm p-5 border-l-4 border-indigo-500">
             <p className="text-sm text-gray-500">Doctors</p>
@@ -323,17 +402,17 @@ export default function AdminDashboard() {
 
         {/* Tab Navigation */}
         <div className="bg-white rounded-xl shadow-sm mb-6">
-          <div className="flex border-b">
-            {['overview', 'doctors', 'asha', 'mothers'].map(tab => (
+          <div className="flex border-b overflow-x-auto">
+            {['overview', 'doctors', 'asha', 'mothers', 'children'].map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-6 py-4 text-sm font-medium ${activeTab === tab
+                className={`px-6 py-4 text-sm font-medium whitespace-nowrap ${activeTab === tab
                   ? 'border-b-2 border-indigo-500 text-indigo-600'
                   : 'text-gray-500 hover:text-gray-700'
                   }`}
               >
-                {tab === 'asha' ? 'ASHA Workers' : tab.charAt(0).toUpperCase() + tab.slice(1)}
+                {tab === 'asha' ? 'ASHA Workers' : tab === 'children' ? '👶 Children' : tab.charAt(0).toUpperCase() + tab.slice(1)}
               </button>
             ))}
           </div>
@@ -703,9 +782,19 @@ export default function AdminDashboard() {
             {/* Mothers Tab */}
             {activeTab === 'mothers' && (
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-lg">Manage Mothers ({mothers.length})</h3>
-                  <div className="flex items-center gap-3">
+                <div className="flex items-center justify-between flex-wrap gap-3">
+                  <h3 className="font-semibold text-lg">Manage Mothers ({filteredMothers.length} of {mothers.length})</h3>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    {/* Status Filter */}
+                    <select
+                      value={motherStatusFilter}
+                      onChange={e => setMotherStatusFilter(e.target.value)}
+                      className="px-3 py-2 border rounded-lg text-sm"
+                    >
+                      <option value="all">All Statuses</option>
+                      <option value="pregnant">🤰 Pregnant</option>
+                      <option value="delivered">✅ Delivered</option>
+                    </select>
                     <div className="relative">
                       <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
                       <input
@@ -745,9 +834,10 @@ export default function AdminDashboard() {
                           <th className="px-4 py-3 text-left font-semibold">Name</th>
                           <th className="px-4 py-3 text-left font-semibold">Phone</th>
                           <th className="px-4 py-3 text-left font-semibold">Location</th>
+                          <th className="px-4 py-3 text-left font-semibold">Delivery Status</th>
                           <th className="px-4 py-3 text-left font-semibold text-purple-600">ASHA Worker</th>
                           <th className="px-4 py-3 text-left font-semibold text-indigo-600">Doctor</th>
-                          <th className="px-4 py-3 text-left font-semibold">Status</th>
+                          <th className="px-4 py-3 text-left font-semibold">Assignment</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -765,6 +855,16 @@ export default function AdminDashboard() {
                               </td>
                               <td className="px-4 py-3 text-gray-600">{mother.phone}</td>
                               <td className="px-4 py-3 text-gray-600">{mother.location || '-'}</td>
+                              <td className="px-4 py-3">
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${mother.status === 'pregnant' ? 'bg-pink-100 text-pink-700' :
+                                  mother.status === 'delivered' ? 'bg-green-100 text-green-700' :
+                                    'bg-gray-100 text-gray-600'
+                                  }`}>
+                                  {mother.status === 'pregnant' ? '🤰 Pregnant' :
+                                    mother.status === 'delivered' ? '✅ Delivered' :
+                                      mother.status || 'Unknown'}
+                                </span>
+                              </td>
                               <td className="px-4 py-3">
                                 <select
                                   value={effectiveAsha || ''}
@@ -807,6 +907,163 @@ export default function AdminDashboard() {
                             </tr>
                           )
                         })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Children Tab (SantanRaksha) */}
+            {activeTab === 'children' && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-lg">Manage Children ({children.length})</h3>
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="Search by name/mother..."
+                        value={searchTerm}
+                        onChange={e => setSearchTerm(e.target.value)}
+                        className="pl-9 pr-4 py-2 border rounded-lg text-sm w-56"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {filteredChildren.length === 0 ? (
+                  <p className="text-gray-500 py-8 text-center">
+                    {searchTerm ? 'No children match your search' : 'No children registered yet'}
+                  </p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-3 text-left font-semibold">Child Name</th>
+                          <th className="px-4 py-3 text-left font-semibold">Age</th>
+                          <th className="px-4 py-3 text-left font-semibold">Gender</th>
+                          <th className="px-4 py-3 text-left font-semibold">Mother</th>
+                          <th className="px-4 py-3 text-left font-semibold text-purple-600">ASHA Worker</th>
+                          <th className="px-4 py-3 text-left font-semibold text-indigo-600">Doctor</th>
+                          <th className="px-4 py-3 text-left font-semibold">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredChildren.map(child => (
+                          <tr key={child.id} className="border-b hover:bg-gray-50">
+                            {editingId === `child-${child.id}` ? (
+                              // Edit mode
+                              <>
+                                <td className="px-4 py-3">
+                                  <input
+                                    type="text"
+                                    value={editData.name}
+                                    onChange={e => setEditData({ ...editData, name: e.target.value })}
+                                    className="px-2 py-1 border rounded w-full"
+                                    placeholder="Name"
+                                  />
+                                </td>
+                                <td className="px-4 py-3">
+                                  <input
+                                    type="date"
+                                    value={editData.birth_date}
+                                    onChange={e => setEditData({ ...editData, birth_date: e.target.value })}
+                                    className="px-2 py-1 border rounded"
+                                  />
+                                </td>
+                                <td className="px-4 py-3">
+                                  <select
+                                    value={editData.gender}
+                                    onChange={e => setEditData({ ...editData, gender: e.target.value })}
+                                    className="px-2 py-1 border rounded"
+                                  >
+                                    <option value="">Select</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                    <option value="other">Other</option>
+                                  </select>
+                                </td>
+                                <td className="px-4 py-3 text-gray-500">{child.mother_name}</td>
+                                <td className="px-4 py-3 text-gray-500">{child.asha_worker_name}</td>
+                                <td className="px-4 py-3 text-gray-500">{child.doctor_name}</td>
+                                <td className="px-4 py-3">
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={() => saveChild(child.id)}
+                                      className="p-1.5 bg-green-100 text-green-700 rounded hover:bg-green-200"
+                                      title="Save"
+                                    >
+                                      <Check className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={() => setEditingId(null)}
+                                      className="p-1.5 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                                      title="Cancel"
+                                    >
+                                      <X className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                </td>
+                              </>
+                            ) : (
+                              // View mode
+                              <>
+                                <td className="px-4 py-3 font-medium">{child.name}</td>
+                                <td className="px-4 py-3 text-gray-600">
+                                  <span className="bg-cyan-100 text-cyan-700 px-2 py-0.5 rounded-full text-xs">
+                                    {child.age_display || 'N/A'}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3 text-gray-600 capitalize">{child.gender || '-'}</td>
+                                <td className="px-4 py-3">
+                                  <div>
+                                    <p className="font-medium">{child.mother_name}</p>
+                                    <p className="text-xs text-gray-400">{child.mother_phone}</p>
+                                    {child.mother_status && (
+                                      <span className={`text-xs px-1.5 py-0.5 rounded ${child.mother_status === 'postnatal' ? 'bg-green-100 text-green-700' :
+                                        child.mother_status === 'pregnant' ? 'bg-pink-100 text-pink-700' :
+                                          'bg-gray-100 text-gray-600'
+                                        }`}>
+                                        {child.mother_status}
+                                      </span>
+                                    )}
+                                  </div>
+                                </td>
+                                <td className="px-4 py-3">
+                                  <span className={child.asha_worker_name !== 'Unassigned' ? 'text-purple-600' : 'text-gray-400'}>
+                                    {child.asha_worker_name}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3">
+                                  <span className={child.doctor_name !== 'Unassigned' ? 'text-indigo-600' : 'text-gray-400'}>
+                                    {child.doctor_name}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3">
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={() => handleEditChild(child)}
+                                      className="p-1.5 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                                      title="Edit"
+                                    >
+                                      <Edit2 className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={() => deleteChild(child.id, child.name)}
+                                      className="p-1.5 bg-red-100 text-red-700 rounded hover:bg-red-200"
+                                      title="Delete"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                </td>
+                              </>
+                            )}
+                          </tr>
+                        ))}
                       </tbody>
                     </table>
                   </div>
