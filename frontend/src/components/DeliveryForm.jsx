@@ -16,6 +16,23 @@ import {
 import { supabase } from '../services/auth.js';
 import './DeliveryForm.css';
 
+// Helper to get Supabase access token from localStorage
+const getAccessToken = () => {
+    const keys = Object.keys(localStorage).filter(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
+    if (keys.length > 0) {
+        const stored = localStorage.getItem(keys[0]);
+        if (stored) {
+            try {
+                const parsed = JSON.parse(stored);
+                return parsed?.access_token || null;
+            } catch {
+                return null;
+            }
+        }
+    }
+    return null;
+};
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export default function DeliveryForm({ doctorId, onSuccess }) {
@@ -184,7 +201,7 @@ export default function DeliveryForm({ doctorId, onSuccess }) {
             const response = await fetch(`${API_URL}/api/delivery/complete`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('supabase_token')}`,
+                    'Authorization': `Bearer ${getAccessToken()}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(requestBody)
