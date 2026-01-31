@@ -16,23 +16,28 @@
 
 ## 1. Vercel Deployment (Frontend)
 
-### Step 1: Connect Repository
+### Method A: Automatic Deployment (Recommended)
+
+The project includes a `vercel.json` file in the root directory that automatically configures build settings and routing.
 
 1. Go to [vercel.com](https://vercel.com) and sign in
 2. Click **Add New** > **Project**
 3. Import your GitHub repository
-4. Select **Frontend** as the root directory
+4. Keep **Root Directory** as `.` (default)
+5. Vercel will detect `vercel.json` and configure:
+   - Build Command: `cd frontend && npm run build`
+   - Output Directory: `frontend/dist`
+   - Framework: Vite
 
-### Step 2: Configure Build Settings
+### Method B: Manual Configuration
 
-| Setting | Value |
-|---------|-------|
-| **Framework Preset** | Vite |
-| **Root Directory** | `frontend` |
-| **Build Command** | `npm run build` |
-| **Output Directory** | `dist` |
+If you prefer to deploy only the frontend folder:
 
-### Step 3: Set Environment Variables
+1. Import repository
+2. Edit **Root Directory** to `frontend`
+3. Select **Vite** as Framework Preset
+
+### Step 2: Set Environment Variables
 
 In Vercel Project Settings > Environment Variables:
 
@@ -40,95 +45,67 @@ In Vercel Project Settings > Environment Variables:
 VITE_API_URL=https://your-backend.onrender.com
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
+VITE_TELEGRAM_BOT_NAME=MatruRaksha_AI_bot
 ```
 
-### Step 4: Deploy
+### Step 3: Deploy
 
 Click **Deploy**. Vercel will automatically deploy on every push to `main`.
-
-### vercel.json Configuration
-
-The project includes a `vercel.json` for SPA routing:
-
-```json
-{
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/" }
-  ]
-}
-```
 
 ---
 
 ## 2. Render Deployment (Backend)
 
-### Step 1: Create New Web Service
+### Method A: Blueprints (Recommended)
 
-1. Go to [render.com](https://render.com) and sign in
-2. Click **New** > **Web Service**
+The project includes a `render.yaml` file for Infrastructure as Code.
+
+1. Go to [render.com](https://render.com)
+2. Click **New** > **Blueprint**
 3. Connect your GitHub repository
+4. Render will detect `render.yaml` and auto-fill settings
+5. You will be prompted to enter the Environment Variables (see list below)
+6. Click **Apply**
 
-### Step 2: Configure Service
+### Method B: Manual Web Service
 
-| Setting | Value |
-|---------|-------|
-| **Name** | matruraksha-backend |
-| **Region** | Singapore (or closest to users) |
-| **Root Directory** | `backend` |
-| **Runtime** | Python 3 |
-| **Build Command** | `pip install -r requirements.txt` |
-| **Start Command** | `gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:$PORT` |
+1. Click **New** > **Web Service**
+2. Connect repository
+3. Settings:
+   - **Root Directory**: `backend`
+   - **Runtime**: Python 3
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `gunicorn main:app -k uvicorn.workers.UvicornWorker -w 4 -b 0.0.0.0:$PORT`
 
-### Step 3: Set Environment Variables
+### Environment Variables
 
-In Render Dashboard > Environment:
+Required on Render (in Dashboard > Environment or during Blueprint setup):
 
 ```env
-# Required
+# Core
+PYTHON_VERSION=3.12.0
+PORT=10000
+
+# Database
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-TELEGRAM_BOT_TOKEN=your-telegram-bot-token
 
-# Server Configuration
-FASTAPI_ENV=production
-LOG_LEVEL=INFO
+# App Config
 BACKEND_URL=https://your-backend.onrender.com
 FRONTEND_URL=https://your-frontend.vercel.app
 
-# Telegram Webhook (recommended for production)
+# Telegram
+TELEGRAM_BOT_TOKEN=your-token
 USE_TELEGRAM_WEBHOOK=true
 
 # AI Services
-GEMINI_API_KEY=your-gemini-api-key
+GEMINI_API_KEY=your-key
+VAPI_API_KEY=your-vapi-key
 
-# OAuth
-OAUTH_REDIRECT_URL=https://your-frontend.vercel.app/auth/callback
-
-# Optional
-RESEND_API_KEY=your-resend-key
-PASSWORD_ENCRYPTION_KEY=your-encryption-key
-```
-
-### Step 4: Deploy
-
-Click **Create Web Service**. Render will deploy automatically.
-
-### render.yaml Configuration
-
-The project includes `render.yaml` for infrastructure as code:
-
-```yaml
-services:
-  - type: web
-    name: matruraksha-backend
-    runtime: python
-    rootDir: backend
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:$PORT
-    envVars:
-      - key: PYTHON_VERSION
-        value: 3.12.0
+# Other Services
+FAST2SMS_API_KEY=your-key
+RESEND_API_KEY=your-key
 ```
 
 ---
