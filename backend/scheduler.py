@@ -96,7 +96,7 @@ def calculate_pregnancy_week(registration_date: str) -> int:
         reg_date = datetime.fromisoformat(registration_date.replace('Z', '+00:00'))
         days_since = (datetime.now() - reg_date).days
         return 8 + (days_since // 7)  # Assume registered at week 8
-    except:
+    except Exception:
         return 20
 
 

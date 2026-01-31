@@ -1,3 +1,6 @@
+from services.voice_service import VoiceService
+
+
 class WhatsAppService:
     def send_message(self, to, message):
         return {"status": "mock_sent"}

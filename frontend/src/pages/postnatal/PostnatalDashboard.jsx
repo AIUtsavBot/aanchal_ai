@@ -38,7 +38,74 @@ export const PostnatalDashboard = ({ ashaWorkerId, doctorId, userRole }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        loadStats();
+        let isMounted = true;
+
+        const fetchStats = async () => {
+            try {
+                setLoading(true);
+
+                // Get children count
+                const { data: children } = await supabase
+                    .from('children')
+                    .select('id, mothers:mother_id(asha_worker_id)')
+                    .order('created_at', { ascending: false });
+
+                // Get delivered mothers count
+                const { data: mothers } = await supabase
+                    .from('mothers')
+                    .select('id, delivery_status, asha_worker_id')
+                    .eq('delivery_status', 'delivered');
+
+                // Get due vaccines
+                const { data: vaccines } = await supabase
+                    .from('vaccinations')
+                    .select('id, status')
+                    .in('status', ['due', 'overdue']);
+
+                // Get growth alerts - use correct column name weight_for_age_z_score
+                let growthAlerts = 0;
+                try {
+                    const { data: growth } = await supabase
+                        .from('growth_records')
+                        .select('id, weight_for_age_z_score')
+                        .or('weight_for_age_z_score.lt.-2,weight_for_age_z_score.gt.2');
+                    growthAlerts = (growth || []).length;
+                } catch (err) {
+                    if (isMounted) {
+                        console.log('Growth records query error (column may not exist):', err);
+                    }
+                }
+
+                if (isMounted) {
+                    const filteredChildren = ashaWorkerId
+                        ? (children || []).filter(c => c.mothers?.asha_worker_id === ashaWorkerId)
+                        : (children || []);
+
+                    const filteredMothers = ashaWorkerId
+                        ? (mothers || []).filter(m => m.asha_worker_id === ashaWorkerId)
+                        : (mothers || []);
+
+                    setStats({
+                        deliveredMothers: filteredMothers.length,
+                        childrenRegistered: filteredChildren.length,
+                        vaccinesDue: (vaccines || []).length,
+                        growthAlerts: growthAlerts
+                    });
+                    setLoading(false);
+                }
+            } catch (err) {
+                if (isMounted) {
+                    console.error('Error loading stats:', err);
+                    setLoading(false);
+                }
+            }
+        };
+
+        fetchStats();
+
+        return () => {
+            isMounted = false;
+        };
     }, [ashaWorkerId]);
 
     const loadStats = async () => {
@@ -136,7 +203,13 @@ export const PostnatalDashboard = ({ ashaWorkerId, doctorId, userRole }) => {
 
             {/* Stats Grid */}
             <div className="stats-grid">
-                <div className="stat-card" onClick={() => setActiveTab('children')}>
+                <div
+                    className="stat-card"
+                    onClick={() => setActiveTab('children')}
+                    onKeyDown={(e) => e.key === 'Enter' && setActiveTab('children')}
+                    role="button"
+                    tabIndex={0}
+                >
                     <div className="stat-icon mothers">👩‍👧</div>
                     <div className="stat-content">
                         <h3>DELIVERED MOTHERS</h3>
@@ -145,7 +218,13 @@ export const PostnatalDashboard = ({ ashaWorkerId, doctorId, userRole }) => {
                     </div>
                 </div>
 
-                <div className="stat-card" onClick={() => setActiveTab('children')}>
+                <div
+                    className="stat-card"
+                    onClick={() => setActiveTab('children')}
+                    onKeyDown={(e) => e.key === 'Enter' && setActiveTab('children')}
+                    role="button"
+                    tabIndex={0}
+                >
                     <div className="stat-icon children">👶</div>
                     <div className="stat-content">
                         <h3>CHILDREN REGISTERED</h3>
@@ -154,7 +233,13 @@ export const PostnatalDashboard = ({ ashaWorkerId, doctorId, userRole }) => {
                     </div>
                 </div>
 
-                <div className="stat-card vaccines" onClick={() => setActiveTab('vaccines')}>
+                <div
+                    className="stat-card vaccines"
+                    onClick={() => setActiveTab('vaccines')}
+                    onKeyDown={(e) => e.key === 'Enter' && setActiveTab('vaccines')}
+                    role="button"
+                    tabIndex={0}
+                >
                     <div className="stat-icon vaccines">💉</div>
                     <div className="stat-content">
                         <h3>VACCINES DUE</h3>
@@ -163,7 +248,13 @@ export const PostnatalDashboard = ({ ashaWorkerId, doctorId, userRole }) => {
                     </div>
                 </div>
 
-                <div className="stat-card growth" onClick={() => setActiveTab('growth')}>
+                <div
+                    className="stat-card growth"
+                    onClick={() => setActiveTab('growth')}
+                    onKeyDown={(e) => e.key === 'Enter' && setActiveTab('growth')}
+                    role="button"
+                    tabIndex={0}
+                >
                     <div className="stat-icon growth">📊</div>
                     <div className="stat-content">
                         <h3>GROWTH ALERTS</h3>

@@ -243,7 +243,25 @@ export default function AdminApprovals() {
     }
   }
 
-  useEffect(() => { loadData() }, [])
+  useEffect(() => {
+    let isMounted = true
+
+    const fetchData = async () => {
+      try {
+        await loadData()
+      } catch (error) {
+        if (isMounted) {
+          console.error('Failed to load data:', error)
+        }
+      }
+    }
+
+    fetchData()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   const pendingRequestsCount = requests.filter(r => r.status === 'PENDING').length
   const pendingUsersCount = pendingUsers.length

@@ -4,7 +4,10 @@ import uuid
 from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, HttpUrl
-from services.auth_service import get_current_user
+try:
+    from middleware.auth import get_current_user
+except ImportError:
+    from backend.middleware.auth import get_current_user
 try:
     from services.supabase_service import supabase
 except ImportError:
@@ -61,7 +64,7 @@ async def list_webhooks(current_user: dict = Depends(get_current_user)):
     if current_user.get("role") != "ADMIN":
         raise HTTPException(403, "Unauthorized")
         
-    res = supabase.table("webhooks").select("*").execute()
+    res = supabase.table("webhooks").select("*").limit(100).execute()
     return res.data or []
 
 @router.delete("/{webhook_id}")

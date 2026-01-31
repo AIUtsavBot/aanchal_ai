@@ -16,6 +16,23 @@ import {
 import { supabase } from '../services/auth.js';
 import './DeliveryForm.css';
 
+// Helper to get Supabase access token from localStorage
+const getAccessToken = () => {
+    const keys = Object.keys(localStorage).filter(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
+    if (keys.length > 0) {
+        const stored = localStorage.getItem(keys[0]);
+        if (stored) {
+            try {
+                const parsed = JSON.parse(stored);
+                return parsed?.access_token || null;
+            } catch {
+                return null;
+            }
+        }
+    }
+    return null;
+};
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export default function DeliveryForm({ doctorId, onSuccess }) {
@@ -51,7 +68,56 @@ export default function DeliveryForm({ doctorId, onSuccess }) {
 
     // Load pregnant mothers
     useEffect(() => {
-        loadPregnantMothers();
+        let isMounted = true;
+
+        const fetchPregnantMothers = async () => {
+            if (!doctorId) {
+                if (isMounted) {
+                    setError('Doctor ID not available');
+                    setLoading(false);
+                }
+                return;
+            }
+
+            setLoading(true);
+            setError('');
+            try {
+                // Use Supabase directly to fetch mothers assigned to this doctor
+                const { data, error: supabaseError } = await supabase
+                    .from('mothers')
+                    .select('*')
+                    .eq('doctor_id', doctorId);
+
+                if (supabaseError) {
+                    throw new Error(supabaseError.message);
+                }
+
+                // Filter for pregnant mothers (not delivered yet / still in matruraksha)
+                const pregnantMothers = (data || []).filter(m =>
+                    !m.delivery_status ||
+                    m.delivery_status === 'pregnant' ||
+                    m.active_system !== 'santanraksha'
+                );
+                if (isMounted) {
+                    setMothers(pregnantMothers);
+                }
+            } catch (err) {
+                if (isMounted) {
+                    console.error('Error loading mothers:', err);
+                    setError('Failed to load patient list');
+                }
+            } finally {
+                if (isMounted) {
+                    setLoading(false);
+                }
+            }
+        };
+
+        fetchPregnantMothers();
+
+        return () => {
+            isMounted = false;
+        };
     }, [doctorId]);
 
     const loadPregnantMothers = async () => {
@@ -184,7 +250,7 @@ export default function DeliveryForm({ doctorId, onSuccess }) {
             const response = await fetch(`${API_URL}/api/delivery/complete`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('supabase_token')}`,
+                    'Authorization': `Bearer ${getAccessToken()}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(requestBody)
@@ -324,6 +390,18 @@ export default function DeliveryForm({ doctorId, onSuccess }) {
                                         babyName: `Baby ${lastName}`
                                     }));
                                 }}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        setSelectedMother(mother);
+                                        const lastName = mother.name?.split(' ').pop() || '';
+                                        setFormData(prev => ({
+                                            ...prev,
+                                            babyName: `Baby ${lastName}`
+                                        }));
+                                    }
+                                }}
+                                role="button"
+                                tabIndex={0}
                                 className={`mother-card ${selectedMother?.id === mother.id ? 'selected' : ''}`}
                             >
                                 <div className="mother-avatar">

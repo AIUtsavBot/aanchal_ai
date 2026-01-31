@@ -20,6 +20,9 @@ import math
 import os
 from supabase import create_client
 
+# Initialize logger early to avoid NameError in import error handlers
+logger = logging.getLogger(__name__)
+
 supabase = create_client(
     os.getenv("SUPABASE_URL", ""),
     os.getenv("SUPABASE_SERVICE_KEY", "")
@@ -38,13 +41,13 @@ except ImportError:
 try:
     from agents.growth_agent import GrowthAgent
     growth_agent = GrowthAgent()
-except:
+except Exception:
     growth_agent = None
 
 # Import telegram service for notifications
 try:
     from services.telegram_service import send_assessment_notification
-except:
+except Exception:
     send_assessment_notification = None
 
 # Import access control utilities
@@ -64,7 +67,6 @@ except ImportError as e:
     async def verify_mother_access(*args, **kwargs):
         raise HTTPException(status_code=500, detail="Access control not configured")
 
-logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/santanraksha", tags=["SantanRaksha"])
 
 
@@ -167,7 +169,7 @@ def get_child_age_months(birth_date_str: str) -> int:
         now = datetime.now()
         months = (now.year - birth_date.year) * 12 + (now.month - birth_date.month)
         return max(0, months)
-    except:
+    except Exception:
         return 0
 
 
@@ -357,6 +359,7 @@ async def get_child_vaccinations(
             .select("*") \
             .eq("child_id", child_id) \
             .order("due_date", desc=False) \
+            .limit(100) \
             .execute()
         
         response = {
@@ -435,6 +438,7 @@ async def initialize_vaccination_schedule(
         existing = supabase.table("vaccinations") \
             .select("vaccine_name") \
             .eq("child_id", child_id) \
+            .limit(100) \
             .execute()
         existing_names = [v['vaccine_name'] for v in (existing.data or [])]
         
@@ -557,7 +561,7 @@ async def add_growth_record(
             total_days = (now - birth_date).days
             age_months = total_days // 30
             age_days = total_days
-        except:
+        except Exception:
             age_months = 0
             age_days = 0
         
@@ -753,7 +757,7 @@ async def toggle_milestone(
                         now = datetime.now()
                         achieved_age_days = (now - birth_date).days
                         achieved_age_months = achieved_age_days // 30
-                    except:
+                    except Exception:
                         pass
                 
                 # Mark as achieved (toggle on)
@@ -790,7 +794,7 @@ async def toggle_milestone(
                     now = datetime.now()
                     achieved_age_days = (now - birth_date).days
                     achieved_age_months = achieved_age_days // 30
-                except:
+                except Exception:
                     pass
             
             # Map milestone category to DB enum values
@@ -858,6 +862,7 @@ async def get_child_milestones(
             .eq("child_id", child_id) \
             .eq("is_achieved", True) \
             .order("achieved_date", desc=True) \
+            .limit(100) \
             .execute()
         
         # Group by category
@@ -1037,6 +1042,7 @@ async def get_child_dashboard(child_id: str):
         vax_result = supabase.table("vaccinations") \
             .select("status") \
             .eq("child_id", child_id) \
+            .limit(100) \
             .execute()
         
         completed_vaccines = len([v for v in (vax_result.data or []) if v['status'] == 'completed'])
@@ -1047,6 +1053,7 @@ async def get_child_dashboard(child_id: str):
         milestone_result = supabase.table("milestones") \
             .select("id") \
             .eq("child_id", child_id) \
+            .limit(100) \
             .execute()
         
         return {

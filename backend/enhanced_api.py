@@ -199,7 +199,7 @@ async def store_context_memory(
                 'type_param': memory_type,
                 'source_param': source
             }).execute()
-        except:
+        except Exception:
             # Fallback to direct insert
             supabase.table("context_memory").insert({
                 "mother_id": mother_id,
@@ -306,7 +306,7 @@ async def retrieve_memory(mother_id: str, limit: int = 20):
                 'mother_id_param': mother_id,
                 'limit_param': limit
             }).execute()
-        except:
+        except Exception:
             # Fallback to direct query
             response = supabase.table("context_memory")\
                 .select("*")\

@@ -3,7 +3,10 @@ import logging
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import StreamingResponse
 from typing import Optional
-from services.auth_service import get_current_user
+try:
+    from middleware.auth import get_current_user
+except ImportError:
+    from backend.middleware.auth import get_current_user
 from services.export_service import ExportService
 # Use cache service if available, though exports might be fresh
 try:
@@ -29,7 +32,7 @@ async def export_vaccinations_pdf(
             raise HTTPException(404, "Child not found")
         
         # Get vaccinations
-        vac_res = supabase.table("vaccinations").select("*").eq("child_id", child_id).order("due_date").execute()
+        vac_res = supabase.table("vaccinations").select("*").eq("child_id", child_id).order("due_date").limit(100).execute()
         
         pdf_buffer = ExportService.generate_vaccination_pdf(child_res.data, vac_res.data or [])
         
@@ -49,7 +52,7 @@ async def export_vaccinations_csv(
 ):
     """Export child vaccination record as CSV"""
     try:
-        vac_res = supabase.table("vaccinations").select("*").eq("child_id", child_id).execute()
+        vac_res = supabase.table("vaccinations").select("*").eq("child_id", child_id).limit(100).execute()
         data = vac_res.data or []
         
         if not data:

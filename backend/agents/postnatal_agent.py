@@ -355,7 +355,7 @@ Empower mothers while ensuring safety."""
                     from datetime import datetime
                     delivery_dt = datetime.fromisoformat(delivery_date.replace('Z', ''))
                     days_postpartum = (datetime.now() - delivery_dt).days
-                except:
+                except Exception:
                     pass
             
             # Enhanced prompt with pregnancy history
@@ -396,8 +396,60 @@ Response:
                 model=self.model_name,
                 contents=full_prompt
             )
-            
+
             cleaned_response = response.text.strip()
+
+            # ==================== POST-VALIDATION ====================
+            # Validate response against clinical rules before returning
+            try:
+                try:
+                    from backend.services.response_validator import validate_response, ValidationSeverity
+                except ImportError:
+                    from services.response_validator import validate_response, ValidationSeverity
+
+                # Build validation context
+                validation_context = {
+                    'query': query,
+                    'age_months': mother_context.get('child_age_months', 12),
+                    'mother_id': mother_context.get('id'),
+                    'agent_type': self.agent_name
+                }
+
+                validation_result = validate_response(
+                    cleaned_response,
+                    validation_context,
+                    self.agent_name
+                )
+
+                if validation_result.severity == ValidationSeverity.CRITICAL:
+                    # Block response, use safe fallback
+                    logger.warning(
+                        f"🚨 {self.agent_name} response BLOCKED: {validation_result.issues}"
+                    )
+                    return validation_result.modified_response
+
+                elif validation_result.severity == ValidationSeverity.WARNING:
+                    # Add disclaimer to response
+                    logger.info(
+                        f"⚠️ {self.agent_name} response has warnings: {validation_result.issues}"
+                    )
+                    cleaned_response = validation_result.modified_response or cleaned_response
+
+                # Log citation status
+                if validation_result.citations_missing:
+                    logger.info(f"📚 {self.agent_name}: No citations found in response")
+                else:
+                    logger.info(
+                        f"📚 {self.agent_name}: Citations found: {validation_result.citations_found}"
+                    )
+
+            except ImportError as ie:
+                # Validator not available - log and continue
+                logger.warning(f"Response validator not available: {ie}")
+            except Exception as ve:
+                # Validation error - log but don't fail the response
+                logger.error(f"Response validation error: {ve}")
+
             logger.info(f"✅ Postnatal Agent processed query with pregnancy history context")
             return cleaned_response
             

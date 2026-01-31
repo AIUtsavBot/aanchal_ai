@@ -94,13 +94,45 @@ export default function RiskDashboard() {
 
   // Fetch analytics only on mount and manual refresh
   useEffect(() => {
-    fetchAnalyticsData()
+    let isMounted = true
+
+    const fetchData = async () => {
+      try {
+        await fetchAnalyticsData()
+      } catch (error) {
+        if (isMounted) {
+          console.error('Failed to fetch analytics:', error)
+        }
+      }
+    }
+
+    fetchData()
+
+    return () => {
+      isMounted = false
+    }
   }, [])
 
   // Fetch mothers for dropdowns
   useEffect(() => {
-    if (activeTab === 'risk-assessment' || activeTab === 'all-mothers') {
-      fetchMothers()
+    let isMounted = true
+
+    const fetchData = async () => {
+      if (activeTab === 'risk-assessment' || activeTab === 'all-mothers') {
+        try {
+          await fetchMothers()
+        } catch (error) {
+          if (isMounted) {
+            console.error('Failed to fetch mothers:', error)
+          }
+        }
+      }
+    }
+
+    fetchData()
+
+    return () => {
+      isMounted = false
     }
   }, [activeTab])
 

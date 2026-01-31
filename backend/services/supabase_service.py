@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional
 from supabase import create_client, Client
 from dotenv import load_dotenv
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
@@ -100,7 +101,8 @@ class DatabaseService:
             if chosen:
                 supabase.table('mothers').update({'doctor_id': chosen.get('id')}).eq('id', mother_id).execute()
             return chosen
-        except Exception:
+        except Exception as e:
+            logger.error(f"Error in assign_doctor_to_mother: {e}")
             return None
 
     @staticmethod
@@ -108,7 +110,8 @@ class DatabaseService:
         try:
             supabase.table('appointments').update({'status': status}).eq('id', appointment_id).execute()
             return True
-        except Exception:
+        except Exception as e:
+            logger.error(f"Error in update_appointment_status: {e}")
             return False
 
     @staticmethod
@@ -124,7 +127,8 @@ class DatabaseService:
             }
             resp = supabase.table('appointments').insert(payload).execute()
             return resp.data[0] if resp.data else None
-        except Exception:
+        except Exception as e:
+            logger.error(f"Error in schedule_appointment: {e}")
             return None
 
     @staticmethod
@@ -251,53 +255,87 @@ class DatabaseService:
 
     @staticmethod
     def get_mother_holistic_data(mother_id: Any) -> Dict[str, Any]:
+        """Fetch all mother data in parallel to avoid N+1 queries."""
         try:
-            # Fetch mother profile
-            profile_resp = supabase.table('mothers').select('*').eq('id', mother_id).execute()
-            profile = profile_resp.data[0] if profile_resp.data else {}
-            
-            # Fetch risk assessments
-            risks_resp = supabase.table('risk_assessments').select('*').eq('mother_id', mother_id).order('created_at', desc=True).limit(3).execute()
-            risks = risks_resp.data or []
-            
-            # Fetch health metrics
-            metrics_resp = supabase.table('health_metrics').select('*').eq('mother_id', mother_id).order('measured_at', desc=True).limit(5).execute()
-            metrics = metrics_resp.data or []
-            
-            # Fetch nutrition plans
-            nutrition_resp = supabase.table('nutrition_plans').select('*').eq('mother_id', mother_id).order('created_at', desc=True).limit(3).execute()
-            nutrition_plans = nutrition_resp.data or []
-            
-            # Fetch prescriptions/medications
-            prescriptions_resp = supabase.table('prescriptions').select('*').eq('mother_id', mother_id).order('created_at', desc=True).limit(10).execute()
-            prescriptions = prescriptions_resp.data or []
-            
-            # Fetch upcoming appointments
-            appointments_resp = supabase.table('appointments').select('*').eq('mother_id', mother_id).gte('appointment_date', datetime.now().isoformat()).order('appointment_date', desc=False).limit(5).execute()
-            appointments = appointments_resp.data or []
-            
-            # Fetch ASHA worker
+            # Define query functions for parallel execution
+            def fetch_profile():
+                resp = supabase.table('mothers').select('*').eq('id', mother_id).execute()
+                return resp.data[0] if resp.data else {}
+
+            def fetch_risks():
+                resp = supabase.table('risk_assessments').select('*').eq('mother_id', mother_id).order('created_at', desc=True).limit(3).execute()
+                return resp.data or []
+
+            def fetch_metrics():
+                resp = supabase.table('health_metrics').select('*').eq('mother_id', mother_id).order('measured_at', desc=True).limit(5).execute()
+                return resp.data or []
+
+            def fetch_nutrition():
+                resp = supabase.table('nutrition_plans').select('*').eq('mother_id', mother_id).order('created_at', desc=True).limit(3).execute()
+                return resp.data or []
+
+            def fetch_prescriptions():
+                resp = supabase.table('prescriptions').select('*').eq('mother_id', mother_id).order('created_at', desc=True).limit(10).execute()
+                return resp.data or []
+
+            def fetch_appointments():
+                resp = supabase.table('appointments').select('*').eq('mother_id', mother_id).gte('appointment_date', datetime.now().isoformat()).order('appointment_date', desc=False).limit(5).execute()
+                return resp.data or []
+
+            # Execute first 6 queries in parallel
+            results = {}
+            with ThreadPoolExecutor(max_workers=6) as executor:
+                futures = {
+                    executor.submit(fetch_profile): 'profile',
+                    executor.submit(fetch_risks): 'risks',
+                    executor.submit(fetch_metrics): 'metrics',
+                    executor.submit(fetch_nutrition): 'nutrition',
+                    executor.submit(fetch_prescriptions): 'prescriptions',
+                    executor.submit(fetch_appointments): 'appointments',
+                }
+                for future in as_completed(futures):
+                    key = futures[future]
+                    try:
+                        results[key] = future.result()
+                    except Exception as e:
+                        logger.warning(f"Failed to fetch {key}: {e}")
+                        results[key] = [] if key != 'profile' else {}
+
+            profile = results.get('profile', {})
+
+            # Fetch ASHA worker and doctor (depend on profile IDs)
             asha = None
-            aw_id = profile.get('asha_worker_id')
-            if aw_id:
-                aw_resp = supabase.table('asha_workers').select('*').eq('id', aw_id).execute()
-                asha = aw_resp.data[0] if aw_resp.data else None
-            
-            # Fetch Doctor
             doctor = None
+            aw_id = profile.get('asha_worker_id')
             doc_id = profile.get('doctor_id')
-            if doc_id:
-                doc_resp = supabase.table('doctors').select('*').eq('id', doc_id).execute()
-                doctor = doc_resp.data[0] if doc_resp.data else None
-            
+
+            if aw_id or doc_id:
+                with ThreadPoolExecutor(max_workers=2) as executor:
+                    futures = {}
+                    if aw_id:
+                        futures[executor.submit(lambda: supabase.table('asha_workers').select('*').eq('id', aw_id).execute())] = 'asha'
+                    if doc_id:
+                        futures[executor.submit(lambda: supabase.table('doctors').select('*').eq('id', doc_id).execute())] = 'doctor'
+
+                    for future in as_completed(futures):
+                        key = futures[future]
+                        try:
+                            resp = future.result()
+                            if key == 'asha':
+                                asha = resp.data[0] if resp.data else None
+                            else:
+                                doctor = resp.data[0] if resp.data else None
+                        except Exception as e:
+                            logger.warning(f"Failed to fetch {key}: {e}")
+
             return {
                 'profile': profile,
                 'medical_history': profile.get('medical_history') or {},
-                'risk_assessments': risks,
-                'recent_metrics': metrics,
-                'nutrition_plans': nutrition_plans,
-                'prescriptions': prescriptions,
-                'appointments': appointments,
+                'risk_assessments': results.get('risks', []),
+                'recent_metrics': results.get('metrics', []),
+                'nutrition_plans': results.get('nutrition', []),
+                'prescriptions': results.get('prescriptions', []),
+                'appointments': results.get('appointments', []),
                 'asha_worker': asha,
                 'doctor': doctor
             }
@@ -326,7 +364,8 @@ class DatabaseService:
             if chosen:
                 supabase.table('mothers').update({'asha_worker_id': chosen.get('id')}).eq('id', mother_id).execute()
             return chosen
-        except Exception:
+        except Exception as e:
+            logger.error(f"Error in assign_asha_worker_to_mother: {e}")
             return None
 
     @staticmethod
@@ -341,7 +380,8 @@ class DatabaseService:
             }
             resp = supabase.table('case_discussions').insert(payload).execute()
             return resp.data[0] if resp.data else None
-        except Exception:
+        except Exception as e:
+            logger.error(f"Error in send_case_message: {e}")
             return None
 
     @staticmethod
@@ -349,9 +389,10 @@ class DatabaseService:
         try:
             resp = supabase.table('case_discussions').select('*').eq('mother_id', mother_id).order('created_at', desc=True).limit(limit).execute()
             return resp.data or []
-        except Exception:
+        except Exception as e:
+            logger.error(f"Error in get_case_messages: {e}")
             return []
-    
+
     @staticmethod
     def get_mother_profile(mother_id: str) -> Optional[Dict]:
         """Get mother's complete profile"""

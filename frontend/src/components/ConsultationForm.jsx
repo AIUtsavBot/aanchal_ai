@@ -90,8 +90,97 @@ export default function ConsultationForm({ motherId, doctorId, doctorName, onSav
 
     // Load previous data
     useEffect(() => {
-        if (motherId) {
-            loadPreviousData()
+        let isMounted = true
+
+        const loadPreviousData = async () => {
+            if (!motherId) return
+
+            setLoading(true)
+            try {
+                // Load ALL previous health metrics (vitals)
+                const { data: metricsData } = await supabase
+                    .from('health_metrics')
+                    .select('*')
+                    .eq('mother_id', motherId)
+                    .order('created_at', { ascending: false })
+                    .limit(20)
+
+                if (isMounted && metricsData && metricsData.length > 0) {
+                    setPreviousVitals(metricsData[0])
+                    setAllVitalsHistory(metricsData)
+                    // Pre-fill with previous values for reference
+                    if (metricsData[0].notes) setHealthStatus(metricsData[0].notes)
+                }
+
+                // Load ALL previous nutrition plans
+                const { data: nutritionData } = await supabase
+                    .from('nutrition_plans')
+                    .select('*')
+                    .eq('mother_id', motherId)
+                    .order('created_at', { ascending: false })
+                    .limit(10)
+
+                if (isMounted && nutritionData && nutritionData.length > 0) {
+                    setPreviousNutritionPlans(nutritionData)
+                    setNutritionPlan(nutritionData[0].plan || '')
+                    setTrimester(nutritionData[0].trimester || 1)
+                }
+
+                // Load ALL previous prescriptions
+                const { data: prescriptionData } = await supabase
+                    .from('prescriptions')
+                    .select('*')
+                    .eq('mother_id', motherId)
+                    .order('created_at', { ascending: false })
+                    .limit(20)
+
+                if (isMounted && prescriptionData && prescriptionData.length > 0) {
+                    setPreviousConsultations(prescriptionData)
+                }
+
+                // Load previous consultation history from health_timeline
+                const { data: historyData } = await supabase
+                    .from('health_timeline')
+                    .select('*')
+                    .eq('mother_id', motherId)
+                    .eq('event_type', 'doctor_consultation')
+                    .order('event_date', { ascending: false })
+                    .limit(20)
+
+                if (isMounted && historyData && historyData.length > 0) {
+                    setConsultationHistory(historyData)
+                }
+
+                // Load upcoming appointment
+                const { data: appointmentData } = await supabase
+                    .from('appointments')
+                    .select('*')
+                    .eq('mother_id', motherId)
+                    .gte('appointment_date', new Date().toISOString())
+                    .order('appointment_date', { ascending: true })
+                    .limit(1)
+
+                if (isMounted && appointmentData && appointmentData[0]) {
+                    const apptDate = new Date(appointmentData[0].appointment_date)
+                    setNextConsultationDate(apptDate.toISOString().split('T')[0])
+                    setNextConsultationTime(apptDate.toTimeString().slice(0, 5))
+                }
+
+            } catch (err) {
+                if (isMounted) {
+                    console.error('Error loading previous data:', err)
+                }
+            } finally {
+                if (isMounted) {
+                    setLoading(false)
+                }
+            }
+        }
+
+        loadPreviousData()
+
+        return () => {
+            isMounted = false
         }
     }, [motherId])
 
@@ -292,9 +381,21 @@ export default function ConsultationForm({ motherId, doctorId, doctorName, onSav
                         hemoglobin: hemoglobin ? parseFloat(hemoglobin) : null,
                         weight: weight ? parseFloat(weight) : null
                     },
-                    medications: validMedications.map(m => m.medication),
+                    // Save full medication objects, not just names
+                    medications: validMedications.map(m => ({
+                        name: m.medication,
+                        dosage: m.dosage,
+                        schedule: m.schedule,
+                        duration: m.startDate && m.endDate ? `${m.startDate} to ${m.endDate}` : null
+                    })),
+                    // Also keep simple list for backward compatibility if needed, using name only
+                    medication_names: validMedications.map(m => m.medication),
+
                     nutrition_plan: nutritionPlan.trim() || null,
-                    next_consultation: nextConsultationDate || null,
+                    next_consultation: nextConsultationDate ? {
+                        date: nextConsultationDate,
+                        time: nextConsultationTime
+                    } : null,
                     recorded_at: new Date().toISOString()
                 },
                 concerns: null
@@ -344,7 +445,7 @@ export default function ConsultationForm({ motherId, doctorId, doctorName, onSav
     }
 
     return (
-        <div className="h-full overflow-y-auto p-6 bg-gray-50 bg-[url('https://as1.ftcdn.net/v2/jpg/04/83/87/46/1000_F_483874697_M7F7G2Kk6x93B6d2e6m78X7.jpg')] bg-repeat opacity-95">
+        <div className="h-full overflow-y-auto p-6 bg-gray-50">
             {/* Sticky Heading with Voice Button */}
             <div className="flex justify-between items-center mb-6 sticky top-0 bg-white/95 backdrop-blur-sm z-20 p-4 rounded-xl shadow-sm border border-gray-200">
                 <div>

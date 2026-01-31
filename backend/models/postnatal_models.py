@@ -58,14 +58,14 @@ class PPDRisk(str, Enum):
 
 class FeedingType(str, Enum):
     EXCLUSIVE_BREASTFEEDING = "exclusive_breastfeeding"
-    MIXED_FEEDING = "mixed_feeding"
-    FORMULA_FEEDING = "formula_feeding"
-    COMPLEMENTARY_FEEDING = "complementary_feeding"
+    MIXED = "mixed"
+    FORMULA = "formula"
+    COMPLEMENTARY = "complementary"
 
 
 class JaundiceLevel(str, Enum):
     NONE = "none"
-    MILD = "mild"
+    MILD = "mild_face"
     MODERATE = "moderate"
     SEVERE = "severe"
 
@@ -120,6 +120,12 @@ class MotherPostnatalAssessmentCreate(BaseModel):
     nutrition_advice: Optional[str] = Field(None, max_length=1000)
     medications: Optional[str] = Field(None, max_length=1000)
     next_visit_date: Optional[date] = None
+
+    # Risk & Referral
+    overall_risk_level: Optional[str] = Field(None, description="low, medium, high, critical")
+    referral_needed: bool = Field(default=False)
+    referral_reason: Optional[str] = Field(None, max_length=500)
+    referral_facility: Optional[str] = Field(None, max_length=200)
     
     # Assessor Info
     assessor_id: Optional[int] = None
@@ -151,7 +157,7 @@ class MotherPostnatalAssessmentResponse(MotherPostnatalAssessmentCreate):
     updated_at: Optional[datetime] = None
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # ==================== CHILD HEALTH ASSESSMENT ====================
@@ -204,6 +210,12 @@ class ChildHealthAssessmentCreate(BaseModel):
     nutrition_advice: Optional[str] = Field(None, max_length=1000)
     medications: Optional[str] = Field(None, max_length=1000)
     next_visit_date: Optional[date] = None
+
+    # Risk & Referral
+    overall_risk_level: Optional[str] = Field(None, description="low, medium, high, critical")
+    referral_needed: bool = Field(default=False)
+    referral_reason: Optional[str] = Field(None, max_length=500)
+    referral_facility: Optional[str] = Field(None, max_length=200)
     
     # Assessor Info
     assessor_id: Optional[int] = None
@@ -234,7 +246,36 @@ class ChildHealthAssessmentResponse(ChildHealthAssessmentCreate):
     updated_at: Optional[datetime] = None
     
     class Config:
-        orm_mode = True
+        from_attributes = True
+
+
+# ==================== CHILD REGISTRATION ====================
+
+class ChildCreate(BaseModel):
+    """Model for registering a new child"""
+    name: str = Field(..., min_length=2, max_length=100)
+    mother_id: str
+    birth_date: date
+    gender: str = Field(..., description="male, female, other")
+    birth_weight_kg: Optional[float] = Field(None, ge=0.5, le=10.0)
+    asha_worker_id: Optional[int] = None
+    doctor_id: Optional[int] = None
+    
+    @validator('birth_date')
+    def validate_birth_date(cls, v):
+        if v > date.today():
+            raise ValueError("Birth date cannot be in the future")
+        return v
+
+
+class ChildResponse(ChildCreate):
+    """Response model for child registration"""
+    id: str
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    
+    class Config:
+        from_attributes = True
 
 
 # ==================== QUERY MODELS ====================
@@ -434,4 +475,52 @@ class MilestoneListResponse(BaseModel):
     total: int
     achieved: int
     concerns: int
+    cached: bool = False
+
+
+# ==================== GROWTH MODELS ====================
+
+class GrowthRecordCreate(BaseModel):
+    """Model for creating a growth record"""
+    child_id: str
+    measurement_date: date = Field(default_factory=date.today)
+    
+    # Measurements
+    weight_kg: float = Field(..., ge=0.5, le=50.0)
+    height_cm: Optional[float] = Field(None, ge=30.0, le=150.0)
+    head_circumference_cm: Optional[float] = Field(None, ge=25.0, le=60.0)
+    muac_cm: Optional[float] = Field(None, description="Mid-Upper Arm Circumference")
+    
+    # Calculated Z-scores (optional input, usually calculated by backend)
+    weight_for_age_z: Optional[float] = None
+    height_for_age_z: Optional[float] = None
+    weight_for_height_z: Optional[float] = None
+    bmi_for_age_z: Optional[float] = None
+    
+    notes: Optional[str] = Field(None, max_length=1000)
+    measured_by: Optional[str] = None
+    
+    @validator('measurement_date')
+    def validate_date(cls, v):
+        if v > date.today():
+             raise ValueError("Measurement date cannot be in the future")
+        return v
+
+
+class GrowthRecordResponse(GrowthRecordCreate):
+    """Response model for growth record"""
+    id: int
+    created_at: datetime
+    age_months: Optional[int] = None
+    
+    class Config:
+        from_attributes = True
+
+
+class GrowthHistoryResponse(BaseModel):
+    """Response model for growth history"""
+    success: bool = True
+    records: List[dict]
+    total: int
+    child_info: Optional[dict] = None
     cached: bool = False

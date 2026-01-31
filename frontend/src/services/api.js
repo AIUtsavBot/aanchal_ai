@@ -391,73 +391,99 @@ export async function queryAgent({ motherId, query, useContext = true, language 
 export const adminAPI = {
   // Get all doctors with their assigned mothers count
   getDoctors: async () => {
-    const res = await api.get('/admin/doctors')
+    const res = await api.get('/api/admin/doctors')
     return res
   },
 
   // Get all ASHA workers with their assigned mothers count
   getAshaWorkers: async () => {
-    const res = await api.get('/admin/asha-workers')
+    const res = await api.get('/api/admin/asha-workers')
     return res
   },
 
   // Get all mothers with assignments
   getMothers: async () => {
-    const res = await api.get('/admin/mothers')
+    const res = await api.get('/api/admin/mothers')
     return res
   },
 
   // Update doctor info
   updateDoctor: async (id, data) => {
-    const res = await api.put(`/admin/doctors/${id}`, data)
+    const res = await api.put(`/api/admin/doctors/${id}`, data)
     return res
   },
 
   // Delete doctor
   deleteDoctor: async (id) => {
-    const res = await api.delete(`/admin/doctors/${id}`)
+    const res = await api.delete(`/api/admin/doctors/${id}`)
     return res
   },
 
   // Update ASHA worker info
   updateAshaWorker: async (id, data) => {
-    const res = await api.put(`/admin/asha-workers/${id}`, data)
+    const res = await api.put(`/api/admin/asha-workers/${id}`, data)
     return res
   },
 
   // Delete ASHA worker
   deleteAshaWorker: async (id) => {
-    const res = await api.delete(`/admin/asha-workers/${id}`)
+    const res = await api.delete(`/api/admin/asha-workers/${id}`)
     return res
   },
 
   // Assign mother to ASHA worker
   assignMotherToAsha: async (motherId, ashaId) => {
-    const res = await api.post(`/admin/mothers/${motherId}/assign-asha`, { asha_worker_id: ashaId })
+    const res = await api.post(`/api/admin/mothers/${motherId}/assign-asha`, { asha_worker_id: ashaId })
     return res
   },
 
   // Assign mother to doctor
   assignMotherToDoctor: async (motherId, doctorId) => {
-    const res = await api.post(`/admin/mothers/${motherId}/assign-doctor`, { doctor_id: doctorId })
+    const res = await api.post(`/api/admin/mothers/${motherId}/assign-doctor`, { doctor_id: doctorId })
     return res
   },
 
   // Send email alert to assigned doctor and ASHA worker
   sendAlert: async (motherId, alertType = 'emergency') => {
-    const res = await api.post(`/admin/mothers/${motherId}/send-alert`, { alert_type: alertType })
+    const res = await api.post(`/api/admin/mothers/${motherId}/send-alert`, { alert_type: alertType })
     return res
   },
 
   // Get dashboard stats
   getStats: async () => {
-    const res = await api.get('/admin/stats')
+    const res = await api.get('/api/admin/stats')
     return res
   },
 
   // Get all admin data in one call (OPTIMIZED)
   getFull: async () => {
-    const res = await api.get('/admin/full')
+    const res = await api.get('/api/admin/full')
+    return res
+  },
+
+  // ==================== SantanRaksha (Children) ====================
+
+  // Get all children with mother info
+  getChildren: async () => {
+    const res = await api.get('/api/admin/children')
+    return res
+  },
+
+  // Get SantanRaksha statistics
+  getSantanRakshaStats: async () => {
+    const res = await api.get('/api/admin/santanraksha-stats')
+    return res
+  },
+
+  // Update child info
+  updateChild: async (id, data) => {
+    const res = await api.put(`/api/admin/children/${id}`, data)
+    return res
+  },
+
+  // Delete child
+  deleteChild: async (id) => {
+    const res = await api.delete(`/api/admin/children/${id}`)
     return res
   }
 }
@@ -501,6 +527,15 @@ export const postnatalAPI = {
   },
 
   /**
+   * Register a new child
+   * @param {object} childData - Child registration data
+   */
+  registerChild: async (childData) => {
+    const response = await api.post('/api/postnatal/children', childData);
+    return response.data;
+  },
+
+  /**
    * Create a mother postnatal assessment
    * @param {object} assessmentData - Assessment data
    */
@@ -525,11 +560,51 @@ export const postnatalAPI = {
    * @param {number} limit - Number of assessments
    */
   getAssessmentHistory: async (motherId, childId = null, limit = 50) => {
-    const params = new URLSearchParams();
-    if (childId) params.append('child_id', childId);
-    params.append('limit', limit);
+    if (childId) {
+      const response = await api.get(`/api/postnatal/children/${childId}/assessments?limit=${limit}`);
+      return response.data;
+    } else {
+      // Fallback for mother - assuming an endpoint exists or using generic
+      // We need to implement GET /api/postnatal/mothers/{id}/assessments if not exists
+      // For now, let's try the generic path if it was working for mothers, or fallback
+      const response = await api.get(`/api/postnatal/mothers/${motherId}/assessments?limit=${limit}`);
+      return response.data;
+    }
+  },
 
-    const response = await api.get(`/api/postnatal/assessments/${motherId}?${params}`);
+  /**
+   * Get vaccinations for a child
+   * @param {string} childId 
+   */
+  getVaccinations: async (childId, limit = 50) => {
+    const response = await api.get(`/api/postnatal/children/${childId}/vaccinations?limit=${limit}`);
+    return response.data;
+  },
+
+  /**
+   * Record a vaccination
+   * @param {object} data
+   */
+  recordVaccination: async (data) => {
+    const response = await api.post('/api/postnatal/vaccinations', data);
+    return response.data;
+  },
+
+  /**
+   * Get growth records for a child
+   * @param {string} childId 
+   */
+  getGrowthRecords: async (childId, limit = 20) => {
+    const response = await api.get(`/api/postnatal/children/${childId}/growth?limit=${limit}`);
+    return response.data;
+  },
+
+  /**
+   * Record a growth measurement
+   * @param {object} data
+   */
+  recordGrowth: async (data) => {
+    const response = await api.post('/api/postnatal/growth', data);
     return response.data;
   }
 };

@@ -34,7 +34,7 @@ try:
         GEMINI_AVAILABLE = True
     else:
         GEMINI_AVAILABLE = False
-except:
+except Exception:
     GEMINI_AVAILABLE = False
 
 

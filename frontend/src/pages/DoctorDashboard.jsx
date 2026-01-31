@@ -96,14 +96,20 @@ export default function DoctorDashboard() {
       const abortController = new AbortController();
 
       // Set a timeout - if profile detection takes too long, abort and show error
+      // Set a timeout - if profile detection takes too long, we'll try to recover
       timeoutId = setTimeout(() => {
         if (isMounted && loadingProfile) {
-          console.log('⚠️ Doctor profile detection timeout (30s) - aborting');
-          abortController.abort();
-          setLoadingProfile(false);
-          setError("Profile detection took too long. Please try signing out and signing back in.");
+          console.log('⚠️ Doctor profile detection slow - checking session...');
+          // Don't just abort, try one force refresh of session if user is stuck
+          if (supabase.auth.getSession()) {
+            console.log('🔄 Session exists, retrying profile load...');
+            autoDetectDoctor();
+          } else {
+            setError("Connection slow. Please refresh the page.");
+            setLoadingProfile(false);
+          }
         }
-      }, 30000); // 30 second timeout for slow Supabase free tier
+      }, 15000); // Check after 15s
 
       try {
         // Small delay to let Supabase initialize
@@ -301,15 +307,41 @@ export default function DoctorDashboard() {
   const loadAssessments = async (motherId) => {
     setLoadingAssessments(true);
     try {
-      const { data, error } = await supabase
+      // 1. Fetch AI/ASHA Risk Assessments
+      const { data: riskData, error: riskError } = await supabase
         .from("risk_assessments")
         .select("*")
         .eq("mother_id", motherId)
         .order("created_at", { ascending: false });
 
-      if (!error) {
-        setAssessments(data || []);
+      // 2. Fetch Doctor Consultations from health_timeline
+      const { data: consultationData, error: consultError } = await supabase
+        .from("health_timeline")
+        .select("*")
+        .eq("mother_id", motherId)
+        .eq("event_type", "doctor_consultation")
+        .order("event_date", { ascending: false });
+
+      const combined = [];
+
+      if (!riskError && riskData) {
+        combined.push(...riskData.map(item => ({ ...item, type: 'risk_assessment' })));
       }
+
+      if (!consultError && consultationData) {
+        combined.push(...consultationData.map(item => ({
+          ...item,
+          type: 'consultation',
+          created_at: item.event_date || item.created_at, // Normalize date field
+          risk_level: 'CONSULTATION', // Placeholder for UI
+          risk_score: null
+        })));
+      }
+
+      // Sort combined list by date desc
+      combined.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+      setAssessments(combined);
     } catch (err) {
       console.error("Error loading assessments:", err);
     } finally {
@@ -318,16 +350,101 @@ export default function DoctorDashboard() {
   };
 
   useEffect(() => {
+    let isMounted = true;
+
+    const fetchMothers = async () => {
+      if (!doctorId) return;
+      setLoading(true);
+      try {
+        // Get mothers assigned to this doctor
+        const { data } = await supabase
+          .from("mothers")
+          .select("*")
+          .eq("doctor_id", doctorId);
+
+        if (!isMounted) return;
+
+        const moms = data || [];
+        setMothers(moms);
+
+        // Load risk levels in a single batch query
+        if (moms.length > 0) {
+          const motherIds = moms.map(m => m.id);
+          const { data: allAssessments } = await supabase
+            .from("risk_assessments")
+            .select("mother_id, risk_level, created_at")
+            .in("mother_id", motherIds)
+            .order("created_at", { ascending: false });
+
+          if (!isMounted) return;
+
+          // Group by mother_id and get the latest for each
+          const risks = {};
+          (allAssessments || []).forEach(ra => {
+            if (!risks[ra.mother_id]) {
+              risks[ra.mother_id] = ra.risk_level;
+            }
+          });
+
+          // Set default LOW for mothers without assessments
+          moms.forEach(m => {
+            if (!risks[m.id]) {
+              risks[m.id] = "LOW";
+            }
+          });
+
+          setRiskMap(risks);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
     if (doctorId) {
-      loadMothers();
+      fetchMothers();
     }
+
+    return () => {
+      isMounted = false;
+    };
   }, [doctorId]);
 
   // Load assessments when mother is selected
   useEffect(() => {
+    let isMounted = true;
+
+    const fetchAssessments = async (motherId) => {
+      setLoadingAssessments(true);
+      try {
+        const { data, error } = await supabase
+          .from("risk_assessments")
+          .select("*")
+          .eq("mother_id", motherId)
+          .order("created_at", { ascending: false });
+
+        if (isMounted && !error) {
+          setAssessments(data || []);
+        }
+      } catch (err) {
+        if (isMounted) {
+          console.error("Error loading assessments:", err);
+        }
+      } finally {
+        if (isMounted) {
+          setLoadingAssessments(false);
+        }
+      }
+    };
+
     if (selected?.id) {
-      loadAssessments(selected.id);
+      fetchAssessments(selected.id);
     }
+
+    return () => {
+      isMounted = false;
+    };
   }, [selected]);
 
   const sorted = [...mothers]
@@ -559,6 +676,9 @@ export default function DoctorDashboard() {
                   <div
                     key={m.id}
                     onClick={() => setSelected(m)}
+                    onKeyDown={(e) => e.key === 'Enter' && setSelected(m)}
+                    role="button"
+                    tabIndex={0}
                     className={`p-4 rounded-lg border-2 cursor-pointer transition-all transform hover:scale-102 ${selected?.id === m.id
                       ? "border-blue-600 bg-blue-50 shadow-md"
                       : `border-gray-200 ${getRiskColor(risk)}`
@@ -767,80 +887,148 @@ export default function DoctorDashboard() {
                         </div>
                       ) : assessments.length > 0 ? (
                         <div className="space-y-4">
-                          {assessments.map((a, idx) => (
-                            <div
-                              key={a.id || idx}
-                              className={`p-4 rounded-lg border-2 ${a.risk_level === "HIGH"
-                                ? "bg-red-50 border-red-200"
-                                : a.risk_level === "MODERATE"
-                                  ? "bg-yellow-50 border-yellow-200"
-                                  : "bg-green-50 border-green-200"
-                                }`}
-                            >
-                              <div className="flex justify-between items-start mb-3">
-                                <div>
-                                  <p className="text-xs text-gray-600 flex items-center gap-1">
-                                    <Calendar className="w-3 h-3" />
-                                    {new Date(a.created_at).toLocaleString()}
-                                  </p>
-                                </div>
-                                <div
-                                  className={`px-3 py-1 rounded-full text-sm font-bold ${a.risk_level === "HIGH"
-                                    ? "bg-red-200 text-red-800"
-                                    : a.risk_level === "MODERATE"
-                                      ? "bg-yellow-200 text-yellow-800"
-                                      : "bg-green-200 text-green-800"
-                                    }`}
-                                >
-                                  {getRiskEmoji(a.risk_level)} {a.risk_level} (
-                                  {(a.risk_score * 100).toFixed(0)}%)
-                                </div>
-                              </div>
+                          {assessments.map((a, idx) => {
+                            const isConsultation = a.type === 'consultation';
+                            // Normalize data access
+                            const systolic = isConsultation ? a.event_data?.vitals?.systolic_bp : a.systolic_bp;
+                            const diastolic = isConsultation ? a.event_data?.vitals?.diastolic_bp : a.diastolic_bp;
+                            const heartRate = isConsultation ? a.event_data?.vitals?.heart_rate : a.heart_rate;
+                            const glucose = isConsultation ? a.event_data?.vitals?.blood_sugar : a.blood_glucose;
+                            const hemoglobin = isConsultation ? a.event_data?.vitals?.hemoglobin : a.hemoglobin;
+                            const riskLevel = isConsultation ? 'CONSULTATION' : a.risk_level;
+                            const score = isConsultation ? null : a.risk_score;
 
-                              <div className="grid grid-cols-4 gap-3 text-sm">
-                                {a.systolic_bp && a.diastolic_bp && (
-                                  <div className="bg-white/60 p-2 rounded">
-                                    <p className="text-xs text-gray-500">
-                                      Blood Pressure
+                            return (
+                              <div
+                                key={a.id || idx}
+                                className={`p-4 rounded-lg border-2 ${riskLevel === "HIGH"
+                                  ? "bg-red-50 border-red-200"
+                                  : riskLevel === "MODERATE"
+                                    ? "bg-yellow-50 border-yellow-200"
+                                    : riskLevel === "CONSULTATION"
+                                      ? "bg-purple-50 border-purple-200"
+                                      : "bg-green-50 border-green-200"
+                                  }`}
+                              >
+                                <div className="flex justify-between items-start mb-3">
+                                  <div>
+                                    <p className="text-xs text-gray-600 flex items-center gap-1">
+                                      <Calendar className="w-3 h-3" />
+                                      {new Date(a.created_at).toLocaleString()}
                                     </p>
-                                    <p className="font-bold">
-                                      {a.systolic_bp}/{a.diastolic_bp}
-                                    </p>
+                                    {isConsultation && a.event_data?.doctor_name && (
+                                      <p className="text-xs text-purple-700 font-medium mt-1">
+                                        Dr. {a.event_data.doctor_name}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div
+                                    className={`px-3 py-1 rounded-full text-sm font-bold ${riskLevel === "HIGH"
+                                      ? "bg-red-200 text-red-800"
+                                      : riskLevel === "MODERATE"
+                                        ? "bg-yellow-200 text-yellow-800"
+                                        : riskLevel === "CONSULTATION"
+                                          ? "bg-purple-200 text-purple-800"
+                                          : "bg-green-200 text-green-800"
+                                      }`}
+                                  >
+                                    {isConsultation ? '🩺 Consultation' : `${getRiskEmoji(riskLevel)} ${riskLevel} (${(score * 100).toFixed(0)}%)`}
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-4 gap-3 text-sm">
+                                  {systolic && diastolic && (
+                                    <div className="bg-white/60 p-2 rounded">
+                                      <p className="text-xs text-gray-500">
+                                        Blood Pressure
+                                      </p>
+                                      <p className="font-bold">
+                                        {systolic}/{diastolic}
+                                      </p>
+                                    </div>
+                                  )}
+                                  {heartRate && (
+                                    <div className="bg-white/60 p-2 rounded">
+                                      <p className="text-xs text-gray-500">
+                                        Heart Rate
+                                      </p>
+                                      <p className="font-bold">
+                                        {heartRate} bpm
+                                      </p>
+                                    </div>
+                                  )}
+                                  {glucose && (
+                                    <div className="bg-white/60 p-2 rounded">
+                                      <p className="text-xs text-gray-500">
+                                        Glucose
+                                      </p>
+                                      <p className="font-bold">
+                                        {glucose} mg/dL
+                                      </p>
+                                    </div>
+                                  )}
+                                  {hemoglobin && (
+                                    <div className="bg-white/60 p-2 rounded">
+                                      <p className="text-xs text-gray-500">
+                                        Hemoglobin
+                                      </p>
+                                      <p className="font-bold">
+                                        {hemoglobin} g/dL
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                                {a.summary && (
+                                  <div className="mt-3 text-sm bg-white/50 p-2 rounded border border-gray-100">
+                                    <span className="font-semibold text-gray-700">Notes: </span>
+                                    <span className="text-gray-600 block mt-1">{a.summary}</span>
                                   </div>
                                 )}
-                                {a.heart_rate && (
-                                  <div className="bg-white/60 p-2 rounded">
-                                    <p className="text-xs text-gray-500">
-                                      Heart Rate
-                                    </p>
-                                    <p className="font-bold">
-                                      {a.heart_rate} bpm
-                                    </p>
-                                  </div>
-                                )}
-                                {a.blood_glucose && (
-                                  <div className="bg-white/60 p-2 rounded">
-                                    <p className="text-xs text-gray-500">
-                                      Glucose
-                                    </p>
-                                    <p className="font-bold">
-                                      {a.blood_glucose} mg/dL
-                                    </p>
-                                  </div>
-                                )}
-                                {a.hemoglobin && (
-                                  <div className="bg-white/60 p-2 rounded">
-                                    <p className="text-xs text-gray-500">
-                                      Hemoglobin
-                                    </p>
-                                    <p className="font-bold">
-                                      {a.hemoglobin} g/dL
-                                    </p>
+
+                                {isConsultation && a.event_data && (
+                                  <div className="mt-3 space-y-3 border-t border-gray-200 pt-2">
+                                    {/* Medications */}
+                                    {a.event_data.medications && a.event_data.medications.length > 0 && (
+                                      <div className="bg-purple-50 p-2 rounded text-xs">
+                                        <p className="font-bold text-purple-800 mb-1 flex items-center gap-1">💊 Medications</p>
+                                        <ul className="space-y-1">
+                                          {a.event_data.medications.map((m, i) => (
+                                            <li key={i} className="flex justify-between border-b border-purple-100 last:border-0 pb-1">
+                                              <span className="font-medium text-gray-700">{m.name || m}</span>
+                                              {typeof m === 'object' && (
+                                                <span className="text-gray-500">{m.dosage || ''} {m.schedule ? `- ${m.schedule}` : ''}</span>
+                                              )}
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                    )}
+
+                                    {/* Nutrition */}
+                                    {a.event_data.nutrition_plan && (
+                                      <div className="bg-green-50 p-2 rounded text-xs">
+                                        <p className="font-bold text-green-800 mb-1 flex items-center gap-1">🍎 Nutrition</p>
+                                        <p className="text-gray-700 whitespace-pre-wrap line-clamp-3 hover:line-clamp-none transition-all">{a.event_data.nutrition_plan}</p>
+                                      </div>
+                                    )}
+
+                                    {/* Next Visit */}
+                                    {a.event_data.next_consultation && (
+                                      <div className="bg-blue-50 p-2 rounded text-xs flex justify-between items-center">
+                                        <span className="font-bold text-blue-800">📅 Next Visit:</span>
+                                        <span className="text-blue-900 font-medium">
+                                          {typeof a.event_data.next_consultation === 'object'
+                                            ? `${new Date(a.event_data.next_consultation.date).toLocaleDateString()} at ${a.event_data.next_consultation.time}`
+                                            : new Date(a.event_data.next_consultation).toLocaleDateString()
+                                          }
+                                        </span>
+                                      </div>
+                                    )}
                                   </div>
                                 )}
                               </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       ) : (
                         <div className="text-center py-12">

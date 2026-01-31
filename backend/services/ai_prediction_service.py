@@ -5,14 +5,7 @@ import json
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 import numpy as np
-
-# Services
-try:
-    from services.supabase_service import supabase
-except ImportError:
-    from supabase import create_client
-    import os
-    supabase = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_SERVICE_KEY"))
+from services.supabase_service import supabase
 
 try:
     from services.cache_service import cache

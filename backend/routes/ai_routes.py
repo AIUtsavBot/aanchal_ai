@@ -11,7 +11,7 @@ try:
     from google import genai
     import os
     gemini_client = genai.Client(api_key=os.getenv("GEMINI_API_KEY")) if os.getenv("GEMINI_API_KEY") else None
-except:
+except Exception:
     gemini_client = None
 
 # Import Supabase

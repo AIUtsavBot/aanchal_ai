@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../services/auth.js';
 import { Target, Check, Clock, AlertCircle, Baby, Brain, Hand, MessageCircle, Heart, Loader } from 'lucide-react';
 import './PostnatalPages.css';
@@ -95,8 +95,50 @@ export const MilestonesTracker = ({ ashaWorkerId }) => {
     const [expandedAge, setExpandedAge] = useState(null);
     const [togglingMilestone, setTogglingMilestone] = useState(null);
 
+    // Ref to track pending operations synchronously (prevents race conditions from rapid clicks)
+    const pendingToggles = useRef(new Set());
+
     useEffect(() => {
-        loadData();
+        let isMounted = true;
+
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+
+                const { data: childrenData } = await supabase
+                    .from('children')
+                    .select('*, mothers:mother_id(name, asha_worker_id)')
+                    .order('birth_date', { ascending: false });
+
+                const { data: milestonesData } = await supabase
+                    .from('milestones')
+                    .select('*')
+                    .eq('is_achieved', true)
+                    .order('achieved_date', { ascending: false });
+
+                if (isMounted) {
+                    if (childrenData) {
+                        const filtered = ashaWorkerId
+                            ? childrenData.filter(c => c.mothers?.asha_worker_id === ashaWorkerId)
+                            : childrenData;
+                        setChildren(filtered);
+                    }
+                    if (milestonesData) setMilestoneRecords(milestonesData);
+                    setLoading(false);
+                }
+            } catch (err) {
+                if (isMounted) {
+                    console.error('Error loading data:', err);
+                    setLoading(false);
+                }
+            }
+        };
+
+        fetchData();
+
+        return () => {
+            isMounted = false;
+        };
     }, [ashaWorkerId]);
 
     const loadData = async () => {
@@ -144,11 +186,19 @@ export const MilestonesTracker = ({ ashaWorkerId }) => {
 
     const toggleMilestone = async (childId, milestone) => {
         const key = `${childId}-${milestone.name}`;
+
+        // Check ref synchronously to prevent race conditions from rapid clicks
+        if (pendingToggles.current.has(key)) {
+            return;
+        }
+
+        // Add to pending set immediately (synchronous)
+        pendingToggles.current.add(key);
         setTogglingMilestone(key);
 
         try {
             // Use the new API endpoint
-            const response = await fetch(`${API_URL}/api/santanraksha/milestone/toggle`, {
+            const response = await fetch(`${API_URL}/api/postnatal/milestone/toggle`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -175,6 +225,7 @@ export const MilestonesTracker = ({ ashaWorkerId }) => {
             // Fallback to direct Supabase
             await fallbackToggleMilestone(childId, milestone);
         } finally {
+            pendingToggles.current.delete(key);
             setTogglingMilestone(null);
         }
     };

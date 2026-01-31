@@ -34,8 +34,10 @@ export default function Navbar() {
           <div className="flex items-center gap-3">
             <Heart className="w-8 h-8 fill-current" />
             <div>
-              <h1 className="text-2xl font-bold">Aanchal AI</h1>
-              <p className="text-blue-100 text-xs">Maternal Health Guardian System</p>
+              <h1 className="text-2xl font-bold">
+                {location.pathname === '/' ? 'Aanchal AI' : (currentView === 'postnatal' ? 'SantanRaksha AI' : 'MatruRaksha AI')}
+              </h1>
+              <p className="text-blue-100 text-xs">Maternal & Child Health Guardian</p>
             </div>
           </div>
 
