@@ -96,7 +96,46 @@ export const MilestonesTracker = ({ ashaWorkerId }) => {
     const [togglingMilestone, setTogglingMilestone] = useState(null);
 
     useEffect(() => {
-        loadData();
+        let isMounted = true;
+
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+
+                const { data: childrenData } = await supabase
+                    .from('children')
+                    .select('*, mothers:mother_id(name, asha_worker_id)')
+                    .order('birth_date', { ascending: false });
+
+                const { data: milestonesData } = await supabase
+                    .from('milestones')
+                    .select('*')
+                    .eq('is_achieved', true)
+                    .order('achieved_date', { ascending: false });
+
+                if (isMounted) {
+                    if (childrenData) {
+                        const filtered = ashaWorkerId
+                            ? childrenData.filter(c => c.mothers?.asha_worker_id === ashaWorkerId)
+                            : childrenData;
+                        setChildren(filtered);
+                    }
+                    if (milestonesData) setMilestoneRecords(milestonesData);
+                    setLoading(false);
+                }
+            } catch (err) {
+                if (isMounted) {
+                    console.error('Error loading data:', err);
+                    setLoading(false);
+                }
+            }
+        };
+
+        fetchData();
+
+        return () => {
+            isMounted = false;
+        };
     }, [ashaWorkerId]);
 
     const loadData = async () => {

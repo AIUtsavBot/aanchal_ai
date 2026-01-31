@@ -11,36 +11,46 @@ export const ChildrenList = ({ ashaWorkerId }) => {
     const [showAddForm, setShowAddForm] = useState(false);
 
     useEffect(() => {
-        loadChildren();
-    }, [ashaWorkerId]);
+        let isMounted = true;
 
-    const loadChildren = async () => {
-        try {
-            setLoading(true);
-            // Get children through their mothers assigned to this ASHA worker
-            const { data, error } = await supabase
-                .from('children')
-                .select(`
+        const fetchChildren = async () => {
+            try {
+                setLoading(true);
+                // Get children through their mothers assigned to this ASHA worker
+                const { data, error } = await supabase
+                    .from('children')
+                    .select(`
           *,
           mothers:mother_id (
             id, name, phone, location, asha_worker_id
           )
         `)
-                .order('birth_date', { ascending: false });
+                    .order('birth_date', { ascending: false });
 
-            if (!error && data) {
-                // Filter by ASHA worker if needed
-                const filteredChildren = ashaWorkerId
-                    ? data.filter(c => c.mothers?.asha_worker_id === ashaWorkerId)
-                    : data;
-                setChildren(filteredChildren);
+                if (isMounted) {
+                    if (!error && data) {
+                        // Filter by ASHA worker if needed
+                        const filteredChildren = ashaWorkerId
+                            ? data.filter(c => c.mothers?.asha_worker_id === ashaWorkerId)
+                            : data;
+                        setChildren(filteredChildren);
+                    }
+                    setLoading(false);
+                }
+            } catch (err) {
+                if (isMounted) {
+                    console.error('Error loading children:', err);
+                    setLoading(false);
+                }
             }
-        } catch (err) {
-            console.error('Error loading children:', err);
-        } finally {
-            setLoading(false);
-        }
-    };
+        };
+
+        fetchChildren();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [ashaWorkerId]);
 
     const calculateAge = (birthDate) => {
         const birth = new Date(birthDate);

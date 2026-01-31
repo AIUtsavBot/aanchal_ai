@@ -33,7 +33,45 @@ export const GrowthCharts = ({ ashaWorkerId }) => {
     });
 
     useEffect(() => {
-        loadData();
+        let isMounted = true;
+
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+
+                const { data: childrenData } = await supabase
+                    .from('children')
+                    .select('*, mothers:mother_id(name, asha_worker_id)')
+                    .order('birth_date', { ascending: false });
+
+                const { data: growthData } = await supabase
+                    .from('growth_records')
+                    .select('*')
+                    .order('measurement_date', { ascending: false });
+
+                if (isMounted) {
+                    if (childrenData) {
+                        const filtered = ashaWorkerId
+                            ? childrenData.filter(c => c.mothers?.asha_worker_id === ashaWorkerId)
+                            : childrenData;
+                        setChildren(filtered);
+                    }
+                    if (growthData) setGrowthRecords(growthData);
+                    setLoading(false);
+                }
+            } catch (err) {
+                if (isMounted) {
+                    console.error('Error loading data:', err);
+                    setLoading(false);
+                }
+            }
+        };
+
+        fetchData();
+
+        return () => {
+            isMounted = false;
+        };
     }, [ashaWorkerId]);
 
     const loadData = async () => {

@@ -68,7 +68,56 @@ export default function DeliveryForm({ doctorId, onSuccess }) {
 
     // Load pregnant mothers
     useEffect(() => {
-        loadPregnantMothers();
+        let isMounted = true;
+
+        const fetchPregnantMothers = async () => {
+            if (!doctorId) {
+                if (isMounted) {
+                    setError('Doctor ID not available');
+                    setLoading(false);
+                }
+                return;
+            }
+
+            setLoading(true);
+            setError('');
+            try {
+                // Use Supabase directly to fetch mothers assigned to this doctor
+                const { data, error: supabaseError } = await supabase
+                    .from('mothers')
+                    .select('*')
+                    .eq('doctor_id', doctorId);
+
+                if (supabaseError) {
+                    throw new Error(supabaseError.message);
+                }
+
+                // Filter for pregnant mothers (not delivered yet / still in matruraksha)
+                const pregnantMothers = (data || []).filter(m =>
+                    !m.delivery_status ||
+                    m.delivery_status === 'pregnant' ||
+                    m.active_system !== 'santanraksha'
+                );
+                if (isMounted) {
+                    setMothers(pregnantMothers);
+                }
+            } catch (err) {
+                if (isMounted) {
+                    console.error('Error loading mothers:', err);
+                    setError('Failed to load patient list');
+                }
+            } finally {
+                if (isMounted) {
+                    setLoading(false);
+                }
+            }
+        };
+
+        fetchPregnantMothers();
+
+        return () => {
+            isMounted = false;
+        };
     }, [doctorId]);
 
     const loadPregnantMothers = async () => {

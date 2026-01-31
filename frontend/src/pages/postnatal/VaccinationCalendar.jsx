@@ -37,7 +37,47 @@ export const VaccinationCalendar = ({ ashaWorkerId }) => {
     const [savingVaccine, setSavingVaccine] = useState(null); // Track which vaccine is being saved
 
     useEffect(() => {
-        loadData();
+        let isMounted = true;
+
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+
+                // Load children
+                const { data: childrenData } = await supabase
+                    .from('children')
+                    .select('*, mothers:mother_id(name, asha_worker_id)')
+                    .order('birth_date', { ascending: false });
+
+                // Load vaccinations
+                const { data: vaccinationsData } = await supabase
+                    .from('vaccinations')
+                    .select('*')
+                    .order('due_date', { ascending: true });
+
+                if (isMounted) {
+                    if (childrenData) {
+                        const filtered = ashaWorkerId
+                            ? childrenData.filter(c => c.mothers?.asha_worker_id === ashaWorkerId)
+                            : childrenData;
+                        setChildren(filtered);
+                    }
+                    if (vaccinationsData) setVaccinations(vaccinationsData);
+                    setLoading(false);
+                }
+            } catch (err) {
+                if (isMounted) {
+                    console.error('Error loading data:', err);
+                    setLoading(false);
+                }
+            }
+        };
+
+        fetchData();
+
+        return () => {
+            isMounted = false;
+        };
     }, [ashaWorkerId]);
 
     const loadData = async () => {

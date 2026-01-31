@@ -65,7 +65,25 @@ export default function AdminDashboard() {
   }, [])
 
 
-  useEffect(() => { loadData() }, [loadData])
+  useEffect(() => {
+    let isMounted = true
+
+    const fetchData = async () => {
+      try {
+        await loadData()
+      } catch (error) {
+        if (isMounted) {
+          console.error('Failed to load data:', error)
+        }
+      }
+    }
+
+    fetchData()
+
+    return () => {
+      isMounted = false
+    }
+  }, [loadData])
 
   // Clear success message after 3 seconds
   useEffect(() => {

@@ -35,9 +35,37 @@ export default function DocumentManager({
   const isDoctor = uploaderRole?.toUpperCase() === "DOCTOR";
 
   useEffect(() => {
-    if (motherId) {
-      loadDocuments();
-    }
+    let isMounted = true;
+
+    const fetchDocuments = async () => {
+      if (!motherId) return;
+
+      setLoading(true);
+      setError("");
+      try {
+        const response = await fetch(`${API_URL}/reports/${motherId}`);
+        if (!response.ok) throw new Error("Failed to load documents");
+        const data = await response.json();
+        if (isMounted) {
+          setDocuments(data.data || []);
+        }
+      } catch (err) {
+        if (isMounted) {
+          console.error("Error loading documents:", err);
+          setError("Failed to load documents");
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchDocuments();
+
+    return () => {
+      isMounted = false;
+    };
   }, [motherId]);
 
   const loadDocuments = async () => {

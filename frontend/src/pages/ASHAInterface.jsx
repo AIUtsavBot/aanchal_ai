@@ -270,9 +270,86 @@ export default function ASHAInterface() {
 
   // Load data when ASHA ID is available
   useEffect(() => {
+    let isMounted = true;
+
+    const fetchMothers = async () => {
+      if (!ashaWorkerId) return;
+      setLoading(true);
+      setError("");
+      try {
+        // Show ALL mothers (pregnant, delivered, postnatal) assigned to this ASHA
+        const { data, error: err } = await supabase
+          .from("mothers")
+          .select("*")
+          .eq("asha_worker_id", Number(ashaWorkerId))
+          .order("status")
+          .order("name");
+
+        if (err) throw err;
+        if (isMounted) {
+          setMothers(data || []);
+        }
+
+        // Load risk assessments in a single batch query
+        if (data && data.length > 0) {
+          const motherIds = data.map(m => m.id);
+          const { data: allAssessments } = await supabase
+            .from("risk_assessments")
+            .select("mother_id, risk_level, created_at")
+            .in("mother_id", motherIds)
+            .order("created_at", { ascending: false });
+
+          // Group by mother_id and get the latest for each
+          const risks = {};
+          (allAssessments || []).forEach(ra => {
+            if (!risks[ra.mother_id]) {
+              risks[ra.mother_id] = ra.risk_level;
+            }
+          });
+
+          // Set default LOW for mothers without assessments
+          data.forEach(m => {
+            if (!risks[m.id]) {
+              risks[m.id] = "LOW";
+            }
+          });
+
+          if (isMounted) {
+            setRiskMap(risks);
+          }
+        }
+
+        // Load analytics
+        if (isMounted) {
+          try {
+            const analyticsData = await apiCall("GET", `/analytics/asha/${ashaWorkerId}`);
+            if (isMounted) {
+              setAnalytics(analyticsData);
+            }
+          } catch (err) {
+            if (isMounted) {
+              console.error("Analytics error:", err);
+            }
+          }
+        }
+      } catch (err) {
+        if (isMounted) {
+          setError("Error loading mothers: " + err.message);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
     if (ashaWorkerId) {
-      loadMothers();
+      fetchMothers();
     }
+
+    return () => {
+      isMounted = false;
+    };
   }, [ashaWorkerId]);
 
   const loadMothers = async () => {
@@ -374,9 +451,55 @@ export default function ASHAInterface() {
 
   // Load assessments when mother is selected
   useEffect(() => {
+    let isMounted = true;
+
+    const fetchMotherAssessments = async (motherId) => {
+      setLoadingMotherAssessments(true);
+      try {
+        const { data, error } = await supabase
+          .from("risk_assessments")
+          .select("*")
+          .eq("mother_id", motherId)
+          .order("created_at", { ascending: false });
+
+        if (!error && isMounted) {
+          setMotherAssessments(data || []);
+        }
+
+        // Fetch next visit date from postnatal assessments
+        const { data: pData } = await supabase
+          .from("postnatal_assessments")
+          .select("next_visit_date")
+          .eq("mother_id", motherId)
+          .not("next_visit_date", "is", null)
+          .order("created_at", { ascending: false })
+          .limit(1);
+
+        if (isMounted) {
+          if (pData && pData.length > 0) {
+            setNextVisit(pData[0].next_visit_date);
+          } else {
+            setNextVisit(null);
+          }
+        }
+      } catch (err) {
+        if (isMounted) {
+          console.error("Error loading assessments:", err);
+        }
+      } finally {
+        if (isMounted) {
+          setLoadingMotherAssessments(false);
+        }
+      }
+    };
+
     if (selected?.id) {
-      loadMotherAssessments(selected.id);
+      fetchMotherAssessments(selected.id);
     }
+
+    return () => {
+      isMounted = false;
+    };
   }, [selected]);
 
   const handleSetManualId = () => {

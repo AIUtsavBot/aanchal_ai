@@ -318,16 +318,101 @@ export default function DoctorDashboard() {
   };
 
   useEffect(() => {
+    let isMounted = true;
+
+    const fetchMothers = async () => {
+      if (!doctorId) return;
+      setLoading(true);
+      try {
+        // Get mothers assigned to this doctor
+        const { data } = await supabase
+          .from("mothers")
+          .select("*")
+          .eq("doctor_id", doctorId);
+
+        if (!isMounted) return;
+
+        const moms = data || [];
+        setMothers(moms);
+
+        // Load risk levels in a single batch query
+        if (moms.length > 0) {
+          const motherIds = moms.map(m => m.id);
+          const { data: allAssessments } = await supabase
+            .from("risk_assessments")
+            .select("mother_id, risk_level, created_at")
+            .in("mother_id", motherIds)
+            .order("created_at", { ascending: false });
+
+          if (!isMounted) return;
+
+          // Group by mother_id and get the latest for each
+          const risks = {};
+          (allAssessments || []).forEach(ra => {
+            if (!risks[ra.mother_id]) {
+              risks[ra.mother_id] = ra.risk_level;
+            }
+          });
+
+          // Set default LOW for mothers without assessments
+          moms.forEach(m => {
+            if (!risks[m.id]) {
+              risks[m.id] = "LOW";
+            }
+          });
+
+          setRiskMap(risks);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
     if (doctorId) {
-      loadMothers();
+      fetchMothers();
     }
+
+    return () => {
+      isMounted = false;
+    };
   }, [doctorId]);
 
   // Load assessments when mother is selected
   useEffect(() => {
+    let isMounted = true;
+
+    const fetchAssessments = async (motherId) => {
+      setLoadingAssessments(true);
+      try {
+        const { data, error } = await supabase
+          .from("risk_assessments")
+          .select("*")
+          .eq("mother_id", motherId)
+          .order("created_at", { ascending: false });
+
+        if (isMounted && !error) {
+          setAssessments(data || []);
+        }
+      } catch (err) {
+        if (isMounted) {
+          console.error("Error loading assessments:", err);
+        }
+      } finally {
+        if (isMounted) {
+          setLoadingAssessments(false);
+        }
+      }
+    };
+
     if (selected?.id) {
-      loadAssessments(selected.id);
+      fetchAssessments(selected.id);
     }
+
+    return () => {
+      isMounted = false;
+    };
   }, [selected]);
 
   const sorted = [...mothers]
