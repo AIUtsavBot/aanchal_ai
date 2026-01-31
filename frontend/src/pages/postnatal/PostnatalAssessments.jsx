@@ -642,6 +642,9 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
                                             key={i}
                                             className={`history-item ${expandedAssessment === i ? 'expanded' : ''}`}
                                             onClick={() => setExpandedAssessment(expandedAssessment === i ? null : i)}
+                                            onKeyDown={(e) => e.key === 'Enter' && setExpandedAssessment(expandedAssessment === i ? null : i)}
+                                            role="button"
+                                            tabIndex={0}
                                             style={{ cursor: 'pointer' }}
                                         >
                                             <div className="history-date">
@@ -1023,6 +1026,9 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
                                             key={i}
                                             className={`history-item ${expandedAssessment === i ? 'expanded' : ''}`}
                                             onClick={() => setExpandedAssessment(expandedAssessment === i ? null : i)}
+                                            onKeyDown={(e) => e.key === 'Enter' && setExpandedAssessment(expandedAssessment === i ? null : i)}
+                                            role="button"
+                                            tabIndex={0}
                                             style={{ cursor: 'pointer' }}
                                         >
                                             <div className="history-date">

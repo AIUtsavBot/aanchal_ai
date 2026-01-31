@@ -66,28 +66,20 @@ async def get_postnatal_mothers(
                 cached_data["cached"] = True
                 return cached_data
         
-        # Build query
-        query = supabase_admin.table("mothers").select("*").eq("status", status)
-        
-        if asha_worker_id:
-            query = query.eq("asha_worker_id", asha_worker_id)
-        if doctor_id:
-            query = query.eq("doctor_id", doctor_id)
-        
-        # Get total count
-        count_result = query.execute()
-        total = len(count_result.data) if count_result.data else 0
+        # Build query with count="exact" to get both data and total count in one request
+        query = supabase_admin.table("mothers").select("*", count="exact").eq("status", status)
 
-        # Apply pagination - rebuild query to avoid mutation issues
-        query = supabase_admin.table("mothers").select("*").eq("status", status)
         if asha_worker_id:
             query = query.eq("asha_worker_id", asha_worker_id)
         if doctor_id:
             query = query.eq("doctor_id", doctor_id)
+
+        # Apply pagination and execute - single query returns both data and count
         query = query.order("created_at", desc=True).range(offset, offset + limit - 1)
-
         mothers_result = query.execute()
+
         mothers = mothers_result.data or []
+        total = mothers_result.count or 0
         
         result = PostnatalMothersResponse(
             mothers=mothers,
@@ -158,28 +150,20 @@ async def get_postnatal_children(
             if not mother_ids:
                 return PostnatalChildrenResponse(children=[], total=0, has_more=False)
         
-        # Build children query
-        query = supabase_admin.table("children").select("*")
-        
-        if mother_id:
-            query = query.eq("mother_id", mother_id)
-        elif mother_ids:
-            query = query.in_("mother_id", mother_ids)
-        
-        # Get total count
-        count_result = query.execute()
-        total = len(count_result.data) if count_result.data else 0
+        # Build children query with count="exact" to get both data and total count in one request
+        query = supabase_admin.table("children").select("*", count="exact")
 
-        # Apply pagination - rebuild query to avoid mutation issues
-        query = supabase_admin.table("children").select("*")
         if mother_id:
             query = query.eq("mother_id", mother_id)
         elif mother_ids:
             query = query.in_("mother_id", mother_ids)
+
+        # Apply pagination and execute - single query returns both data and count
         query = query.order("birth_date", desc=True).range(offset, offset + limit - 1)
-
         children_result = query.execute()
+
         children = children_result.data or []
+        total = children_result.count or 0
         
         result = PostnatalChildrenResponse(
             children=children,

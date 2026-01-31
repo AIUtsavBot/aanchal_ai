@@ -424,6 +424,7 @@ async def get_postnatal_summary(mother_id: str):
             children_result = supabase.table("children") \
                 .select("*") \
                 .eq("mother_id", mother_id) \
+                .limit(20) \
                 .execute()
             summary["children"] = children_result.data or []
         except Exception:

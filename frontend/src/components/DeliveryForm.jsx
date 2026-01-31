@@ -390,6 +390,18 @@ export default function DeliveryForm({ doctorId, onSuccess }) {
                                         babyName: `Baby ${lastName}`
                                     }));
                                 }}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        setSelectedMother(mother);
+                                        const lastName = mother.name?.split(' ').pop() || '';
+                                        setFormData(prev => ({
+                                            ...prev,
+                                            babyName: `Baby ${lastName}`
+                                        }));
+                                    }
+                                }}
+                                role="button"
+                                tabIndex={0}
                                 className={`mother-card ${selectedMother?.id === mother.id ? 'selected' : ''}`}
                             >
                                 <div className="mother-avatar">

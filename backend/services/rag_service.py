@@ -41,9 +41,11 @@ except ImportError:
 
 # Import Supabase
 try:
-    from supabase import create_client, Client
+    from supabase import Client
+    from services.supabase_service import supabase as shared_supabase
     SUPABASE_AVAILABLE = True
 except ImportError:
+    shared_supabase = None
     SUPABASE_AVAILABLE = False
     logger.warning("⚠️ Supabase not available")
 
@@ -89,16 +91,13 @@ class HybridRAGService:
         self.supabase: Optional[Client] = None
         self._initialized = False
         self._embeddings_loaded = False
-        
-        # Initialize Supabase client
-        supabase_url = os.getenv("SUPABASE_URL")
-        supabase_key = os.getenv("SUPABASE_KEY")
-        
-        if supabase_url and supabase_key:
-            self.supabase = create_client(supabase_url, supabase_key)
-            logger.info("✅ Supabase client initialized for RAG")
+
+        # Use shared Supabase client
+        if shared_supabase:
+            self.supabase = shared_supabase
+            logger.info("✅ Using shared Supabase client for RAG")
         else:
-            logger.warning("⚠️ Supabase credentials not found")
+            logger.warning("⚠️ Supabase client not available")
         
     def _find_csv(self) -> str:
         """Find the maternal health CSV file"""

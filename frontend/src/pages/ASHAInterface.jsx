@@ -783,6 +783,14 @@ export default function ASHAInterface() {
                     setSelected(m);
                     setMainView("mother");
                   }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      setSelected(m);
+                      setMainView("mother");
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
                   className={`p-3 rounded-lg border cursor-pointer transition-all ${selected?.id === m.id
                     ? "border-green-500 bg-green-50"
                     : "border-gray-200 hover:border-green-300"
@@ -1353,6 +1361,14 @@ export default function ASHAInterface() {
                                 setSelectedAssessment(a);
                                 setMainView("assessment-detail");
                               }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  setSelectedAssessment(a);
+                                  setMainView("assessment-detail");
+                                }
+                              }}
+                              role="button"
+                              tabIndex={0}
                               className="p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 flex justify-between items-center"
                             >
                               <div>

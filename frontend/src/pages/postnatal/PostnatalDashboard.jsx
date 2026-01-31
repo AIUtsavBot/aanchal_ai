@@ -203,7 +203,13 @@ export const PostnatalDashboard = ({ ashaWorkerId, doctorId, userRole }) => {
 
             {/* Stats Grid */}
             <div className="stats-grid">
-                <div className="stat-card" onClick={() => setActiveTab('children')}>
+                <div
+                    className="stat-card"
+                    onClick={() => setActiveTab('children')}
+                    onKeyDown={(e) => e.key === 'Enter' && setActiveTab('children')}
+                    role="button"
+                    tabIndex={0}
+                >
                     <div className="stat-icon mothers">👩‍👧</div>
                     <div className="stat-content">
                         <h3>DELIVERED MOTHERS</h3>
@@ -212,7 +218,13 @@ export const PostnatalDashboard = ({ ashaWorkerId, doctorId, userRole }) => {
                     </div>
                 </div>
 
-                <div className="stat-card" onClick={() => setActiveTab('children')}>
+                <div
+                    className="stat-card"
+                    onClick={() => setActiveTab('children')}
+                    onKeyDown={(e) => e.key === 'Enter' && setActiveTab('children')}
+                    role="button"
+                    tabIndex={0}
+                >
                     <div className="stat-icon children">👶</div>
                     <div className="stat-content">
                         <h3>CHILDREN REGISTERED</h3>
@@ -221,7 +233,13 @@ export const PostnatalDashboard = ({ ashaWorkerId, doctorId, userRole }) => {
                     </div>
                 </div>
 
-                <div className="stat-card vaccines" onClick={() => setActiveTab('vaccines')}>
+                <div
+                    className="stat-card vaccines"
+                    onClick={() => setActiveTab('vaccines')}
+                    onKeyDown={(e) => e.key === 'Enter' && setActiveTab('vaccines')}
+                    role="button"
+                    tabIndex={0}
+                >
                     <div className="stat-icon vaccines">💉</div>
                     <div className="stat-content">
                         <h3>VACCINES DUE</h3>
@@ -230,7 +248,13 @@ export const PostnatalDashboard = ({ ashaWorkerId, doctorId, userRole }) => {
                     </div>
                 </div>
 
-                <div className="stat-card growth" onClick={() => setActiveTab('growth')}>
+                <div
+                    className="stat-card growth"
+                    onClick={() => setActiveTab('growth')}
+                    onKeyDown={(e) => e.key === 'Enter' && setActiveTab('growth')}
+                    role="button"
+                    tabIndex={0}
+                >
                     <div className="stat-icon growth">📊</div>
                     <div className="stat-content">
                         <h3>GROWTH ALERTS</h3>

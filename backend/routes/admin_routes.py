@@ -113,9 +113,9 @@ async def get_admin_full_data(current_user: dict = Depends(require_admin)):
                 return cached_data
         
         # Fetch all data in parallel (all queries at once)
-        mothers_result = supabase_admin.table("mothers").select("id,name,phone,age,location,doctor_id,asha_worker_id").order("name").execute()
-        doctors_result = supabase_admin.table("doctors").select("*").order("name").execute()
-        asha_result = supabase_admin.table("asha_workers").select("*").order("name").execute()
+        mothers_result = supabase_admin.table("mothers").select("id,name,phone,age,location,doctor_id,asha_worker_id").order("name").limit(1000).execute()
+        doctors_result = supabase_admin.table("doctors").select("*").order("name").limit(500).execute()
+        asha_result = supabase_admin.table("asha_workers").select("*").order("name").limit(500).execute()
         pending_users = supabase_admin.table("user_profiles").select("id", count="exact").is_("role", "null").execute()
         
         mothers = mothers_result.data or []
@@ -186,11 +186,11 @@ async def list_doctors(current_user: dict = Depends(require_admin)):
                 return cached_data
         
         # Get all doctors
-        doctors_result = supabase_admin.table("doctors").select("*").order("name").execute()
+        doctors_result = supabase_admin.table("doctors").select("*").order("name").limit(500).execute()
         doctors = doctors_result.data or []
-        
+
         # Get ALL mothers with doctor_id in ONE query (avoid N+1)
-        mothers_result = supabase_admin.table("mothers").select("doctor_id").execute()
+        mothers_result = supabase_admin.table("mothers").select("doctor_id").limit(10000).execute()
         
         # Count in memory
         doctor_counts = {}
@@ -228,7 +228,7 @@ async def get_doctor_details(doctor_id: int, current_user: dict = Depends(requir
         doctor = doctor_result.data
         
         # Get assigned mothers
-        mothers = supabase_admin.table("mothers").select("*").eq("doctor_id", doctor_id).execute()
+        mothers = supabase_admin.table("mothers").select("*").eq("doctor_id", doctor_id).limit(500).execute()
         doctor["assigned_mothers"] = mothers.data or []
         
         return {"success": True, "doctor": doctor}
@@ -299,11 +299,11 @@ async def list_asha_workers(current_user: dict = Depends(require_admin)):
                 return cached_data
         
         # Get all ASHA workers
-        asha_result = supabase_admin.table("asha_workers").select("*").order("name").execute()
+        asha_result = supabase_admin.table("asha_workers").select("*").order("name").limit(500).execute()
         asha_workers = asha_result.data or []
-        
+
         # Get ALL mothers with asha_worker_id in ONE query (avoid N+1)
-        mothers_result = supabase_admin.table("mothers").select("asha_worker_id").execute()
+        mothers_result = supabase_admin.table("mothers").select("asha_worker_id").limit(10000).execute()
         
         # Count in memory
         asha_counts = {}
@@ -341,7 +341,7 @@ async def get_asha_worker_details(asha_id: int, current_user: dict = Depends(req
         asha = asha_result.data
         
         # Get assigned mothers
-        mothers = supabase_admin.table("mothers").select("*").eq("asha_worker_id", asha_id).execute()
+        mothers = supabase_admin.table("mothers").select("*").eq("asha_worker_id", asha_id).limit(500).execute()
         asha["assigned_mothers"] = mothers.data or []
         
         return {"success": True, "asha_worker": asha}
@@ -409,12 +409,12 @@ async def list_mothers(current_user: dict = Depends(require_admin)):
                 return cached_data
         
         # Get all mothers with doctor and ASHA worker info
-        mothers_result = supabase_admin.table("mothers").select("*").order("name").execute()
+        mothers_result = supabase_admin.table("mothers").select("*").order("name").limit(1000).execute()
         mothers = mothers_result.data or []
-        
+
         # Get doctor and ASHA worker names for each mother
-        doctors = {d["id"]: d for d in (supabase_admin.table("doctors").select("id, name").execute().data or [])}
-        asha_workers = {a["id"]: a for a in (supabase_admin.table("asha_workers").select("id, name").execute().data or [])}
+        doctors = {d["id"]: d for d in (supabase_admin.table("doctors").select("id, name").limit(500).execute().data or [])}
+        asha_workers = {a["id"]: a for a in (supabase_admin.table("asha_workers").select("id, name").limit(500).execute().data or [])}
         
         for mother in mothers:
             mother["doctor_name"] = doctors.get(mother.get("doctor_id"), {}).get("name", "Unassigned")

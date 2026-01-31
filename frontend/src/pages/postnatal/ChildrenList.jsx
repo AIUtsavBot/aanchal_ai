@@ -103,7 +103,14 @@ export const ChildrenList = ({ ashaWorkerId }) => {
             ) : (
                 <div className="children-grid">
                     {filteredChildren.map(child => (
-                        <div key={child.id} className="child-card" onClick={() => setSelectedChild(child)}>
+                        <div
+                            key={child.id}
+                            className="child-card"
+                            onClick={() => setSelectedChild(child)}
+                            onKeyDown={(e) => e.key === 'Enter' && setSelectedChild(child)}
+                            role="button"
+                            tabIndex={0}
+                        >
                             <div className="child-avatar">
                                 {child.gender === 'female' ? '👧' : '👦'}
                             </div>

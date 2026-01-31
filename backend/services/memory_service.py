@@ -9,20 +9,16 @@ from typing import Dict, List, Optional
 from datetime import datetime
 import json
 from google import genai
-from supabase import create_client
+from services.supabase_service import supabase
 
 logger = logging.getLogger(__name__)
 
-# Initialize clients
+# Initialize Gemini client
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
 gemini_client = None
 if GEMINI_API_KEY:
     gemini_client = genai.Client(api_key=GEMINI_API_KEY)
-
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY) if SUPABASE_URL and SUPABASE_KEY else None
 
 
 class GeminiService:

@@ -61,7 +61,7 @@ async def list_webhooks(current_user: dict = Depends(get_current_user)):
     if current_user.get("role") != "ADMIN":
         raise HTTPException(403, "Unauthorized")
         
-    res = supabase.table("webhooks").select("*").execute()
+    res = supabase.table("webhooks").select("*").limit(100).execute()
     return res.data or []
 
 @router.delete("/{webhook_id}")

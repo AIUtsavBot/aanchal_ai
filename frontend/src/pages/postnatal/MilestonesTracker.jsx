@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../services/auth.js';
 import { Target, Check, Clock, AlertCircle, Baby, Brain, Hand, MessageCircle, Heart, Loader } from 'lucide-react';
 import './PostnatalPages.css';
@@ -95,6 +95,9 @@ export const MilestonesTracker = ({ ashaWorkerId }) => {
     const [expandedAge, setExpandedAge] = useState(null);
     const [togglingMilestone, setTogglingMilestone] = useState(null);
 
+    // Ref to track pending operations synchronously (prevents race conditions from rapid clicks)
+    const pendingToggles = useRef(new Set());
+
     useEffect(() => {
         let isMounted = true;
 
@@ -183,6 +186,14 @@ export const MilestonesTracker = ({ ashaWorkerId }) => {
 
     const toggleMilestone = async (childId, milestone) => {
         const key = `${childId}-${milestone.name}`;
+
+        // Check ref synchronously to prevent race conditions from rapid clicks
+        if (pendingToggles.current.has(key)) {
+            return;
+        }
+
+        // Add to pending set immediately (synchronous)
+        pendingToggles.current.add(key);
         setTogglingMilestone(key);
 
         try {
@@ -214,6 +225,7 @@ export const MilestonesTracker = ({ ashaWorkerId }) => {
             // Fallback to direct Supabase
             await fallbackToggleMilestone(childId, milestone);
         } finally {
+            pendingToggles.current.delete(key);
             setTogglingMilestone(null);
         }
     };

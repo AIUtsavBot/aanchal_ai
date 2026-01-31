@@ -264,7 +264,13 @@ export const VaccinationCalendar = ({ ashaWorkerId }) => {
                 <div className="vaccination-list">
                     {children.map(child => (
                         <div key={child.id} className="child-vaccine-card">
-                            <div className="child-header" onClick={() => setSelectedChild(selectedChild === child.id ? null : child.id)}>
+                            <div
+                                className="child-header"
+                                onClick={() => setSelectedChild(selectedChild === child.id ? null : child.id)}
+                                onKeyDown={(e) => e.key === 'Enter' && setSelectedChild(selectedChild === child.id ? null : child.id)}
+                                role="button"
+                                tabIndex={0}
+                            >
                                 <div className="child-info">
                                     <span className="avatar">{child.gender === 'female' ? '👧' : '👦'}</span>
                                     <div>

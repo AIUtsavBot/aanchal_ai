@@ -101,7 +101,8 @@ class DatabaseService:
             if chosen:
                 supabase.table('mothers').update({'doctor_id': chosen.get('id')}).eq('id', mother_id).execute()
             return chosen
-        except Exception:
+        except Exception as e:
+            logger.error(f"Error in assign_doctor_to_mother: {e}")
             return None
 
     @staticmethod
@@ -109,7 +110,8 @@ class DatabaseService:
         try:
             supabase.table('appointments').update({'status': status}).eq('id', appointment_id).execute()
             return True
-        except Exception:
+        except Exception as e:
+            logger.error(f"Error in update_appointment_status: {e}")
             return False
 
     @staticmethod
@@ -125,7 +127,8 @@ class DatabaseService:
             }
             resp = supabase.table('appointments').insert(payload).execute()
             return resp.data[0] if resp.data else None
-        except Exception:
+        except Exception as e:
+            logger.error(f"Error in schedule_appointment: {e}")
             return None
 
     @staticmethod
@@ -361,7 +364,8 @@ class DatabaseService:
             if chosen:
                 supabase.table('mothers').update({'asha_worker_id': chosen.get('id')}).eq('id', mother_id).execute()
             return chosen
-        except Exception:
+        except Exception as e:
+            logger.error(f"Error in assign_asha_worker_to_mother: {e}")
             return None
 
     @staticmethod
@@ -376,7 +380,8 @@ class DatabaseService:
             }
             resp = supabase.table('case_discussions').insert(payload).execute()
             return resp.data[0] if resp.data else None
-        except Exception:
+        except Exception as e:
+            logger.error(f"Error in send_case_message: {e}")
             return None
 
     @staticmethod
@@ -384,9 +389,10 @@ class DatabaseService:
         try:
             resp = supabase.table('case_discussions').select('*').eq('mother_id', mother_id).order('created_at', desc=True).limit(limit).execute()
             return resp.data or []
-        except Exception:
+        except Exception as e:
+            logger.error(f"Error in get_case_messages: {e}")
             return []
-    
+
     @staticmethod
     def get_mother_profile(mother_id: str) -> Optional[Dict]:
         """Get mother's complete profile"""

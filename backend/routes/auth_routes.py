@@ -340,8 +340,8 @@ async def get_all_users(current_user: dict = Depends(require_admin)):
     try:
         # Get all users from user_profiles table
         from backend.services.supabase_service import supabase
-        
-        result = supabase.table("user_profiles").select("*").execute()
+
+        result = supabase.table("user_profiles").select("*").limit(1000).execute()
         
         return {
             "success": True,
@@ -518,7 +518,7 @@ async def get_pending_users(current_user: dict = Depends(require_admin)):
     Get users with null role (pending approval) - Alias for frontend compatibility
     """
     try:
-        result = supabase_admin.table("user_profiles").select("*").is_("role", "null").execute()
+        result = supabase_admin.table("user_profiles").select("*").is_("role", "null").limit(500).execute()
         return {
             "success": True,
             "count": len(result.data) if result.data else 0,

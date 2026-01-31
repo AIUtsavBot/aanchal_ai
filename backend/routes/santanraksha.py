@@ -359,6 +359,7 @@ async def get_child_vaccinations(
             .select("*") \
             .eq("child_id", child_id) \
             .order("due_date", desc=False) \
+            .limit(100) \
             .execute()
         
         response = {
@@ -437,6 +438,7 @@ async def initialize_vaccination_schedule(
         existing = supabase.table("vaccinations") \
             .select("vaccine_name") \
             .eq("child_id", child_id) \
+            .limit(100) \
             .execute()
         existing_names = [v['vaccine_name'] for v in (existing.data or [])]
         
@@ -860,6 +862,7 @@ async def get_child_milestones(
             .eq("child_id", child_id) \
             .eq("is_achieved", True) \
             .order("achieved_date", desc=True) \
+            .limit(100) \
             .execute()
         
         # Group by category
@@ -1039,6 +1042,7 @@ async def get_child_dashboard(child_id: str):
         vax_result = supabase.table("vaccinations") \
             .select("status") \
             .eq("child_id", child_id) \
+            .limit(100) \
             .execute()
         
         completed_vaccines = len([v for v in (vax_result.data or []) if v['status'] == 'completed'])
@@ -1049,6 +1053,7 @@ async def get_child_dashboard(child_id: str):
         milestone_result = supabase.table("milestones") \
             .select("id") \
             .eq("child_id", child_id) \
+            .limit(100) \
             .execute()
         
         return {

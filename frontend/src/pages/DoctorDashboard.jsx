@@ -644,6 +644,9 @@ export default function DoctorDashboard() {
                   <div
                     key={m.id}
                     onClick={() => setSelected(m)}
+                    onKeyDown={(e) => e.key === 'Enter' && setSelected(m)}
+                    role="button"
+                    tabIndex={0}
                     className={`p-4 rounded-lg border-2 cursor-pointer transition-all transform hover:scale-102 ${selected?.id === m.id
                       ? "border-blue-600 bg-blue-50 shadow-md"
                       : `border-gray-200 ${getRiskColor(risk)}`

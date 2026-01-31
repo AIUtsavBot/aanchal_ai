@@ -7,16 +7,9 @@ import httpx
 import asyncio
 from datetime import datetime
 from typing import Dict, Any, List
+from services.supabase_service import supabase
 
 logger = logging.getLogger(__name__)
-
-# Try to import supabase
-try:
-    from services.supabase_service import supabase
-except ImportError:
-    from supabase import create_client
-    import os
-    supabase = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_SERVICE_KEY"))
 
 class WebhookService:
     """Service to manage and dispatch webhooks"""
