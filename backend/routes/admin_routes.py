@@ -124,7 +124,7 @@ async def get_admin_full_data(current_user: dict = Depends(require_admin)):
                 return cached_data
         
         # Fetch all data in parallel (all queries at once)
-        mothers_result = supabase_admin.table("mothers").select("id,name,phone,age,location,doctor_id,asha_worker_id").order("name").limit(1000).execute()
+        mothers_result = supabase_admin.table("mothers").select("id,name,phone,age,location,doctor_id,asha_worker_id,delivery_status").order("name").limit(1000).execute()
         doctors_result = supabase_admin.table("doctors").select("*").order("name").limit(500).execute()
         asha_result = supabase_admin.table("asha_workers").select("*").order("name").limit(500).execute()
         pending_users = supabase_admin.table("user_profiles").select("id", count="exact").is_("role", "null").execute()

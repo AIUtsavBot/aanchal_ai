@@ -304,7 +304,7 @@ export default function AdminDashboard() {
     const matchesSearch = m.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       m.phone?.includes(searchTerm) ||
       m.location?.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = motherStatusFilter === 'all' || m.status === motherStatusFilter
+    const matchesStatus = motherStatusFilter === 'all' || m.delivery_status === motherStatusFilter
     return matchesSearch && matchesStatus
   })
 
@@ -856,13 +856,13 @@ export default function AdminDashboard() {
                               <td className="px-4 py-3 text-gray-600">{mother.phone}</td>
                               <td className="px-4 py-3 text-gray-600">{mother.location || '-'}</td>
                               <td className="px-4 py-3">
-                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${mother.status === 'pregnant' ? 'bg-pink-100 text-pink-700' :
-                                  mother.status === 'delivered' ? 'bg-green-100 text-green-700' :
-                                    'bg-gray-100 text-gray-600'
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${mother.delivery_status === 'pregnant' ? 'bg-pink-100 text-pink-700' :
+                                    mother.delivery_status === 'delivered' ? 'bg-green-100 text-green-700' :
+                                      'bg-gray-100 text-gray-600'
                                   }`}>
-                                  {mother.status === 'pregnant' ? '🤰 Pregnant' :
-                                    mother.status === 'delivered' ? '✅ Delivered' :
-                                      mother.status || 'Unknown'}
+                                  {mother.delivery_status === 'pregnant' ? '🤰 Pregnant' :
+                                    mother.delivery_status === 'delivered' ? '✅ Delivered' :
+                                      mother.delivery_status || 'Unknown'}
                                 </span>
                               </td>
                               <td className="px-4 py-3">
