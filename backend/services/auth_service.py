@@ -115,7 +115,7 @@ class AuthService:
         role: str,
         phone: Optional[str] = None,
         assigned_area: Optional[str] = None,
-        assigned_area: Optional[str] = None,
+
         degree_cert_url: Optional[str] = None,
         id_info: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:

@@ -356,14 +356,7 @@ Return ONLY valid JSON:
                 lines.append(f"   - Ask if the current issue is related to the previous one")
                 lines.append(f"   - Ask if previous advice helped")
         
-        lines.append("\n🔹 QUESTIONING PROTOCOL:")
-        lines.append("   1. Do NOT immediately prescribe or advise")
-        lines.append("   2. First ask 1-2 clarifying questions about:")
-        lines.append("      - Duration (कितने दिन से? / किती दिवसांपासून?)")
-        lines.append("      - Severity (कितना तेज़? / किती तीव्र?)")
-        lines.append("      - What makes it better/worse")
-        lines.append("   3. If recurring, ask about previous treatment effectiveness")
-        lines.append("   4. Only after gathering info, provide advice")
+
         
         return "\n".join(lines)
     
