@@ -308,6 +308,7 @@ async def create_register_request(request: RegisterRequest):
             role=request.role,
             phone=request.phone,
             assigned_area=request.assigned_area,
+
             degree_cert_url=request.degree_cert_url,
             id_info=meta_info if meta_info else None
         )
