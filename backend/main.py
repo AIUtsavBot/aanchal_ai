@@ -621,6 +621,8 @@ ALLOWED_ORIGINS = [
     # Production URLs
     "https://matru-raksha-ai-event.vercel.app",
     "https://matruraksha-ai-event.onrender.com",
+    "https://aanchal-ai.vercel.app",
+    "https://aanchal-ai.vercel.app/",
 ]
 
 app.add_middleware(
