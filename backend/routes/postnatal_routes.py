@@ -75,13 +75,18 @@ async def get_postnatal_mothers(
             query = query.eq("doctor_id", doctor_id)
         
         # Get total count
-        count_result = await query.execute()
+        count_result = query.execute()
         total = len(count_result.data) if count_result.data else 0
-        
-        # Apply pagination
+
+        # Apply pagination - rebuild query to avoid mutation issues
+        query = supabase_admin.table("mothers").select("*").eq("status", status)
+        if asha_worker_id:
+            query = query.eq("asha_worker_id", asha_worker_id)
+        if doctor_id:
+            query = query.eq("doctor_id", doctor_id)
         query = query.order("created_at", desc=True).range(offset, offset + limit - 1)
-        
-        mothers_result = await query.execute()
+
+        mothers_result = query.execute()
         mothers = mothers_result.data or []
         
         result = PostnatalMothersResponse(
@@ -147,7 +152,7 @@ async def get_postnatal_children(
             if doctor_id:
                 mothers_query = mothers_query.eq("doctor_id", doctor_id)
             
-            mothers_result = await mothers_query.execute()
+            mothers_result = mothers_query.execute()
             mother_ids = [m["id"] for m in (mothers_result.data or [])]
             
             if not mother_ids:
@@ -162,13 +167,18 @@ async def get_postnatal_children(
             query = query.in_("mother_id", mother_ids)
         
         # Get total count
-        count_result = await query.execute()
+        count_result = query.execute()
         total = len(count_result.data) if count_result.data else 0
-        
-        # Apply pagination
+
+        # Apply pagination - rebuild query to avoid mutation issues
+        query = supabase_admin.table("children").select("*")
+        if mother_id:
+            query = query.eq("mother_id", mother_id)
+        elif mother_ids:
+            query = query.in_("mother_id", mother_ids)
         query = query.order("birth_date", desc=True).range(offset, offset + limit - 1)
-        
-        children_result = await query.execute()
+
+        children_result = query.execute()
         children = children_result.data or []
         
         result = PostnatalChildrenResponse(
@@ -218,7 +228,7 @@ async def create_mother_assessment(
         assessment_data["created_at"] = datetime.utcnow().isoformat()
         
         # Insert into database
-        result = await supabase_admin.table("postnatal_assessments").insert(assessment_data).execute()
+        result = supabase_admin.table("postnatal_assessments").insert(assessment_data).execute()
         
         if not result.data:
             raise HTTPException(
@@ -273,7 +283,7 @@ async def create_child_assessment(
         assessment_data["created_at"] = datetime.utcnow().isoformat()
         
         # Insert into database
-        result = await supabase_admin.table("postnatal_assessments").insert(assessment_data).execute()
+        result = supabase_admin.table("postnatal_assessments").insert(assessment_data).execute()
         
         if not result.data:
             raise HTTPException(
@@ -339,17 +349,17 @@ async def get_assessment_history(
         
         query = query.order("assessment_date", desc=True).limit(limit)
         
-        assessments_result = await query.execute()
+        assessments_result = query.execute()
         assessments = assessments_result.data or []
         
         # Get mother info
-        mother_result = await supabase_admin.table("mothers").select("*").eq("id", mother_id).single().execute()
+        mother_result = supabase_admin.table("mothers").select("*").eq("id", mother_id).single().execute()
         mother_info = mother_result.data if mother_result.data else None
         
         # Get child info if specified
         child_info = None
         if child_id:
-            child_result = await supabase_admin.table("children").select("*").eq("id", child_id).single().execute()
+            child_result = supabase_admin.table("children").select("*").eq("id", child_id).single().execute()
             child_info = child_result.data if child_result.data else None
         
         result = AssessmentHistoryResponse(
