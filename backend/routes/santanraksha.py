@@ -20,6 +20,9 @@ import math
 import os
 from supabase import create_client
 
+# Initialize logger early to avoid NameError in import error handlers
+logger = logging.getLogger(__name__)
+
 supabase = create_client(
     os.getenv("SUPABASE_URL", ""),
     os.getenv("SUPABASE_SERVICE_KEY", "")
@@ -64,7 +67,6 @@ except ImportError as e:
     async def verify_mother_access(*args, **kwargs):
         raise HTTPException(status_code=500, detail="Access control not configured")
 
-logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/santanraksha", tags=["SantanRaksha"])
 
 
