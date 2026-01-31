@@ -4,8 +4,24 @@ Test rate limiting functionality
 """
 
 import pytest
+import os
+
+# Set test environment BEFORE importing app
+os.environ["TESTING"] = "true"
+os.environ.setdefault("SUPABASE_URL", "https://test.supabase.co")
+os.environ.setdefault("SUPABASE_KEY", "test-key")
+os.environ.setdefault("SUPABASE_SERVICE_KEY", "test-service-key")
+os.environ.setdefault("GEMINI_API_KEY", "test-key")
+
 from fastapi.testclient import TestClient
-import time
+from main import app
+
+
+@pytest.fixture
+def client():
+    """Create test client"""
+    with TestClient(app) as c:
+        yield c
 
 
 @pytest.mark.unit
@@ -25,7 +41,7 @@ def test_rate_limit_blocks_excessive_requests(client: TestClient):
     for _ in range(250):  # Exceed default 200/hour limit
         response = client.get("/health")
         responses.append(response.status_code)
-    
+
     # At least one should be rate limited (429)
     assert 429 in responses
 
@@ -38,12 +54,12 @@ def test_rate_limit_response_format(client: TestClient):
         response = client.get("/health")
         if response.status_code == 429:
             data = response.json()
-            
+
             # Check error structure
             assert "error" in data
             assert data["error"]["code"] == "RATE_LIMIT_EXCEEDED"
             assert "message" in data["error"]
-            
+
             # Check retry-after header
             assert "Retry-After" in response.headers
             break
@@ -53,7 +69,7 @@ def test_rate_limit_response_format(client: TestClient):
 def test_rate_limit_includes_headers(client: TestClient):
     """Test rate limit headers are included"""
     response = client.get("/health")
-    
+
     # SlowAPI should add rate limit headers
     # (exact headers depend on SlowAPI configuration)
     assert response.status_code in [200, 429]
