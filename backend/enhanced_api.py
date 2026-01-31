@@ -159,7 +159,7 @@ async def parse_voice_vitals(request: VitalsParseRequest):
         """
         
         response = gemini_client.models.generate_content(
-            model='gemini-2.0-flash-exp', 
+            model='gemini-2.5-flash', 
             contents=prompt,
             config={
                 'response_mime_type': 'application/json'

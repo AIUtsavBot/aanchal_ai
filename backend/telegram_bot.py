@@ -881,7 +881,7 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
             
             try:
                 from google import genai
-                TRANSCRIPTION_MODEL = "gemini-2.0-flash-exp" # Faster for audio
+                TRANSCRIPTION_MODEL = "gemini-2.5-flash" # Faster for audio
                 if not os.getenv("GEMINI_API_KEY"):
                     raise ValueError("No Gemini API Key")
                 

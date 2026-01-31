@@ -19,10 +19,14 @@ const Signup = () => {
   });
   const [degreeFile, setDegreeFile] = useState(null);
   const [idFile, setIdFile] = useState(null);      // ASHA ID document
+  const [idDocUrl, setIdDocUrl] = useState(null);  // URL of uploaded ID document
   const [idValidation, setIdValidation] = useState(null);  // ID validation result
+  const [certValidation, setCertValidation] = useState(null); // Doctor cert validation result
+  const [nameMatch, setNameMatch] = useState(null); // Name matching result
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [validatingId, setValidatingId] = useState(false);
+  const [validatingCert, setValidatingCert] = useState(false);
   const [success, setSuccess] = useState(false);
   const [countdown, setCountdown] = useState(5);
 
@@ -43,12 +47,46 @@ const Signup = () => {
     }
   }, [success, navigate]);
 
+  // Function to check if names match (case-insensitive, handling common variations)
+  const checkNameMatch = (formName, docName) => {
+    if (!formName || !docName) {
+      setNameMatch(null);
+      return;
+    }
+    const normalizedFormName = formName.toLowerCase().replace(/[^a-z\s]/g, '').trim();
+    const normalizedDocName = docName.toLowerCase().replace(/[^a-z\s]/g, '').trim();
+
+    // Check direct match or if one contains the other (handles middle names, initials)
+    const isMatch = normalizedFormName === normalizedDocName ||
+      normalizedDocName.includes(normalizedFormName) ||
+      normalizedFormName.includes(normalizedDocName);
+
+    setNameMatch({
+      match: isMatch,
+      formName: formName,
+      docName: docName,
+      message: isMatch
+        ? `✅ Name matches ID document`
+        : `⚠️ Name mismatch: Form says "${formName}" but ID shows "${docName}". Please use the name exactly as on your ID.`
+    });
+  };
+
   const handleChange = (e) => {
-    setFormData({
+    const newFormData = {
       ...formData,
       [e.target.name]: e.target.value,
-    });
+    };
+    setFormData(newFormData);
     setError("");
+
+    // Re-check name match when fullName changes
+    if (e.target.name === 'fullName') {
+      if (formData.role === 'ASHA_WORKER' && idValidation?.info?.full_name) {
+        checkNameMatch(e.target.value, idValidation.info.full_name);
+      } else if (formData.role === 'DOCTOR' && certValidation?.info?.doctor_name) {
+        checkNameMatch(e.target.value, certValidation.info.doctor_name);
+      }
+    }
   };
 
   // Handle ASHA ID document upload and validation
@@ -65,16 +103,24 @@ const Signup = () => {
       // Validate ID document (includes hidden age check on backend)
       const res = await certificateAPI.validateAshaID(file);
       if (res?.data?.success && res?.data?.eligible) {
+        const docName = res.data.id_info?.full_name || '';
         setIdValidation({
           valid: true,
           info: res.data.id_info,
-          message: `✅ ID verified: ${res.data.id_info?.full_name}`
+          message: `✅ ID verified: ${docName}`
         });
+        // Store the document URL if provided
+        if (res.data.id_doc_url) {
+          setIdDocUrl(res.data.id_doc_url);
+        }
+        // Check name matching
+        checkNameMatch(formData.fullName, docName);
       } else {
         setIdValidation({
           valid: false,
           message: res?.data?.error || "ID validation failed"
         });
+        setNameMatch(null);
       }
     } catch (err) {
       const errorMsg = err.response?.data?.detail || err.message || "Failed to validate ID";
@@ -83,8 +129,55 @@ const Signup = () => {
         message: errorMsg
       });
       setError(errorMsg);
+      setNameMatch(null);
     } finally {
       setValidatingId(false);
+    }
+  };
+
+  // Handle Doctor Certificate upload and validation
+  const handleDegreeFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setDegreeFile(file);
+    setCertValidation(null);
+    setValidatingCert(true);
+    setError("");
+
+    try {
+      // Parse certificate to extract name
+      const res = await certificateAPI.parseCertificate(file);
+      if (res?.data?.parsed_data) {
+        const docName = res.data.parsed_data.doctor_name || '';
+
+        // Basic validation - must have a name
+        if (docName && docName !== 'Unknown') {
+          setCertValidation({
+            valid: true,
+            info: res.data.parsed_data,
+            message: `✅ Certificate parsed: ${docName}`
+          });
+          // Check name matching
+          checkNameMatch(formData.fullName, docName);
+        } else {
+          setCertValidation({
+            valid: false,
+            message: "Could not extract name from certificate. Please ensure it's clear."
+          });
+          setNameMatch(null);
+        }
+      }
+    } catch (err) {
+      console.error("Certificate parsing error:", err);
+      // Don't block upload on parsing error, but warn
+      setCertValidation({
+        valid: true, // Allow upload even if parsing fails
+        info: null,
+        message: "⚠️ Could not auto-read certificate details (Manual review required)"
+      });
+    } finally {
+      setValidatingCert(false);
     }
   };
 
@@ -118,16 +211,42 @@ const Signup = () => {
         setLoading(false);
         return;
       }
+      // Check name match
+      if (nameMatch && !nameMatch.match) {
+        setError(`Name mismatch: Your name "${formData.fullName}" doesn't match the ID document name "${nameMatch.docName}". Please use the name exactly as shown on your ID.`);
+        setLoading(false);
+        return;
+      }
     }
 
     try {
       let degreeUrl = null;
+      let uploadedIdDocUrl = null;
+
+      // Upload ID document for ASHA worker
+      if (formData.role === "ASHA_WORKER" && idFile) {
+        try {
+          const idUpload = await authAPI.uploadCertification(formData.email, idFile);
+          uploadedIdDocUrl = idUpload?.data?.public_url || null;
+        } catch (uploadErr) {
+          console.warn("ID document upload failed, continuing with validation info:", uploadErr);
+        }
+      }
+
       if (formData.role === "DOCTOR") {
         if (!degreeFile) {
           setError("Please upload your degree certification");
           setLoading(false);
           return;
         }
+
+        // Name matching check for doctors (using parsed certificate)
+        if (certValidation?.valid && nameMatch && !nameMatch.match) {
+          setError(`Name mismatch: Your name "${formData.fullName}" doesn't match the name on the certificate "${nameMatch.docName}". Please use the name exactly as shown on your certificate.`);
+          setLoading(false);
+          return;
+        }
+
         const up = await authAPI.uploadCertification(
           formData.email,
           degreeFile
@@ -144,7 +263,21 @@ const Signup = () => {
         assigned_area: formData.assignedArea,
         degree_cert_url: degreeUrl,
         // Include parsed ID info for admin review (ASHA workers)
-        id_info: formData.role === "ASHA_WORKER" && idValidation?.info ? idValidation.info : null,
+        id_info: formData.role === "ASHA_WORKER" && idValidation?.info ? {
+          ...idValidation.info,
+          name_verified: nameMatch?.match || false,
+          form_name: formData.fullName,
+          document_name: idValidation?.info?.full_name
+        } : null,
+        // Include parsed Certificate info for admin review (Doctors)
+        document_metadata: formData.role === "DOCTOR" && certValidation?.info ? {
+          ...certValidation.info,
+          name_verified: nameMatch?.match || false,
+          form_name: formData.fullName,
+          document_name: certValidation?.info?.doctor_name
+        } : null,
+        // Include ID document URL for admin to view
+        id_doc_url: uploadedIdDocUrl,
       };
 
       const res = await authAPI.createRegisterRequest(payload);
@@ -303,6 +436,15 @@ const Signup = () => {
                     {idValidation.message}
                   </p>
                 )}
+                {/* Name Match Status */}
+                {nameMatch && idValidation?.valid && (
+                  <div className={`mt-2 p-2 rounded-lg text-sm ${nameMatch.match
+                    ? 'bg-green-50 text-green-700 border border-green-200'
+                    : 'bg-yellow-50 text-yellow-700 border border-yellow-200'
+                    }`}>
+                    {nameMatch.message}
+                  </div>
+                )}
                 <p className="mt-1 text-xs text-gray-500">
                   Upload your government ID for verification (any language)
                 </p>
@@ -318,9 +460,28 @@ const Signup = () => {
                 <input
                   type="file"
                   accept="application/pdf,image/*"
-                  onChange={(e) => setDegreeFile(e.target.files?.[0] || null)}
+                  onChange={handleDegreeFileChange}
                   className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
+                {validatingCert && (
+                  <p className="mt-2 text-sm text-blue-600 flex items-center gap-2">
+                    <span className="animate-spin">⏳</span> Analyzing certificate...
+                  </p>
+                )}
+                {certValidation && (
+                  <p className={`mt-2 text-sm ${certValidation.valid ? 'text-green-600' : 'text-gray-600'}`}>
+                    {certValidation.message}
+                  </p>
+                )}
+                {/* Name Match Status for Doctor */}
+                {nameMatch && certValidation?.valid && (
+                  <div className={`mt-2 p-2 rounded-lg text-sm ${nameMatch.match
+                    ? 'bg-green-50 text-green-700 border border-green-200'
+                    : 'bg-yellow-50 text-yellow-700 border border-yellow-200'
+                    }`}>
+                    {nameMatch.message}
+                  </div>
+                )}
                 <p className="mt-1 text-xs text-gray-500">
                   Upload PDF or image of your medical degree
                 </p>

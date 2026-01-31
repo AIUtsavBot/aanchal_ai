@@ -100,7 +100,7 @@ class CertificateVerificationService:
     
     def __init__(self):
         self.gemini = gemini_client
-        self.model_name = "gemini-2.0-flash-exp"
+        self.model_name = "gemini-2.5-flash"
     
     async def parse_certificate(
         self,
@@ -127,11 +127,17 @@ class CertificateVerificationService:
             prompt = """You are an expert document parser. Analyze this medical/doctor certificate image.
 The document may be in ANY language (Hindi, Tamil, Marathi, Bengali, English, French, etc.).
 
+It is likely a Medical Council Registration Certificate (State or National).
+Common format: Header -> Table of details -> Footer.
+
+Look for "Name", "Name of the Doctor", "Certified that", or similar indicators for the name.
+If the name is in a table row labeled "Name", extract it.
+
 Extract ALL information and return in this EXACT JSON format:
 {
-    "doctor_name": "Full name as written on certificate",
-    "registration_number": "Medical registration number (e.g., MH/12345, 2020/03/1234)",
-    "council_name": "Name of medical council (e.g., Maharashtra Medical Council)",
+    "doctor_name": "Full name of the doctor (e.g. 'GANDHI SANJAY', 'Dr. Aditi Sharma')",
+    "registration_number": "Medical registration number (e.g., MH/12345, 26001, 2020/03/1234)",
+    "council_name": "Name of medical council (e.g., Maharashtra Medical Council, Medical Council of India)",
     "council_state_code": "2-letter state code if Indian (MH, KA, TN, etc.) or country code",
     "qualification": "Primary qualification (MBBS, MD, MS, etc.)",
     "university": "University name where they graduated",
@@ -139,15 +145,16 @@ Extract ALL information and return in this EXACT JSON format:
     "valid_until": "Expiry date if mentioned (YYYY-MM-DD format) or null",
     "specialization": "Medical specialization if mentioned or null",
     "document_language": "Primary language of the document",
-    "raw_text": "Key text extracted from the certificate",
+    "raw_text": "Key text extracted from the certificate (especially name and reg no)",
     "confidence": "0.0 to 1.0 confidence score in extraction accuracy"
 }
 
 IMPORTANT:
 - Return ONLY valid JSON
-- If a field is not visible, use null
-- Translate names to English but keep registration numbers exactly as written
-- Be thorough - look at all text including stamps and seals
+- If the name is written as 'Patil Virendra' or 'Surname Name', extract it as is or normalize to 'First Last' if clear.
+- Be very careful with names in ALL CAPS.
+- If a field is not visible, use null.
+- Translate names to English but keep registration numbers exactly as written.
 """
             
             response = self.gemini.models.generate_content(

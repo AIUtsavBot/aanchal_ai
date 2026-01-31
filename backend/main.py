@@ -712,6 +712,70 @@ async def fallback_decide_register_request(request_id: int, body: RegisterDecisi
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+class RegisterRequestPayload(BaseModel):
+    email: str
+    password: str
+    full_name: str
+    role: str
+    phone: Optional[str] = None
+    assigned_area: Optional[str] = None
+    degree_cert_url: Optional[str] = None
+    id_info: Optional[dict] = None
+    document_metadata: Optional[dict] = None # For doctor certificate info
+    id_doc_url: Optional[str] = None  # URL of uploaded ID document for admin review
+
+@app.post("/auth/register-request")
+async def fallback_create_register_request(payload: RegisterRequestPayload):
+    """Fallback route for registration requests (without /api prefix)"""
+    try:
+        # Include id_doc_url in id_info for storage
+        # Use document_metadata if provided (for doctors), otherwise id_info (for ASHA)
+        meta_info = payload.document_metadata or payload.id_info or {}
+        
+        if payload.id_doc_url:
+            meta_info['id_doc_url'] = payload.id_doc_url
+            
+        result = await auth_service.create_registration_request(
+            email=payload.email,
+            password=payload.password,
+            full_name=payload.full_name,
+            role=payload.role,
+            phone=payload.phone,
+            assigned_area=payload.assigned_area,
+            degree_cert_url=payload.degree_cert_url,
+            id_info=meta_info if meta_info else None
+        )
+        return {"success": True, "request": result}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/auth/upload-cert")
+async def fallback_upload_certification(file: UploadFile = File(...), email: str = Form(...)):
+    """Fallback route for certification upload (without /api prefix)"""
+    try:
+        from services.auth_service import supabase_admin
+        import time
+        content = await file.read()
+        safe_email = email.replace('@', '_').replace(':', '_')
+        path = f"certifications/{safe_email}_{int(time.time())}_{file.filename}"
+        resp = supabase_admin.storage.from_("certifications").upload(path, content, {
+            "content-type": file.content_type or "application/octet-stream",
+            "x-upsert": "true"
+        })
+        pub = supabase_admin.storage.from_("certifications").get_public_url(path)
+        return {"success": True, "path": path, "public_url": pub}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.get("/auth/role-requests")
+async def fallback_get_role_requests(current_user: dict = Depends(require_admin)):
+    """Fallback route for role requests (without /api prefix)"""
+    try:
+        requests = await auth_service.list_registration_requests(status_filter="PENDING")
+        return {"success": True, "requests": requests}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # ==================== HELPER FUNCTIONS ====================
 
 def calculate_risk_score(assessment: RiskAssessment) -> dict:

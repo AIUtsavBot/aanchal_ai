@@ -90,7 +90,7 @@ class IDDocumentVerificationService:
     
     def __init__(self):
         self.gemini = gemini_client
-        self.model_name = "gemini-2.0-flash-exp"
+        self.model_name = "gemini-2.5-flash"
     
     async def parse_id_document(
         self,

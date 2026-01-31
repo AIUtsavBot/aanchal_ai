@@ -42,7 +42,7 @@ async def check_gemini_api(gemini_client) -> Dict[str, any]:
         
         # Simple ping - try to generate minimal content
         response = gemini_client.models.generate_content(
-            model='gemini-2.0-flash-exp',
+            model='gemini-2.5-flash',
             contents="test"
         )
         

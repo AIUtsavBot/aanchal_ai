@@ -27,8 +27,14 @@ const Login = () => {
     setError('')
     setLoading(true)
 
+    // Show warning if it takes too long (Cold Start)
+    const timeout = setTimeout(() => {
+      setError('Connection is taking longer than usual. The server might be waking up (Cold Start). Please wait...')
+    }, 5000)
+
     try {
       const result = await signIn(formData.email, formData.password)
+      clearTimeout(timeout)
 
       // Redirect based on role
       if (result.user.role === 'ADMIN') {
@@ -41,6 +47,7 @@ const Login = () => {
         navigate('/dashboard')
       }
     } catch (err) {
+      clearTimeout(timeout)
       setError(err.message || 'Failed to sign in')
     } finally {
       setLoading(false)

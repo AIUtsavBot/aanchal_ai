@@ -176,15 +176,26 @@ export const authAPI = {
   },
   // New role-based registration requests (from AuthCallback)
   listRoleRequests: async () => {
-    const res = await api.get('/auth/role-requests')
+    // Maps to backend list_register_requests
+    const res = await api.get('/auth/register-requests')
     return res
   },
   approveRoleRequest: async (requestId, role) => {
-    const res = await api.post(`/auth/role-requests/${requestId}/approve`, { role })
+    // Maps to backend decide_register_request with approved=true
+    // Note: 'role' param is ignored by backend (it uses requested_role), 
+    // but we can pass it if backend logic changes.
+    const res = await api.post(`/auth/register-requests/${requestId}/decision`, {
+      approved: true,
+      note: "Approved via Admin Dashboard"
+    })
     return res
   },
   rejectRoleRequest: async (requestId, reason) => {
-    const res = await api.post(`/auth/role-requests/${requestId}/reject`, { reason })
+    // Maps to backend decide_register_request with approved=false
+    const res = await api.post(`/auth/register-requests/${requestId}/decision`, {
+      approved: false,
+      note: reason
+    })
     return res
   }
 }

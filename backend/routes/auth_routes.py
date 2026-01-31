@@ -72,6 +72,8 @@ class RegisterRequest(BaseModel):
     assigned_area: Optional[str] = None
     degree_cert_url: Optional[str] = Field(None, description="Doctor certification file URL in storage")
     id_info: Optional[dict] = Field(None, description="Metadata from parsed ID document (ASHA workers)")
+    document_metadata: Optional[dict] = Field(None, description="Metadata from parsed Doctor certificate")
+    id_doc_url: Optional[str] = Field(None, description="URL of uploaded ID document for admin review")
 
 class RegisterRequestDecision(BaseModel):
     approved: bool
@@ -99,6 +101,10 @@ async def sign_up(request: SignUpRequest, req: Request = None):
     - assigned_area: Assigned geographical area
     """
     try:
+        user_agent = req.headers.get("user-agent")
+        ip = req.client.host if req.client else "unknown"
+        logger.info(f"Sign up attempt: {request.email} ({request.role}) from {ip}")
+        
         result = await auth_service.sign_up(
             email=request.email,
             password=request.password,
@@ -110,15 +116,22 @@ async def sign_up(request: SignUpRequest, req: Request = None):
         
         return AuthResponse(**result, message="User registered successfully")
     
+    except ValueError as e:
+        logger.warning(f"Sign up validation error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
     except Exception as e:
         logger.error(f"❌ Sign up error: {e}")
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
         )
 
 
 @router.post("/signin", response_model=AuthResponse)
+@audit_action("SIGN_IN", "users")
 async def sign_in(request: SignInRequest, req: Request = None):
     """
     Sign in with email and password
@@ -126,6 +139,10 @@ async def sign_in(request: SignInRequest, req: Request = None):
     Returns user data and JWT tokens (access_token, refresh_token)
     """
     try:
+        user_agent = req.headers.get("user-agent")
+        ip = req.client.host if req.client else "unknown"
+        logger.info(f"Sign in attempt: {request.email} from {ip}")
+        
         result = await auth_service.sign_in(
             email=request.email,
             password=request.password
@@ -144,7 +161,28 @@ async def sign_in(request: SignInRequest, req: Request = None):
         
         return AuthResponse(**result, message="Signed in successfully")
     
+    except ValueError as e:
+        # Invalid credentials usually raise ValueError explicitly in service or implicitly via exception
+        logger.warning(f"Sign in failed (invalid credentials): {request.email}")
+        
+        # Log failed login attempt
+        if req:
+            await AuditService.log_action(
+                action="LOGIN_FAILED",
+                request=req,
+                details={"email": request.email, "error": str(e)},
+                status="FAILURE"
+            )
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password"
+        )
     except Exception as e:
+        if "Invalid login credentials" in str(e):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password"
+            )
         logger.error(f"❌ Sign in error: {e}")
         
         # Log failed login attempt
@@ -157,8 +195,8 @@ async def sign_in(request: SignInRequest, req: Request = None):
             )
             
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
         )
 
 
@@ -256,6 +294,13 @@ async def create_register_request(request: RegisterRequest):
     Roles allowed to request: DOCTOR, ASHA_WORKER
     """
     try:
+        # Include id_doc_url in db storage (mapped to id_info column)
+        # Use document_metadata if provided (for doctors), otherwise id_info (for ASHA)
+        meta_info = request.document_metadata or request.id_info or {}
+        
+        if request.id_doc_url:
+            meta_info['id_doc_url'] = request.id_doc_url
+
         result = await auth_service.create_registration_request(
             email=request.email,
             password=request.password,
@@ -264,7 +309,7 @@ async def create_register_request(request: RegisterRequest):
             phone=request.phone,
             assigned_area=request.assigned_area,
             degree_cert_url=request.degree_cert_url,
-            id_info=request.id_info
+            id_info=meta_info if meta_info else None
         )
         return {"success": True, "request": result}
     except Exception as e:

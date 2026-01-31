@@ -122,6 +122,26 @@ export default function AdminApprovals() {
           <h4 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
             <FileText className="w-4 h-4" /> Doctor Certificate Details
           </h4>
+
+          {/* Name Verification Status */}
+          {metadata.name_verified !== undefined && (
+            <div className={`mb-3 p-2 rounded-lg flex items-center gap-2 ${metadata.name_verified
+                ? 'bg-blue-100 text-blue-800'
+                : 'bg-yellow-100 text-yellow-800'
+              }`}>
+              {metadata.name_verified ? (
+                <>
+                  <CheckCircle className="w-4 h-4" />
+                  <span className="font-medium">✅ Name Verified: Form name matches certificate</span>
+                </>
+              ) : (
+                <>
+                  <Clock className="w-4 h-4" />
+                  <span className="font-medium">⚠️ Name Mismatch: Form: "{metadata.form_name}" vs Cert: "{metadata.document_name}"</span>
+                </>
+              )}
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
             <div className="flex items-center gap-2">
               <User className="w-4 h-4 text-blue-600" />
@@ -177,6 +197,27 @@ export default function AdminApprovals() {
           <h4 className="font-semibold text-green-800 mb-3 flex items-center gap-2">
             <CreditCard className="w-4 h-4" /> ASHA Worker Details
           </h4>
+
+          {/* Name Verification Status */}
+          {metadata.name_verified !== undefined && (
+            <div className={`mb-3 p-2 rounded-lg flex items-center gap-2 ${metadata.name_verified
+              ? 'bg-green-100 text-green-800'
+              : 'bg-yellow-100 text-yellow-800'
+              }`}>
+              {metadata.name_verified ? (
+                <>
+                  <CheckCircle className="w-4 h-4" />
+                  <span className="font-medium">✅ Name Verified: Form name matches ID document</span>
+                </>
+              ) : (
+                <>
+                  <Clock className="w-4 h-4" />
+                  <span className="font-medium">⚠️ Name Mismatch: Form: "{metadata.form_name}" vs ID: "{metadata.document_name}"</span>
+                </>
+              )}
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
             <div className="flex items-center gap-2">
               <User className="w-4 h-4 text-green-600" />
@@ -219,6 +260,23 @@ export default function AdminApprovals() {
               <span className="font-medium">{metadata.age ? `${metadata.age} years` : 'Not calculated'}</span>
             </div>
           </div>
+
+          {/* View ID Document Button */}
+          {metadata.id_doc_url && (
+            <div className="mt-4">
+              <a
+                href={metadata.id_doc_url}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+              >
+                <FileText className="w-4 h-4" />
+                View ID Document
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+          )}
+
           {metadata.address && (
             <div className="mt-3 p-2 bg-white rounded border border-green-100">
               <div className="flex items-start gap-2">
