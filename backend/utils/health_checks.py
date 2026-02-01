@@ -85,9 +85,16 @@ async def check_cache_service(cache) -> Dict[str, any]:
         # Get cache stats
         stats = cache.stats()
         
+        if "active_entries" in stats:
+            message = f"In-memory cache active with {stats['active_entries']} entries"
+        elif "keyspace_hits" in stats:
+             message = f"Redis cache active (Hits: {stats.get('hits', 0)})"
+        else:
+             message = "Cache service active"
+             
         return {
             "status": "healthy",
-            "message": f"Cache active with {stats['active_entries']} entries",
+            "message": message,
             "details": stats
         }
     except Exception as e:

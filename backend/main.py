@@ -302,7 +302,6 @@ def run_telegram_bot():
         time.sleep(2)
         
         # Use webhooks if BACKEND_URL is set (more efficient - only triggers on messages)
-        # Use webhooks if BACKEND_URL is set (more efficient - only triggers on messages)
         # Check if BACKEND_URL is localhost - webhooks won't work
         is_localhost = "localhost" in BACKEND_URL or "127.0.0.1" in BACKEND_URL
         
@@ -314,7 +313,7 @@ def run_telegram_bot():
             
         if USE_TELEGRAM_WEBHOOK and BACKEND_URL and not is_localhost:
             webhook_url = f"{BACKEND_URL}/telegram/webhook/{TELEGRAM_BOT_TOKEN}"
-            logger.info(f"🔗 Setting up Telegram webhook: {BACKEND_URL}/telegram/webhook/...")
+            logger.info(f"🔗 Setting up Telegram webhook: {webhook_url}")
             
             try:
                 # Set webhook with Telegram
@@ -326,38 +325,41 @@ def run_telegram_bot():
                 logger.info("✅ Telegram webhook set successfully")
                 logger.info("🪝 Bot will receive updates via webhook (no polling)")
                 
-                # Initialize and start the application for webhook mode
+                # Initialize the application
+                loop.run_until_complete(application.initialize())
                 loop.run_until_complete(application.start())
-                bot_running = True
+                # DO NOT CALL updater.start_polling() here!
                 
+                bot_running = True
                 logger.info("🤖 MatruRaksha Telegram Bot is ACTIVE (webhook mode)")
                 
-                # In webhook mode, we don't run_forever - FastAPI handles incoming requests
-                # Keep the application running but don't poll
+                # Keep the thread alive but do nothing (FastAPI handles requests)
                 while bot_running:
-                    time.sleep(1)  # Shorter sleep for responsiveness
+                    time.sleep(1)
                     
             except Exception as webhook_error:
                 logger.error(f"❌ Webhook setup failed: {webhook_error}")
                 logger.warning("⚠️ Falling back to polling mode due to webhook error...")
-                # Fall through to polling
+                # Fall through to polling (logic below handles this if bot_running is False)
         else:
             if not BACKEND_URL:
                 logger.warning("⚠️ BACKEND_URL not set - cannot use webhooks. Defaulting to polling.")
             elif is_localhost:
                  logger.info("ℹ️ Localhost detected - using polling mode.")
         
-        # Fallback: Start polling if webhooks not available
+        # Fallback: Start polling if webhooks not used or failed
         if not bot_running:
             logger.info("🚀 Starting Telegram polling...")
             bot_running = True
             
+            loop.run_until_complete(application.initialize())
             loop.run_until_complete(application.start())
             loop.run_until_complete(application.updater.start_polling(
                 drop_pending_updates=True,
                 allowed_updates=["message", "callback_query", "inline_query"],
-                poll_interval=2.0  # Poll every 2 seconds instead of every second
+                poll_interval=2.0
             ))
+
             
             logger.info("✅ Telegram polling started")
             logger.info("🤖 MatruRaksha Telegram Bot is ACTIVE (polling mode)")
@@ -462,8 +464,9 @@ async def lifespan(app: FastAPI):
 
 # ==================== CREATE FASTAPI APP ====================
 # Mount enhanced API router
+# Mount enhanced API router
 try:
-    from enhanced_api import router as enhanced_router
+    from routes.enhanced_routes import router as enhanced_router
     app = FastAPI(title="MatruRaksha AI Backend", lifespan=lifespan)
     app.include_router(enhanced_router)
 except ImportError:
@@ -585,6 +588,15 @@ try:
     logger.info("✅ Certificate verification routes loaded (multilingual + NMC)")
 except Exception as e:
     logger.warning(f"⚠️  Certificate routes not available: {e}")
+
+# Mount Telegram Webhook Route
+try:
+    from routes.telegram_webhook import router as telegram_webhook_router
+    app.include_router(telegram_webhook_router)
+    logger.info("✅ Telegram Webhook route loaded")
+except ImportError as e:
+    logger.warning(f"⚠️  Telegram Webhook route not available: {e}")
+
 
 
 # ==================== SECURITY & RATE LIMITING ====================

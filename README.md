@@ -141,7 +141,12 @@ GEMINI_API_KEY=your_gemini_key
 TELEGRAM_BOT_TOKEN=your_bot_token
 ```
 
-### 3. Run Locally
+### 3. Database Setup
+Run the SQL migration files in `infra/supabase/` in the following order using Supabase SQL Editor:
+1.  `infra/supabase/migration_santanraksha_v1.sql` (Core tables for Child Health)
+2.  `infra/supabase/migration_voice_features_v2.sql` (Voice & Consultation features)
+
+### 4. Run Locally
 
 **Backend:**
 ```bash
@@ -159,10 +164,36 @@ npm install
 npm run dev
 ```
 
-### 4. Running Tests
+**Scheduler (Optional):**
+To run the background scheduler for reminders:
+```bash
+cd backend
+python scheduler.py
+```
+
+### 5. Running Tests
+**Unit Tests:**
 ```bash
 pytest backend/tests/
 ```
+
+**Integration/Script Tests:**
+```bash
+pytest backend/scripts/test_*.py
+```
+
+### 6. Utility Scripts
+Useful maintenance scripts are located in `backend/scripts/`:
+-   `check_users.py`: Verify user roles.
+-   `fix_approved_users.py`: Fix approval status issues.
+-   `verify_setup.py`: Check system configuration.
+
+---
+
+## 📚 Documentation
+-   [API Specification](docs/API_SPECIFICATION.md)
+-   [SantanRaksha (Child Health) Details](docs/SANTANRAKSHA.md)
+-   [Architecture](docs/architecture.md)
 
 ---
 

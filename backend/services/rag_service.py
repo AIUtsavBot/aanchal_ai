@@ -103,8 +103,10 @@ class HybridRAGService:
         """Find the maternal health CSV file"""
         possible_paths = [
             Path(__file__).parent.parent.parent / "Maternal Health Risk Data Set.csv",
+            Path(__file__).parent.parent / "data" / "Maternal Health Risk Data Set.csv",
             Path(__file__).parent.parent / "Maternal Health Risk Data Set.csv",
             Path.cwd() / "Maternal Health Risk Data Set.csv",
+            Path.cwd() / "backend" / "data" / "Maternal Health Risk Data Set.csv",
             Path.cwd().parent / "Maternal Health Risk Data Set.csv",
         ]
         
