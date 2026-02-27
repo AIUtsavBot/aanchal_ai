@@ -23,10 +23,11 @@ from supabase import create_client
 # Initialize logger early to avoid NameError in import error handlers
 logger = logging.getLogger(__name__)
 
-supabase = create_client(
-    os.getenv("SUPABASE_URL", ""),
-    os.getenv("SUPABASE_SERVICE_KEY", "")
-)
+# Import supabase client from services
+try:
+    from services.supabase_service import supabase
+except ImportError:
+    from backend.services.supabase_service import supabase
 
 # Import cache service
 try:
@@ -74,29 +75,48 @@ router = APIRouter(prefix="/api/santanraksha", tags=["SantanRaksha"])
 
 async def get_current_user(authorization: Optional[str] = Header(None)):
     """
-    Extract user info from Authorization header
-    Expected format: Bearer {token} or user_id:{user_id},role:{role}
+    Extract user info from Authorization header.
+    Supports: Bearer {supabase_jwt} or custom user_id:{id},role:{role} format.
+    Unauthenticated requests get read-only MOTHER role (least privilege).
     """
     if not authorization:
-        # For backwards compatibility, return admin access if no auth
-        logger.warning("No authorization header, defaulting to ADMIN access")
-        return {"user_id": "system", "role": "ADMIN"}
+        logger.debug("No authorization header — assigning read-only MOTHER role")
+        return {"user_id": "anonymous", "role": "MOTHER"}
     
     try:
-        # Try to parse custom format: user_id:xxx,role:yyy
+        # Try custom format: user_id:xxx,role:yyy
         if "user_id:" in authorization and "role:" in authorization:
             parts = authorization.split(",")
             user_id = parts[0].split(":")[1].strip()
             role = parts[1].split(":")[1].strip()
-            return {"user_id": user_id, "role": role}
+            # Validate role is one of the known roles
+            valid_roles = {"ADMIN", "DOCTOR", "ASHA_WORKER", "ASHA", "MOTHER"}
+            if role.upper() not in valid_roles:
+                logger.warning(f"Invalid role '{role}' in custom auth header")
+                return {"user_id": user_id, "role": "MOTHER"}
+            return {"user_id": user_id, "role": role.upper()}
         
-        # Otherwise assume it's a token and decode
-        # For now, return admin access
-        logger.warning("Token-based auth not implemented, defaulting to ADMIN")
-        return {"user_id": "system", "role": "ADMIN"}
+        # Try Bearer token via Supabase
+        token = authorization.replace("Bearer ", "").strip()
+        if token and supabase:
+            try:
+                user_response = supabase.auth.get_user(token)
+                if user_response and user_response.user:
+                    user_id = user_response.user.id
+                    # Look up role from user_profiles table
+                    profile = supabase.table("user_profiles").select("role").eq("id", user_id).execute()
+                    role = "MOTHER"
+                    if profile.data:
+                        role = profile.data[0].get("role", "MOTHER")
+                    return {"user_id": user_id, "role": role}
+            except Exception as auth_err:
+                logger.warning(f"Supabase token validation failed: {auth_err}")
+        
+        # Token present but couldn't validate — read-only access
+        return {"user_id": "unknown", "role": "MOTHER"}
     except Exception as e:
         logger.error(f"Error parsing authorization: {e}")
-        return {"user_id": "system", "role": "ADMIN"}
+        return {"user_id": "unknown", "role": "MOTHER"}
 
 
 # ==================== PYDANTIC MODELS ====================
@@ -166,29 +186,59 @@ def get_child_age_months(birth_date_str: str) -> int:
     """Calculate child's age in months from birth date string"""
     try:
         birth_date = datetime.fromisoformat(birth_date_str.replace('Z', '+00:00'))
-        now = datetime.now()
+        # Use timezone-aware now if birth_date is aware
+        if birth_date.tzinfo:
+            from datetime import timezone
+            now = datetime.now(timezone.utc)
+        else:
+            now = datetime.now()
         months = (now.year - birth_date.year) * 12 + (now.month - birth_date.month)
         return max(0, months)
     except Exception:
         return 0
 
 
+# WHO Child Growth Standards — SD values (1 SD from median)
+# Source: WHO Multicentre Growth Reference Study Group, 2006
+# These replace the previous approximate SD = median * 0.15
+WHO_WEIGHT_SD_MALE = {
+    0: 0.43, 1: 0.54, 2: 0.61, 3: 0.67, 4: 0.72, 5: 0.76,
+    6: 0.80, 9: 0.92, 12: 1.01, 18: 1.18, 24: 1.33
+}
+WHO_WEIGHT_SD_FEMALE = {
+    0: 0.39, 1: 0.49, 2: 0.56, 3: 0.62, 4: 0.67, 5: 0.71,
+    6: 0.74, 9: 0.87, 12: 0.98, 18: 1.15, 24: 1.30
+}
+WHO_HEIGHT_SD_MALE = {
+    0: 1.89, 1: 2.08, 2: 2.15, 3: 2.21, 4: 2.26, 5: 2.29,
+    6: 2.32, 9: 2.41, 12: 2.52, 18: 2.81, 24: 3.08
+}
+WHO_HEIGHT_SD_FEMALE = {
+    0: 1.86, 1: 2.00, 2: 2.10, 3: 2.18, 4: 2.24, 5: 2.28,
+    6: 2.31, 9: 2.39, 12: 2.51, 18: 2.77, 24: 3.03
+}
+
+
 def calculate_z_scores(weight_kg: float, height_cm: Optional[float], 
                        age_months: int, gender: str) -> Dict[str, float]:
-    """Calculate WHO z-scores for weight and height"""
+    """Calculate WHO z-scores using proper SD values from WHO Growth Standards"""
     z_scores = {}
     
-    # Select reference table based on gender
-    weight_table = WHO_WEIGHT_MALE if gender.lower() == 'male' else WHO_WEIGHT_FEMALE
-    height_table = WHO_HEIGHT_MALE if gender.lower() == 'male' else WHO_HEIGHT_FEMALE
+    is_male = gender.lower() == 'male'
+    
+    # Select reference tables based on gender
+    weight_table = WHO_WEIGHT_MALE if is_male else WHO_WEIGHT_FEMALE
+    height_table = WHO_HEIGHT_MALE if is_male else WHO_HEIGHT_FEMALE
+    weight_sd_table = WHO_WEIGHT_SD_MALE if is_male else WHO_WEIGHT_SD_FEMALE
+    height_sd_table = WHO_HEIGHT_SD_MALE if is_male else WHO_HEIGHT_SD_FEMALE
     
     # Find closest age in tables
     closest_age = min(weight_table.keys(), key=lambda x: abs(x - age_months))
     
     # Weight-for-age z-score
     median_weight = weight_table.get(closest_age, 10.0)
-    sd_weight = median_weight * 0.15  # Approximate SD
-    if median_weight > 0:
+    sd_weight = weight_sd_table.get(closest_age, median_weight * 0.12)  # Fallback to approximate
+    if sd_weight > 0:
         wfa_z = (weight_kg - median_weight) / sd_weight
         z_scores['weight_for_age_z'] = round(wfa_z, 2)
     
@@ -196,8 +246,8 @@ def calculate_z_scores(weight_kg: float, height_cm: Optional[float],
     if height_cm and height_cm > 0:
         closest_age_h = min(height_table.keys(), key=lambda x: abs(x - age_months))
         median_height = height_table.get(closest_age_h, 75.0)
-        sd_height = median_height * 0.05
-        if median_height > 0:
+        sd_height = height_sd_table.get(closest_age_h, median_height * 0.04)  # Fallback
+        if sd_height > 0:
             hfa_z = (height_cm - median_height) / sd_height
             z_scores['height_for_age_z'] = round(hfa_z, 2)
     

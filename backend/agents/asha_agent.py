@@ -1,5 +1,5 @@
 """
-MatruRaksha AI - Care and Nutrition Agents
+Aanchal AI - Care and Nutrition Agents
 """
 from typing import Any, List, Dict
 import logging
@@ -59,7 +59,7 @@ class AshaAgent(BaseAgent):
     
     def get_system_prompt(self) -> str:
         return """
-You are a COMMUNITY HEALTH SERVICES COORDINATOR for MatruRaksha AI.
+You are a COMMUNITY HEALTH SERVICES COORDINATOR for Aanchal AI.
 
 Your role: Connect mothers with local healthcare services, appointments, and community resources.
 

@@ -1,5 +1,5 @@
 """
-MatruRaksha AI - Care Agent
+Aanchal AI - Care Agent
 """
 
 from agents.base_agent import BaseAgent
@@ -16,7 +16,7 @@ class CareAgent(BaseAgent):
     
     def get_system_prompt(self) -> str:
         return """
-You are a MATERNAL CARE SPECIALIST for MatruRaksha AI.
+You are a MATERNAL CARE SPECIALIST for Aanchal AI.
 
 Your role: Provide comprehensive, empathetic, and PERSONALIZED guidance on pregnancy care and wellness.
 

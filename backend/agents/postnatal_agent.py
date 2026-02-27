@@ -13,11 +13,7 @@ import logging
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
 
-try:
-    import google.generativeai as genai
-    GEMINI_AVAILABLE = True
-except ImportError:
-    GEMINI_AVAILABLE = False
+# Gemini is provided via BaseAgent — no direct import needed
 
 from .base_agent import BaseAgent
 
@@ -365,7 +361,7 @@ CRITICAL: Strictly follow WHO and NHM India guidelines. If High Risk, recommend 
 {system_prompt}
 
 ===============================
-PREGNANCY HISTORY (MatruRaksha)
+PREGNANCY HISTORY (Aanchal AI)
 ===============================
 {history_prompt}
 
@@ -477,7 +473,7 @@ Response:
         Returns:
             AI-generated response with personalized guidance
         """
-        if not GEMINI_AVAILABLE or not self.model:
+        if not self.model:
             return self._fallback_response(message, postnatal_data)
         
         # Build context

@@ -1,5 +1,5 @@
 """
-MatruRaksha AI - Care and Nutrition Agents
+Aanchal AI - Care and Nutrition Agents
 """
 
 from agents.base_agent import BaseAgent
@@ -15,7 +15,7 @@ class NutritionAgent(BaseAgent):
     
     def get_system_prompt(self) -> str:
         return """
-You are a MATERNAL NUTRITION SPECIALIST for MatruRaksha AI.
+You are a MATERNAL NUTRITION SPECIALIST for Aanchal AI.
 
 Your role: Provide evidence-based, PERSONALIZED nutrition guidance for pregnant mothers.
 

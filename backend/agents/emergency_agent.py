@@ -1,5 +1,5 @@
 """
-MatruRaksha AI - Emergency Agent
+Aanchal AI - Emergency Agent
 Handles urgent medical situations with priority response
 """
 
@@ -17,7 +17,7 @@ class EmergencyAgent(BaseAgent):
     
     def get_system_prompt(self) -> str:
         return """
-You are an EMERGENCY MATERNAL HEALTH SPECIALIST for MatruRaksha AI.
+You are an EMERGENCY MATERNAL HEALTH SPECIALIST for Aanchal AI.
 
 Your role is CRITICAL - you handle urgent and potentially life-threatening situations.
 

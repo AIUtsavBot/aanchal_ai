@@ -115,35 +115,35 @@ except ImportError as e:
 
 # ==================== PYDANTIC MODELS ====================
 class Mother(BaseModel):
-    name: str
-    phone: str
-    age: int
-    gravida: int
-    parity: int
-    bmi: float
-    location: str
-    preferred_language: str = "en"
+    name: str = Field(..., min_length=1, max_length=200)
+    phone: str = Field(..., min_length=5, max_length=20)
+    age: int = Field(..., ge=10, le=60)
+    gravida: int = Field(..., ge=0, le=20)
+    parity: int = Field(..., ge=0, le=20)
+    bmi: float = Field(..., ge=10.0, le=60.0)
+    location: str = Field(..., min_length=1, max_length=300)
+    preferred_language: str = Field(default="en", pattern="^(en|hi|mr)$")
     telegram_chat_id: Optional[str] = None
     due_date: Optional[str] = None
     # New fields for delivery switch
-    delivery_status: Optional[str] = "pregnant"
-    active_system: Optional[str] = "matruraksha"
+    delivery_status: Optional[str] = Field(default="pregnant", pattern="^(pregnant|delivered|postnatal)$")
+    active_system: Optional[str] = Field(default="matruraksha", pattern="^(matruraksha|santanraksha)$")
     delivery_date: Optional[str] = None
 
 class RiskAssessment(BaseModel):
     mother_id: str
-    systolic_bp: Optional[int] = None
-    diastolic_bp: Optional[int] = None
-    heart_rate: Optional[int] = None
-    blood_glucose: Optional[float] = None
-    hemoglobin: Optional[float] = None
-    proteinuria: int = 0
-    edema: int = 0
-    headache: int = 0
-    vision_changes: int = 0
-    epigastric_pain: int = 0
-    vaginal_bleeding: int = 0
-    notes: Optional[str] = None
+    systolic_bp: Optional[int] = Field(default=None, ge=50, le=300)
+    diastolic_bp: Optional[int] = Field(default=None, ge=30, le=200)
+    heart_rate: Optional[int] = Field(default=None, ge=30, le=250)
+    blood_glucose: Optional[float] = Field(default=None, ge=0, le=500)
+    hemoglobin: Optional[float] = Field(default=None, ge=0, le=25)
+    proteinuria: int = Field(default=0, ge=0, le=4)
+    edema: int = Field(default=0, ge=0, le=3)
+    headache: int = Field(default=0, ge=0, le=1)
+    vision_changes: int = Field(default=0, ge=0, le=1)
+    epigastric_pain: int = Field(default=0, ge=0, le=1)
+    vaginal_bleeding: int = Field(default=0, ge=0, le=1)
+    notes: Optional[str] = Field(default=None, max_length=2000)
 
 class DocumentAnalysisRequest(BaseModel):
     report_id: str  # UUID as string
@@ -312,8 +312,11 @@ def run_telegram_bot():
             logger.warning("⚠️ Falling back to polling mode automatically.")
             
         if USE_TELEGRAM_WEBHOOK and BACKEND_URL and not is_localhost:
-            webhook_url = f"{BACKEND_URL}/telegram/webhook/{TELEGRAM_BOT_TOKEN}"
-            logger.info(f"🔗 Setting up Telegram webhook: {webhook_url}")
+            # Use a hashed token as webhook secret to avoid exposing raw bot token in URLs/logs
+            import hashlib
+            webhook_secret = hashlib.sha256(TELEGRAM_BOT_TOKEN.encode()).hexdigest()[:32]
+            webhook_url = f"{BACKEND_URL}/telegram/webhook/{webhook_secret}"
+            logger.info(f"🔗 Setting up Telegram webhook: {BACKEND_URL}/telegram/webhook/***")
             
             try:
                 # Set webhook with Telegram
@@ -668,8 +671,10 @@ async def telegram_webhook(token: str, request: Request):
     """
     global telegram_bot_app
     
-    # Verify token matches our bot token
-    if token != TELEGRAM_BOT_TOKEN:
+    # Verify token matches our hashed webhook secret
+    import hashlib
+    expected_secret = hashlib.sha256(TELEGRAM_BOT_TOKEN.encode()).hexdigest()[:32]
+    if token != expected_secret:
         logger.warning("⚠️ Invalid webhook token received")
         raise HTTPException(status_code=403, detail="Invalid token")
     
@@ -863,7 +868,13 @@ def calculate_pregnancy_week(registration_date: str) -> int:
     """Calculate current pregnancy week from registration"""
     try:
         reg_date = datetime.fromisoformat(registration_date.replace('Z', '+00:00'))
-        days_since = (datetime.now() - reg_date).days
+        # Use timezone-aware now() if reg_date is aware, else naive
+        if reg_date.tzinfo:
+            from datetime import timezone
+            now = datetime.now(timezone.utc)
+        else:
+            now = datetime.now()
+        days_since = (now - reg_date).days
         return 8 + (days_since // 7)
     except Exception:
         return 20
@@ -1122,17 +1133,19 @@ async def register_mother(mother: Mother, background_tasks: BackgroundTasks):
             "data": result.data[0]
         }
     
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"❌ Error registering mother: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error registering mother: {str(e)}"
+            detail="Error registering mother. Please try again later."
         )
 
 
 @app.get("/mothers")
-def get_all_mothers():
-    """Get all registered mothers"""
+def get_all_mothers(limit: int = 100, offset: int = 0):
+    """Get registered mothers with pagination"""
     try:
         if not supabase:
             raise HTTPException(
@@ -1140,19 +1153,26 @@ def get_all_mothers():
                 detail="Supabase not connected"
             )
         
-        result = supabase.table("mothers").select("*").execute()
-        logger.info(f"✅ Retrieved {len(result.data)} mothers")
+        # Enforce max limit to prevent abuse
+        limit = min(limit, 500)
+        
+        result = supabase.table("mothers").select(
+            "id,name,phone,age,location,preferred_language,created_at,delivery_status"
+        ).order("created_at", desc=True).range(offset, offset + limit - 1).execute()
+        logger.info(f"✅ Retrieved {len(result.data)} mothers (offset={offset}, limit={limit})")
         
         return {
             "status": "success",
             "count": len(result.data),
+            "offset": offset,
+            "limit": limit,
             "data": result.data
         }
     except Exception as e:
         logger.error(f"❌ Error fetching mothers: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error fetching mothers: {str(e)}"
+            detail="Error fetching mothers. Please try again later."
         )
 
 
@@ -1182,7 +1202,7 @@ def get_mother(mother_id: str):
         logger.error(f"❌ Error fetching mother: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error fetching mother: {str(e)}"
+            detail="Error fetching mother details. Please try again later."
         )
 
 
@@ -1296,7 +1316,7 @@ async def analyze_report(request: DocumentAnalysisRequest, background_tasks: Bac
         
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Analysis failed: {str(e)}"
+            detail="Analysis failed. Please try again later."
         )
 
 
@@ -1504,7 +1524,7 @@ async def upload_report(
         logger.error(f"❌ Error uploading report: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Upload failed: {str(e)}"
+            detail="Upload failed. Please try again later."
         )
 
 
@@ -1713,7 +1733,7 @@ async def assess_risk(assessment: RiskAssessment, background_tasks: BackgroundTa
         logger.error(f"❌ Error assessing risk: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error assessing risk: {str(e)}"
+            detail="Error processing risk assessment. Please try again later."
         )
 
 
@@ -1738,13 +1758,13 @@ def get_mother_risk(mother_id: str):
         logger.error(f"❌ Error fetching risk assessments: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error fetching risk assessments: {str(e)}"
+            detail="Error fetching risk assessments. Please try again later."
         )
 
 
 @app.get("/risk/all")
-def get_all_risk_assessments():
-    """Get all risk assessments - optimized for dashboard loading"""
+def get_all_risk_assessments(limit: int = 200, offset: int = 0):
+    """Get risk assessments with pagination - optimized for dashboard loading"""
     try:
         if not supabase:
             raise HTTPException(
@@ -1752,18 +1772,24 @@ def get_all_risk_assessments():
                 detail="Supabase not connected"
             )
         
-        result = supabase.table("risk_assessments").select("*").order("created_at", desc=True).execute()
+        limit = min(limit, 1000)
+        
+        result = supabase.table("risk_assessments").select(
+            "id,mother_id,risk_level,risk_score,created_at"
+        ).order("created_at", desc=True).range(offset, offset + limit - 1).execute()
         
         return {
             "status": "success",
             "count": len(result.data),
+            "offset": offset,
+            "limit": limit,
             "data": result.data
         }
     except Exception as e:
         logger.error(f"❌ Error fetching all risk assessments: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error fetching risk assessments: {str(e)}"
+            detail="Error fetching risk assessments. Please try again later."
         )
 
 
@@ -1834,7 +1860,7 @@ def get_dashboard_analytics():
         logger.error(f"❌ Error fetching analytics: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error fetching analytics: {str(e)}"
+            detail="Error fetching analytics. Please try again later."
         )
 
 
@@ -1913,7 +1939,7 @@ def get_asha_analytics(asha_id: int):
         logger.error(f"❌ Error fetching ASHA analytics: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error fetching analytics: {str(e)}"
+            detail="Error fetching analytics. Please try again later."
         )
 
 @app.get("/dashboard/full")
@@ -2080,7 +2106,7 @@ def get_full_dashboard():
         logger.error(f"❌ Error fetching full dashboard: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error fetching dashboard: {str(e)}"
+            detail="Error fetching dashboard. Please try again later."
         )
 
 
@@ -2224,7 +2250,7 @@ async def send_case_discussion(msg: CaseDiscussionMessage):
         logger.error(f"❌ Error sending case discussion: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to send message: {str(e)}"
+            detail="Failed to send message. Please try again later."
         )
 
 

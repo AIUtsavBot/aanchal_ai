@@ -19,7 +19,7 @@ class MedicationAgent(BaseAgent):
     
     def get_system_prompt(self) -> str:
         return """
-You are a MEDICATION SAFETY SPECIALIST for MatruRaksha AI.
+You are a MEDICATION SAFETY SPECIALIST for Aanchal AI.
 
 Your role: Provide information about medications and supplements during pregnancy.
 

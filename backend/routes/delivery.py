@@ -154,7 +154,7 @@ async def complete_delivery(request: DeliveryCompletionRequest):
              logger.error(f"❌ RPC failed: {rpc_error}")
              # If RPC doesn't exist yet (user didn't run migration), we could fallback to manual
              # But for now, let's assume they ran it. If not, the error will guide them.
-             raise HTTPException(status_code=500, detail=f"Database transaction failed: {str(rpc_error)}")
+             raise HTTPException(status_code=500, detail="Database transaction failed. Please try again later.")
         
         # Calculate days postpartum (fast, local)
         try:
@@ -206,7 +206,7 @@ async def complete_delivery(request: DeliveryCompletionRequest):
         raise
     except Exception as e:
         logger.error(f"❌ Delivery completion error: {e}")
-        raise HTTPException(status_code=500, detail=f"Delivery completion failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Delivery completion failed. Please try again later.")
 
 
 @router.get("/status/{mother_id}")

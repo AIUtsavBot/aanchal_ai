@@ -45,13 +45,23 @@ def _fetch_profile_sync(mother_id: str, supabase: Client) -> Dict[str, Any]:
         data, timestamp = _profile_cache[mother_id]
         if (datetime.now() - timestamp).seconds < CACHE_TTL:
             return data
+        # Expired — remove
+        del _profile_cache[mother_id]
             
-    resp = supabase.table("mothers").select("*").eq("id", mother_id).execute()
+    resp = supabase.table("mothers").select(
+        "id,name,age,phone,gravida,parity,bmi,location,preferred_language,"
+        "due_date,delivery_status,active_system,height_cm,weight_kg,"
+        "telegram_chat_id,doctor_id,asha_worker_id,created_at"
+    ).eq("id", mother_id).execute()
     data = resp.data[0] if resp.data else {}
     
-    # Update cache
+    # Update cache (with eviction for large caches)
     if data:
         _profile_cache[mother_id] = (data, datetime.now())
+        # Evict oldest entries if cache grows too large
+        if len(_profile_cache) > 200:
+            oldest_key = min(_profile_cache, key=lambda k: _profile_cache[k][1])
+            del _profile_cache[oldest_key]
         
     return data
 
@@ -80,7 +90,8 @@ def _fetch_reports_sync(mother_id: str, supabase: Client, limit: int) -> List[Di
 
 def _fetch_appointments_sync(mother_id: str, supabase: Client) -> List[Dict]:
     try:
-        now_iso = datetime.now().isoformat()
+        from datetime import timezone
+        now_iso = datetime.now(timezone.utc).isoformat()
         resp = supabase.table("appointments").select("*") \
             .eq("mother_id", mother_id) \
             .gte("appointment_date", now_iso) \
@@ -99,11 +110,60 @@ def _fetch_risks_sync(mother_id: str, supabase: Client) -> List[Dict]:
     except Exception:
         return []
 
+# --- Postnatal Data Fetchers (only called for delivered mothers) ---
+
+def _fetch_children_sync(mother_id: str, supabase: Client) -> List[Dict]:
+    """Fetch children registered under this mother."""
+    try:
+        resp = supabase.table("children").select(
+            "id,name,birth_date,gender,birth_weight_kg,created_at"
+        ).eq("mother_id", mother_id).order("birth_date", desc=True).execute()
+        return resp.data or []
+    except Exception:
+        return []
+
+def _fetch_vaccinations_sync(child_ids: List[str], supabase: Client) -> List[Dict]:
+    """Fetch vaccination records for all children."""
+    try:
+        if not child_ids:
+            return []
+        resp = supabase.table("vaccinations").select(
+            "child_id,vaccine_name,status,administered_date,dose_number"
+        ).in_("child_id", child_ids).execute()
+        return resp.data or []
+    except Exception:
+        return []
+
+def _fetch_growth_records_sync(child_ids: List[str], supabase: Client) -> List[Dict]:
+    """Fetch recent growth records for all children."""
+    try:
+        if not child_ids:
+            return []
+        resp = supabase.table("growth_records").select(
+            "child_id,measurement_date,weight_kg,height_cm,head_circumference_cm,age_months"
+        ).in_("child_id", child_ids).order("measurement_date", desc=True).limit(10).execute()
+        return resp.data or []
+    except Exception:
+        return []
+
+def _fetch_postnatal_assessments_sync(mother_id: str, supabase: Client) -> List[Dict]:
+    """Fetch recent postnatal assessments for mother & children."""
+    try:
+        resp = supabase.table("postnatal_assessments").select(
+            "assessment_type,assessment_date,mother_id,child_id,overall_risk_level,"
+            "notes,recommendations,days_postpartum,weight_kg,length_cm,"
+            "feeding_type,breastfeeding_established,mood_status"
+        ).eq("mother_id", mother_id).order("assessment_date", desc=True).limit(5).execute()
+        return resp.data or []
+    except Exception:
+        return []
+
 # --- Main Async Builder ---
 
 async def build_holistic_context_async(mother_id: str, supabase: Client, limits: Dict[str, int] | None = None) -> Dict[str, Any]:
     """
     Async + Parallelized version of context builder.
+    Now includes postnatal/child data when the mother has delivered.
     """
     limits = limits or {"timeline": 15, "memories": 25, "reports": 10}
     
@@ -130,6 +190,33 @@ async def build_holistic_context_async(mother_id: str, supabase: Client, limits:
     recent_risks = results[5] if not isinstance(results[5], Exception) else []
     
     upcoming_appt = upcoming_appts[0] if upcoming_appts else None
+    
+    # --- Check if postnatal → fetch child data ---
+    is_postnatal = mother.get('active_system') == 'santanraksha' or mother.get('delivery_status') in ['delivered', 'postnatal']
+    
+    children = []
+    vaccinations = []
+    growth_records = []
+    postnatal_assessments = []
+    
+    if is_postnatal:
+        # Fetch children first, then use child IDs for vaccinations/growth
+        children = await asyncio.to_thread(_fetch_children_sync, mother_id, supabase)
+        child_ids = [c['id'] for c in children if c.get('id')]
+        
+        if child_ids:
+            # Fetch vaccinations, growth, and assessments in parallel
+            postnatal_tasks = [
+                asyncio.to_thread(_fetch_vaccinations_sync, child_ids, supabase),
+                asyncio.to_thread(_fetch_growth_records_sync, child_ids, supabase),
+                asyncio.to_thread(_fetch_postnatal_assessments_sync, mother_id, supabase),
+            ]
+            pn_results = await asyncio.gather(*postnatal_tasks, return_exceptions=True)
+            vaccinations = pn_results[0] if not isinstance(pn_results[0], Exception) else []
+            growth_records = pn_results[1] if not isinstance(pn_results[1], Exception) else []
+            postnatal_assessments = pn_results[2] if not isinstance(pn_results[2], Exception) else []
+        else:
+            postnatal_assessments = await asyncio.to_thread(_fetch_postnatal_assessments_sync, mother_id, supabase)
     
     # --- Processing Logic (CPU bound, fast) ---
     
@@ -180,7 +267,6 @@ async def build_holistic_context_async(mother_id: str, supabase: Client, limits:
     
     # Pregnancy History (for Postnatal)
     pregnancy_history: List[str] = []
-    is_postnatal = mother.get('active_system') == 'santanraksha' or mother.get('delivery_status') in ['delivered', 'postnatal']
     
     if is_postnatal and timeline:
         keywords = {'preeclampsia', 'gdm', 'diabetes', 'anemia', 'hemorrhage', 'complication'}
@@ -199,6 +285,68 @@ async def build_holistic_context_async(mother_id: str, supabase: Client, limits:
     
     if is_postnatal:
         lines.append(f"Status: Postnatal/Delivered")
+        
+        # --- POSTNATAL: Add child data to context ---
+        if children:
+            lines.append("")
+            lines.append("=== CHILDREN ===")
+            for child in children:
+                child_name = child.get('name', 'Unknown')
+                child_id = child.get('id', '')
+                birth_date = child.get('birth_date', '')
+                gender = child.get('gender', '')
+                birth_wt = child.get('birth_weight_kg', '')
+                
+                # Calculate age
+                child_age_str = "unknown"
+                if birth_date:
+                    try:
+                        bd = datetime.fromisoformat(str(birth_date).replace("Z", "+00:00"))
+                        age_days = (datetime.now() - bd.replace(tzinfo=None)).days
+                        if age_days < 30:
+                            child_age_str = f"{age_days} days"
+                        else:
+                            child_age_str = f"{age_days // 30} months ({age_days} days)"
+                    except Exception:
+                        child_age_str = birth_date[:10] if birth_date else "unknown"
+                
+                lines.append(f"Child: {child_name} | {gender} | Age: {child_age_str} | Birth Wt: {birth_wt}kg")
+                
+                # Vaccinations for this child
+                child_vax = [v for v in vaccinations if v.get('child_id') == child_id]
+                if child_vax:
+                    completed = [v for v in child_vax if v.get('status') == 'completed']
+                    pending = [v for v in child_vax if v.get('status') != 'completed']
+                    lines.append(f"  Vaccinations: {len(completed)} completed, {len(pending)} pending")
+                    if pending:
+                        pending_names = [v.get('vaccine_name', '') for v in pending[:5]]
+                        lines.append(f"  Pending: {', '.join(pending_names)}")
+                
+                # Growth records for this child
+                child_growth = [g for g in growth_records if g.get('child_id') == child_id]
+                if child_growth:
+                    latest = child_growth[0]  # Already sorted desc
+                    lines.append(f"  Latest Growth ({latest.get('measurement_date', '')[:10]}): "
+                                f"Wt {latest.get('weight_kg')}kg | "
+                                f"Ht {latest.get('height_cm')}cm | "
+                                f"HC {latest.get('head_circumference_cm')}cm")
+        
+        # Postnatal assessments
+        if postnatal_assessments:
+            lines.append("")
+            lines.append("=== RECENT POSTNATAL ASSESSMENTS ===")
+            for a in postnatal_assessments[:3]:
+                atype = a.get('assessment_type', '')
+                adate = str(a.get('assessment_date', ''))[:10]
+                risk = a.get('overall_risk_level', 'N/A')
+                notes = a.get('notes', '')[:100] if a.get('notes') else ''
+                lines.append(f"- {adate} [{atype}] Risk: {risk}")
+                if a.get('mood_status') and a.get('mood_status') != 'stable':
+                    lines.append(f"  Mood: {a.get('mood_status')}")
+                if a.get('feeding_type'):
+                    lines.append(f"  Feeding: {a.get('feeding_type')}")
+                if notes:
+                    lines.append(f"  Notes: {notes}")
     else:
         due = mother.get("due_date")
         if due: lines.append(f"Due Date: {due[:10]}")
@@ -227,9 +375,11 @@ async def build_holistic_context_async(mother_id: str, supabase: Client, limits:
 
     # Sources
     sources = ["profile", "timeline", "memories", "reports", "appointments"]
+    if is_postnatal:
+        sources.extend(["children", "vaccinations", "growth_records", "postnatal_assessments"])
     
     elapsed = (datetime.now() - start_time).total_seconds()
-    logger.info(f"⚡ Context built in {elapsed:.2f}s for {mother_id}")
+    logger.info(f"⚡ Context built in {elapsed:.2f}s for {mother_id} ({'postnatal' if is_postnatal else 'pregnancy'})")
 
     return {
         "context_text": "\n".join(lines),
@@ -246,10 +396,26 @@ async def build_holistic_context_async(mother_id: str, supabase: Client, limits:
             "profile": mother,
             "timeline": timeline,
             "appointments": upcoming_appts,
-            "risks": recent_risks
+            "risks": recent_risks,
+            "children": children,
+            "vaccinations": vaccinations,
+            "growth_records": growth_records,
+            "postnatal_assessments": postnatal_assessments,
         }
     }
 
-# Sync wrapper for backward compatibility if absolutely needed
+# Sync wrapper for backward compatibility
+# NOTE: Cannot use asyncio.run() inside an existing event loop (e.g., FastAPI).
+# Use loop.run_until_complete() or call the async version directly instead.
 def build_holistic_context_sync(mother_id: str, supabase: Client):
-    return asyncio.run(build_holistic_context_async(mother_id, supabase))
+    try:
+        loop = asyncio.get_running_loop()
+        # Already in an event loop — must use thread
+        import concurrent.futures
+        with concurrent.futures.ThreadPoolExecutor() as pool:
+            return pool.submit(
+                asyncio.run, build_holistic_context_async(mother_id, supabase)
+            ).result(timeout=10)
+    except RuntimeError:
+        # No running loop — safe to use asyncio.run
+        return asyncio.run(build_holistic_context_async(mother_id, supabase))

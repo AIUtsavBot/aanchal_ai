@@ -107,7 +107,7 @@ export const motherAPI = {
         telegram_chat_id: data.telegram_chat_id ? String(data.telegram_chat_id).trim() : null
       }
 
-      console.log('Registering mother with payload:', payload)
+      if (import.meta.env.DEV) console.debug('Register payload keys:', Object.keys(payload))
       const response = await api.post('/mothers/register', payload)
       return response
     } catch (error) {
@@ -276,7 +276,7 @@ export const riskAPI = {
         notes: data.notes ? String(data.notes).trim() : null
       }
 
-      console.log('Assessing risk with payload:', payload)
+      if (import.meta.env.DEV) console.debug('Risk assessment for mother:', payload.mother_id)
       const response = await api.post('/risk/assess', payload)
       return response
     } catch (error) {

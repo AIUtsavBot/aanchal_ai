@@ -7,7 +7,7 @@ import logging
 from typing import Optional, List
 from fastapi import APIRouter, HTTPException, Depends, status, Query
 from pydantic import BaseModel, Field
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from fastapi.encoders import jsonable_encoder
 
 from models.postnatal_models import (
@@ -18,7 +18,6 @@ from models.postnatal_models import (
     PostnatalMothersQuery,
     PostnatalChildrenQuery,
     PostnatalMothersResponse,
-    PostnatalChildrenResponse,
     PostnatalChildrenResponse,
     AssessmentHistoryResponse,
     ChildCreate,
@@ -113,7 +112,7 @@ async def get_postnatal_mothers(
         logger.error(f"❌ Error fetching postnatal mothers: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error fetching mothers: {str(e)}"
+            detail="Error fetching mothers. Please try again later."
         )
 
 
@@ -170,7 +169,7 @@ async def register_child(
         logger.error(f"❌ Error registering child: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error registering child: {str(e)}"
+            detail="Error registering child. Please try again later."
         )
 
 @router.get("/children", response_model=PostnatalChildrenResponse)
@@ -254,7 +253,7 @@ async def get_postnatal_children(
         logger.error(f"❌ Error fetching children: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error fetching children: {str(e)}"
+            detail="Error fetching children. Please try again later."
         )
 
 
@@ -321,7 +320,7 @@ async def create_mother_assessment(
         logger.error(f"❌ Error creating mother assessment: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error creating assessment: {str(e)}"
+            detail="Error creating assessment. Please try again later."
         )
 
 
@@ -431,7 +430,7 @@ async def create_child_assessment(
         logger.error(f"❌ Error creating child assessment: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error creating assessment: {str(e)}"
+            detail="Error creating assessment. Please try again later."
         )
 
 
@@ -502,17 +501,192 @@ async def get_assessment_history(
         logger.error(f"❌ Error fetching assessment history: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error fetching assessment history: {str(e)}"
+            detail="Error fetching assessment history. Please try again later."
         )
         
 # ==================== VACCINATIONS ====================
 # Moved to santanraksha.py
 
+<<<<<<< HEAD
+=======
+@router.get("/children/{child_id}/vaccinations", response_model=VaccinationListResponse)
+async def get_child_vaccinations(
+    child_id: str,
+    limit: int = 50,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get vaccination records for a child"""
+    try:
+        # Check cache
+        cache_key = f"postnatal:vaccinations:{child_id}:{limit}"
+        if CACHE_AVAILABLE and cache:
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                cached_data["cached"] = True
+                return cached_data
+                
+        # Get all vaccinations for this child
+        query = supabase_admin.table("vaccinations").select("*").eq("child_id", child_id)
+        
+        result = query.execute()
+        vaccinations = result.data or []
+        
+        # Calculate stats
+        total = len(vaccinations)
+        completed = sum(1 for v in vaccinations if v.get("status") == "completed")
+        overdue = sum(1 for v in vaccinations if v.get("status") == "overdue")
+        
+        response = VaccinationListResponse(
+            vaccinations=vaccinations,
+            total=total,
+            completed=completed,
+            pending=total - completed,
+            overdue=overdue,
+            cached=False
+        )
+        
+        # Cache
+        if CACHE_AVAILABLE and cache:
+            cache.set(cache_key, response.dict(), ttl_seconds=60)
+            
+        return response
+        
+    except Exception as e:
+        logger.error(f"Error fetching vaccinations: {e}")
+        raise HTTPException(status_code=500, detail="Error fetching vaccinations")
+
+
+@router.post("/vaccinations", status_code=status.HTTP_201_CREATED, response_model=VaccinationResponse)
+async def create_vaccination(
+    vaccination: VaccinationCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Record a vaccination (or update existing)"""
+    try:
+        # Filter out None values to avoid Supabase column mismatch errors
+        raw_data = vaccination.dict()
+        data = {k: v for k, v in raw_data.items() if v is not None}
+        
+        # Convert date objects to ISO strings for Supabase
+        for key in list(data.keys()):
+            if isinstance(data[key], date):
+                data[key] = data[key].isoformat()
+        
+        data["created_at"] = datetime.utcnow().isoformat()
+        if not data.get("administered_by"):
+            data["administered_by"] = f"{current_user.get('role', 'User')} {current_user.get('id')}"
+            
+        # Check if record exists for this vaccine and child
+        existing = supabase_admin.table("vaccinations") \
+            .select("id") \
+            .eq("child_id", vaccination.child_id) \
+            .eq("vaccine_name", vaccination.vaccine_name) \
+            .execute()
+            
+        res = None
+        if existing.data:
+            # Update
+            res = supabase_admin.table("vaccinations").update(data).eq("id", existing.data[0]['id']).execute()
+        else:
+            # Insert
+            res = supabase_admin.table("vaccinations").insert(data).execute()
+            
+        if not res.data:
+            raise HTTPException(status_code=500, detail="Failed to save vaccination")
+            
+        # Invalidate cache
+        if CACHE_AVAILABLE and cache:
+            cache.delete(f"postnatal:vaccinations:{vaccination.child_id}:*")
+            
+        return res.data[0]
+        
+    except Exception as e:
+        logger.error(f"Error saving vaccination: {e}")
+        raise HTTPException(status_code=500, detail="Error saving vaccination")
+>>>>>>> c303068 (feat: postnatal context + vaccination fix + brain audit)
 
 
 # ==================== GROWTH ====================
 # Moved to santanraksha.py
 
+<<<<<<< HEAD
+=======
+@router.get("/children/{child_id}/growth", response_model=GrowthHistoryResponse)
+async def get_child_growth(
+    child_id: str,
+    limit: int = 20,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get growth records for a child"""
+    try:
+        # Check cache
+        cache_key = f"postnatal:growth:{child_id}:{limit}"
+        if CACHE_AVAILABLE and cache:
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                cached_data["cached"] = True
+                return cached_data
+                
+        # Get growth records
+        query = supabase_admin.table("growth_records") \
+            .select("*") \
+            .eq("child_id", child_id) \
+            .order("measurement_date", desc=True) \
+            .limit(limit)
+            
+        result = query.execute()
+        records = result.data or []
+        
+        # Get child info
+        child_res = supabase_admin.table("children").select("*").eq("id", child_id).single().execute()
+        
+        response = GrowthHistoryResponse(
+            records=records,
+            total=len(records),
+            child_info=child_res.data,
+            cached=False
+        )
+        
+        # Cache
+        if CACHE_AVAILABLE and cache:
+            cache.set(cache_key, response.dict(), ttl_seconds=60)
+            
+        return response
+        
+    except Exception as e:
+        logger.error(f"Error fetching growth records: {e}")
+        raise HTTPException(status_code=500, detail="Error fetching growth records")
+
+
+@router.post("/growth", status_code=status.HTTP_201_CREATED, response_model=GrowthRecordResponse)
+async def create_growth_record(
+    record: GrowthRecordCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Record a growth measurement"""
+    try:
+        data = jsonable_encoder(record.dict())
+        data["created_at"] = datetime.utcnow().isoformat()
+        if not data.get("measured_by"):
+            data["measured_by"] = f"{current_user.get('role', 'User')} {current_user.get('id')}"
+            
+        # Calculate Z-scores logic could go here, or handled by frontend/AI
+        
+        res = supabase_admin.table("growth_records").insert(data).execute()
+            
+        if not res.data:
+            raise HTTPException(status_code=500, detail="Failed to save growth record")
+            
+        # Invalidate cache
+        if CACHE_AVAILABLE and cache:
+            cache.delete(f"postnatal:growth:{record.child_id}:*")
+            
+        return res.data[0]
+        
+    except Exception as e:
+        logger.error(f"Error saving growth record: {e}")
+        raise HTTPException(status_code=500, detail="Error saving growth record")
+>>>>>>> c303068 (feat: postnatal context + vaccination fix + brain audit)
 
 # ==================== ASSESSMENTS ====================
 
@@ -561,7 +735,7 @@ async def get_child_health_assessments(
         
     except Exception as e:
         logger.error(f"Error fetching child assessments: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Error fetching child assessments")
 
 
 @router.get("/mothers/{mother_id}/assessments", response_model=AssessmentHistoryResponse)
@@ -609,7 +783,7 @@ async def get_mother_health_assessments(
         
     except Exception as e:
         logger.error(f"Error fetching mother assessments: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Error fetching mother assessments")
         
 
 # ==================== MILESTONES ====================

@@ -1,5 +1,5 @@
 """
-MatruRaksha AI - Base Agent Class
+Aanchal AI - Base Agent Class
 All specialized agents inherit from this base class
 """
 
@@ -30,7 +30,7 @@ except Exception:
 GEMINI_MODEL_NAME = (
     os.getenv("GEMINI_SFT_MODEL")
     or os.getenv("GEMINI_MODEL_NAME")
-    or "gemini-2.5-flash"
+    or "gemini-2.0-flash"
 )
 
 
@@ -177,7 +177,7 @@ Response (ask clarifying questions if needed, include citations for medical advi
                 # Build validation context
                 validation_context = {
                     'query': query,
-                    'age_months': mother_context.get('child_age_months', 12),
+                    'age_months': mother_context.get('child_age_months') or mother_context.get('age_months', 12),
                     'mother_id': mother_context.get('id'),
                     'agent_type': self.agent_name
                 }

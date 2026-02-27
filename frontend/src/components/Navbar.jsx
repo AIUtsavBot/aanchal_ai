@@ -35,7 +35,7 @@ export default function Navbar() {
             <Heart className="w-8 h-8 fill-current" />
             <div>
               <h1 className="text-2xl font-bold">
-                {location.pathname === '/' ? 'Aanchal AI' : (currentView === 'postnatal' ? 'SantanRaksha AI' : 'MatruRaksha AI')}
+                Aanchal AI
               </h1>
               <p className="text-blue-100 text-xs">Maternal & Child Health Guardian</p>
             </div>

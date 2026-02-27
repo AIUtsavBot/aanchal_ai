@@ -10,7 +10,6 @@ from typing import Dict, Any, List, Optional
 from supabase import create_client, Client
 from dotenv import load_dotenv
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 load_dotenv(os.path.join(BASE_DIR, ".env"))
@@ -153,7 +152,7 @@ class DatabaseService:
                 'response_time_ms': response_time_ms,
                 'intent_classification': intent_classification,
                 'confidence_score': confidence_score,
-                'message_timestamp': datetime.now().isoformat()
+                'message_timestamp': datetime.utcnow().isoformat()
             }
             
             result = supabase.table('chat_histories').insert(data).execute()
@@ -313,9 +312,13 @@ class DatabaseService:
                 with ThreadPoolExecutor(max_workers=2) as executor:
                     futures = {}
                     if aw_id:
-                        futures[executor.submit(lambda: supabase.table('asha_workers').select('*').eq('id', aw_id).execute())] = 'asha'
+                        def fetch_asha(wid=aw_id):  # bind aw_id to default arg
+                            return supabase.table('asha_workers').select('*').eq('id', wid).execute()
+                        futures[executor.submit(fetch_asha)] = 'asha'
                     if doc_id:
-                        futures[executor.submit(lambda: supabase.table('doctors').select('*').eq('id', doc_id).execute())] = 'doctor'
+                        def fetch_doctor(did=doc_id):  # bind doc_id to default arg
+                            return supabase.table('doctors').select('*').eq('id', did).execute()
+                        futures[executor.submit(fetch_doctor)] = 'doctor'
 
                     for future in as_completed(futures):
                         key = futures[future]
@@ -461,7 +464,13 @@ class DatabaseService:
         try:
             due_date_obj = datetime.fromisoformat(due_date.replace('Z', '+00:00'))
             conception_date = due_date_obj - timedelta(weeks=40)
-            weeks_pregnant = (datetime.now() - conception_date).days // 7
+            # Use timezone-aware now if due_date is aware
+            if due_date_obj.tzinfo:
+                from datetime import timezone
+                now = datetime.now(timezone.utc)
+            else:
+                now = datetime.now()
+            weeks_pregnant = (now - conception_date).days // 7
             return max(0, min(weeks_pregnant, 42))  # Cap at 0-42 weeks
             
         except Exception as e:

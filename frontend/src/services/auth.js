@@ -50,7 +50,16 @@ const IDLE_TIMEOUT_MS = 30 * 60 * 1000  // 30 minutes idle timeout
 // Cache user for instant reload
 const cacheUser = (user) => {
   if (user) {
-    localStorage.setItem(USER_CACHE_KEY, JSON.stringify(user))
+    // Only cache non-sensitive fields (no tokens, no metadata)
+    const safeUser = {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      full_name: user.full_name,
+      assigned_area: user.assigned_area,
+      is_active: user.is_active,
+    }
+    localStorage.setItem(USER_CACHE_KEY, JSON.stringify(safeUser))
     localStorage.setItem(LAST_ACTIVITY_KEY, Date.now().toString())
   } else {
     localStorage.removeItem(USER_CACHE_KEY)
@@ -328,7 +337,7 @@ class AuthService {
     try {
       const { data, error } = await supabase
         .from('user_profiles')
-        .select('*')
+        .select('id,full_name,role,phone,assigned_area,avatar_url,is_active,asha_worker_id')
         .eq('id', userId)
         .single()
 

@@ -1,5 +1,5 @@
 """
-MatruRaksha AI - Care and Nutrition Agents
+Aanchal AI - Care and Nutrition Agents
 """
 
 from agents.base_agent import BaseAgent
@@ -17,7 +17,7 @@ class RiskAgent(BaseAgent):
     
     def get_system_prompt(self) -> str:
         return """
-You are a MATERNAL RISK ASSESSMENT SPECIALIST for MatruRaksha AI.
+You are a MATERNAL RISK ASSESSMENT SPECIALIST for Aanchal AI.
 
 Your role: Help identify, monitor, and manage potential pregnancy risks and complications.
 

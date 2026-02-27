@@ -105,7 +105,7 @@ class AuthService:
                 
         except Exception as e:
             logger.error(f"❌ Sign up error: {e}")
-            raise Exception(f"Sign up failed: {str(e)}")
+            raise Exception("Sign up failed")
 
     @staticmethod
     async def create_registration_request(
@@ -386,7 +386,7 @@ class AuthService:
                 
         except Exception as e:
             logger.error(f"❌ Sign in error: {e}")
-            raise Exception(f"Sign in failed: {str(e)}")
+            raise Exception("Sign in failed. Please check your credentials.")
     
     @staticmethod
     async def sign_in_with_google() -> Dict[str, Any]:
@@ -410,7 +410,7 @@ class AuthService:
             
         except Exception as e:
             logger.error(f"❌ Google OAuth error: {e}")
-            raise Exception(f"Google OAuth failed: {str(e)}")
+            raise Exception("Google OAuth setup failed")
     
     @staticmethod
     async def sign_out(access_token: str) -> Dict[str, Any]:
@@ -439,7 +439,7 @@ class AuthService:
             
         except Exception as e:
             logger.error(f"❌ Sign out error: {e}")
-            raise Exception(f"Sign out failed: {str(e)}")
+            raise Exception("Sign out failed")
     
     @staticmethod
     async def get_user(access_token: str) -> Dict[str, Any]:
@@ -485,7 +485,7 @@ class AuthService:
                 
         except Exception as e:
             logger.error(f"❌ Get user error: {e}")
-            raise Exception(f"Failed to get user: {str(e)}")
+            raise Exception("Failed to get user")
     
     @staticmethod
     async def refresh_session(refresh_token: str) -> Dict[str, Any]:
@@ -515,7 +515,7 @@ class AuthService:
                 
         except Exception as e:
             logger.error(f"❌ Session refresh error: {e}")
-            raise Exception(f"Session refresh failed: {str(e)}")
+            raise Exception("Session refresh failed")
     
     @staticmethod
     async def update_profile(
@@ -568,7 +568,7 @@ class AuthService:
                 
         except Exception as e:
             logger.error(f"❌ Profile update error: {e}")
-            raise Exception(f"Profile update failed: {str(e)}")
+            raise Exception("Profile update failed")
     
     @staticmethod
     async def get_users_by_role(role: str, assigned_area: Optional[str] = None) -> List[Dict[str, Any]]:
@@ -677,4 +677,4 @@ async def get_current_user(
             raise HTTPException(status_code=401, detail="Invalid or expired token")
     except Exception as e:
         logger.error(f"Auth error: {e}")
-        raise HTTPException(status_code=401, detail=f"Authentication failed: {str(e)}")
+        raise HTTPException(status_code=401, detail="Authentication failed")

@@ -65,7 +65,7 @@ async def verify_certificate(
         logger.error(f"Certificate verification error: {e}", exc_info=True)
         raise HTTPException(
             status_code=500,
-            detail=f"Verification failed: {str(e)}"
+            detail="Verification failed. Please try again."
         )
 
 
@@ -96,7 +96,7 @@ async def parse_certificate(file: UploadFile = File(...)):
         logger.error(f"Certificate parsing error: {e}", exc_info=True)
         raise HTTPException(
             status_code=500,
-            detail=f"Parsing failed: {str(e)}"
+            detail="Document parsing failed. Please try again."
         )
 
 
@@ -177,7 +177,7 @@ async def parse_id_document_endpoint(file: UploadFile = File(...)):
         logger.error(f"ID document parsing error: {e}", exc_info=True)
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to parse document: {str(e)}"
+            detail="Failed to parse document. Please try again."
         )
 
 
@@ -219,7 +219,7 @@ async def validate_asha_id(file: UploadFile = File(...)):
         logger.error(f"ASHA validation error: {e}", exc_info=True)
         raise HTTPException(
             status_code=500,
-            detail=f"Validation failed: {str(e)}"
+            detail="Validation failed. Please try again."
         )
 
 

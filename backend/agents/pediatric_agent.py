@@ -13,12 +13,6 @@ import logging
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 
-try:
-    import google.generativeai as genai
-    GEMINI_AVAILABLE = True
-except ImportError:
-    GEMINI_AVAILABLE = False
-
 from .base_agent import BaseAgent
 
 logger = logging.getLogger(__name__)

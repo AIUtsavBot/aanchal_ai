@@ -1,11 +1,12 @@
 """
-MatruRaksha AI - Telegram Bot
+Aanchal AI - Telegram Bot
 
 Provides conversational maternal health support, home dashboard, profile switching,
 document uploads, and AI-powered answers.
 """
 
 import os
+import asyncio
 import json
 import html
 import logging
@@ -18,7 +19,6 @@ from io import BytesIO
 
 from gtts import gTTS
 import aiohttp
-import asyncio
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.constants import ParseMode
 from telegram.ext import (
@@ -113,7 +113,13 @@ def _calculate_pregnancy_status(due_date: Optional[str]) -> Optional[str]:
     try:
         due = datetime.fromisoformat(due_date.replace("Z", "+00:00"))
         conception = due - timedelta(weeks=40)
-        weeks = max(0, min(42, (datetime.now() - conception).days // 7))
+        # Use timezone-aware now if due_date is timezone-aware
+        if due.tzinfo:
+            from datetime import timezone
+            now = datetime.now(timezone.utc)
+        else:
+            now = datetime.now()
+        weeks = max(0, min(42, (now - conception).days // 7))
         months = max(1, min(10, weeks // 4 or 1))
         return f"Week {weeks} (Month {months})"
     except Exception:
@@ -157,7 +163,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not mothers:
         # Display the Telegram Chat ID prominently so the user can easily share it
         await update.message.reply_text(
-            "👋 *Welcome to MatruRaksha AI!*\n\n"
+            "👋 *Welcome to Aanchal AI!*\n\n"
             f"📱 *Your Telegram Chat ID:* `{chat_id}`\n\n"
             "_Copy this ID and share it with your ASHA worker or Doctor if they are registering you in the system._\n\n"
             "It looks like you haven't registered yet. Use /register to add your profile "
@@ -843,6 +849,8 @@ async def receive_age(update: Update, context: ContextTypes.DEFAULT_TYPE):
         value = None
     context.user_data.setdefault('registration_data', {})
     context.user_data['registration_data']['age'] = value
+    await update.message.reply_text("Please enter your phone number (or type 'skip').")
+    return AWAITING_PHONE
 
 async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
@@ -910,8 +918,8 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                     await status_msg.edit_text("⚠️ Could not hear anything clearly. Please try again.")
                     return
                 
-                await status_msg.edit_text(f"🗣️ *You said:*\n_{user_text}_\n\n⏳ Generating response... please wait.", parse_mode=ParseMode.MARKDOWN)
-                
+                # Show what was heard
+                await status_msg.edit_text(f"🗣️ You said: *\"{user_text}\"*", parse_mode=ParseMode.MARKDOWN)
                 
                 # 3. Route to Orchestrator
                 # Need mother context
@@ -932,36 +940,42 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                     # Send thinking action
                     await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
                     
-                    # Call Orchestrator
-                    # Call Orchestrator
-                    response_text = await route_message(
+                    # Call Orchestrator — route_message returns a string
+                    reply_text = await route_message(
                         message=user_text,
                         mother_context=mother,
-                        reports_context=[]
+                        reports_context=[],
                     )
-                    reply_text = response_text
-                    
-                    # Note: Orchestrator currently returns string only, so no mother_data update check needed here.
+                    if not reply_text:
+                        reply_text = "I'm not sure how to help with that."
 
                 # 4. Text-to-Speech (TTS)
                 await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="record_voice")
                 
-                tts = gTTS(reply_text, lang='en', tld='co.in') # Indian accent English
-                # Note: gTTS lang support is limited, for mixed Hindi code-switching 'en' often works best or 'hi'
+                # Detect language from mother profile for TTS
+                tts_lang = 'en'
+                if mother:
+                    pref_lang = mother.get('preferred_language', 'en')
+                    if pref_lang in ('hi', 'mr'):  # gTTS supports hi, mr
+                        tts_lang = pref_lang
                 
-                audio_io = BytesIO()
-                tts.write_to_fp(audio_io)
-                audio_io.seek(0)
+                try:
+                    tts = gTTS(reply_text, lang=tts_lang, tld='co.in')
+                    audio_io = BytesIO()
+                    tts.write_to_fp(audio_io)
+                    audio_io.seek(0)
+                    
+                    # 5. Send Voice Reply
+                    await update.message.reply_voice(
+                        voice=audio_io,
+                        caption=f"{reply_text[:200]}..." if len(reply_text) > 200 else reply_text
+                    )
+                except Exception as tts_err:
+                    logger.warning(f"TTS failed, sending text only: {tts_err}")
                 
-                # 5. Send Audio Reply
-                await update.message.reply_audio(
-                    audio=audio_io,
-                    title="MatruRaksha Assistant",
-                    performer="AI Doctor",
-                    caption=f"{reply_text[:200]}..." # Short caption
-                )
-                
-                
+                # Send full text as backup
+                await update.message.reply_text(reply_text)
+
             except Exception as e:
                 logger.error(f"Voice processing error: {e}", exc_info=True)
                 await status_msg.edit_text("❌ Sorry, I couldn't process your voice message. Please try typing.")
@@ -969,7 +983,6 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
     except Exception as e:
         logger.error(f"Voice handler fatal error: {e}", exc_info=True)
         await status_msg.edit_text("❌ Error processing voice.")
-
 
 
 async def receive_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -1172,10 +1185,14 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
         'baby not moving', 'no movement', 'water broke', 'water break', 'labor',
         'emergency', 'urgent', 'help me', 'dying', 'hospital', 'ambulance',
         'headache', 'blurred vision', 'swelling', 'high fever', 'chest pain',
-        # Hindi
-        'खून', 'रक्तस्राव', 'दर्द', 'बेहोश', 'सांस', 'मदद', 'इमरजेंसी', 'अस्पताल',
-        # Marathi
-        'रक्त', 'वेदना', 'बेशुद्ध', 'श्वास', 'मदत', 'इमर्जन्सी', 'हॉस्पिटल',
+        # Hindi (Devanagari)
+        'खून', 'रक्तस्राव', 'दर्द', 'तेज दर्द', 'बेहोश', 'सांस',
+        'मदद', 'इमरजेंसी', 'अस्पताल', 'एम्बुलेंस', 'बुखार', 'दौरा',
+        # Hindi (transliterated — critical for Roman-script users)
+        'khoon', 'dard', 'tez dard', 'behosh', 'saans', 'madad',
+        'bukhar', 'daura', 'bacha nahi hil raha',
+        # Marathi (Devanagari)
+        'रक्त', 'वेदना', 'बेशुद्ध', 'श्वास', 'मदत', 'इमर्जन्सी', 'हॉस्पिटल', 'ताप',
     ]
     text_lower = text.lower()
     is_emergency = any(keyword in text_lower for keyword in emergency_keywords)
