@@ -29,14 +29,14 @@
     border-radius: 14px;
     background: rgba(255, 255, 255, 0.5);
     backdrop-filter: blur(15px);
-    border: 1px solid rgba(147, 197, 253, 0.2);
+    border: 1px solid rgba(153, 246, 228, 0.2);
 }
 
 .delivery-loading-spinner {
     width: 40px;
     height: 40px;
-    border: 3px solid rgba(37, 99, 235, 0.15);
-    border-top: 3px solid #2563eb;
+    border: 3px solid rgba(13, 148, 136, 0.15);
+    border-top: 3px solid #0d9488;
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin-bottom: 1rem;
@@ -64,7 +64,7 @@
 .mother-card {
     background: rgba(255, 255, 255, 0.55);
     backdrop-filter: blur(15px);
-    border: 1px solid rgba(147, 197, 253, 0.2);
+    border: 1px solid rgba(153, 246, 228, 0.2);
     border-radius: 14px;
     padding: 1.25rem;
     cursor: pointer;
@@ -73,15 +73,15 @@
 
 .mother-card:hover {
     background: rgba(255, 255, 255, 0.8);
-    border-color: rgba(37, 99, 235, 0.2);
-    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.08);
+    border-color: rgba(13, 148, 136, 0.2);
+    box-shadow: 0 6px 20px rgba(13, 148, 136, 0.08);
     transform: translateY(-2px);
 }
 
 .mother-card.selected {
-    border-color: #2563eb;
-    background: rgba(37, 99, 235, 0.04);
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+    border-color: #0d9488;
+    background: rgba(13, 148, 136, 0.04);
+    box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.15);
 }
 
 .mother-card-name {
@@ -127,7 +127,7 @@
 .delivery-form-section {
     background: rgba(255, 255, 255, 0.55);
     backdrop-filter: blur(15px);
-    border: 1px solid rgba(147, 197, 253, 0.2);
+    border: 1px solid rgba(153, 246, 228, 0.2);
     border-radius: 14px;
     padding: 1.5rem;
     margin-bottom: 1.25rem;
@@ -135,7 +135,7 @@
 }
 
 .delivery-form-section:hover {
-    border-color: rgba(37, 99, 235, 0.15);
+    border-color: rgba(13, 148, 136, 0.15);
 }
 
 .delivery-form-section h3 {
@@ -169,7 +169,7 @@
     width: 100%;
     padding: 10px 14px;
     background: rgba(255, 255, 255, 0.6);
-    border: 1px solid rgba(147, 197, 253, 0.25);
+    border: 1px solid rgba(153, 246, 228, 0.25);
     border-radius: 10px;
     color: #1e293b;
     font-size: 0.875rem;
@@ -180,8 +180,8 @@
 .delivery-form-group input:focus,
 .delivery-form-group select:focus,
 .delivery-form-group textarea:focus {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    border-color: #0d9488;
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
     background: rgba(255, 255, 255, 0.85);
 }
 
@@ -196,7 +196,7 @@
     align-items: center;
     gap: 8px;
     padding: 12px 28px;
-    background: linear-gradient(135deg, #2563eb, #06b6d4);
+    background: linear-gradient(135deg, #0d9488, #06b6d4);
     color: white;
     border: none;
     border-radius: 12px;
@@ -204,12 +204,12 @@
     font-size: 0.9rem;
     cursor: pointer;
     transition: all 0.25s ease;
-    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2);
+    box-shadow: 0 4px 15px rgba(13, 148, 136, 0.2);
 }
 
 .delivery-submit-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(37, 99, 235, 0.3);
+    box-shadow: 0 8px 25px rgba(13, 148, 136, 0.3);
 }
 
 .delivery-submit-btn:disabled {

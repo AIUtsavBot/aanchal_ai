@@ -3,7 +3,7 @@
     display: inline-flex;
     background: rgba(255, 255, 255, 0.5);
     backdrop-filter: blur(15px);
-    border: 1px solid rgba(147, 197, 253, 0.25);
+    border: 1px solid rgba(153, 246, 228, 0.25);
     border-radius: 10px;
     padding: 3px;
     gap: 2px;
@@ -23,12 +23,12 @@
 }
 
 .view-toggle-btn:hover {
-    color: #2563eb;
-    background: rgba(37, 99, 235, 0.05);
+    color: #0d9488;
+    background: rgba(13, 148, 136, 0.05);
 }
 
 .view-toggle-btn.active {
-    background: linear-gradient(135deg, #2563eb, #06b6d4);
+    background: linear-gradient(135deg, #0d9488, #06b6d4);
     color: white;
-    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.2);
 }

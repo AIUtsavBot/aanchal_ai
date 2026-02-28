@@ -15,7 +15,7 @@ CLINICAL TEAL — Healthtech Dashboard
   background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-right: 1px solid rgba(147, 197, 253, 0.25);
+  border-right: 1px solid rgba(153, 246, 228, 0.25);
   min-height: 100vh;
   padding: 1.5rem 1rem;
 }
@@ -106,14 +106,14 @@ CLINICAL TEAL — Healthtech Dashboard
 }
 
 .dashboard-nav-tab:hover {
-  background: rgba(37, 99, 235, 0.06);
-  color: #2563eb;
+  background: rgba(13, 148, 136, 0.06);
+  color: #0d9488;
 }
 
 .dashboard-nav-tab.active {
-  background: linear-gradient(135deg, #2563eb, #06b6d4);
+  background: linear-gradient(135deg, #0d9488, #06b6d4);
   color: white;
-  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 4px 15px rgba(13, 148, 136, 0.2);
 }
 
 /* KPI Cards */
@@ -136,7 +136,7 @@ CLINICAL TEAL — Healthtech Dashboard
 .kpi-card .kpi-value {
   font-size: 1.75rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #2563eb, #06b6d4);
+  background: linear-gradient(135deg, #0d9488, #06b6d4);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -159,7 +159,7 @@ CLINICAL TEAL — Healthtech Dashboard
 .dashboard-form {
   background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(147, 197, 253, 0.2);
+  border: 1px solid rgba(153, 246, 228, 0.2);
   border-radius: 14px;
   padding: 1.5rem;
 }
@@ -178,7 +178,7 @@ CLINICAL TEAL — Healthtech Dashboard
   width: 100%;
   padding: 10px 14px;
   background: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(147, 197, 253, 0.25);
+  border: 1px solid rgba(153, 246, 228, 0.25);
   border-radius: 10px;
   color: #1e293b;
   font-size: 0.875rem;
@@ -189,8 +189,8 @@ CLINICAL TEAL — Healthtech Dashboard
 .dashboard-form input:focus,
 .dashboard-form textarea:focus,
 .dashboard-form select:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  border-color: #0d9488;
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
 }
 
 .dashboard-form input::placeholder,
@@ -212,7 +212,7 @@ CLINICAL TEAL — Healthtech Dashboard
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: #64748b;
-  border-bottom: 1px solid rgba(147, 197, 253, 0.2);
+  border-bottom: 1px solid rgba(153, 246, 228, 0.2);
   text-align: left;
 }
 
@@ -329,7 +329,7 @@ CLINICAL TEAL — Healthtech Dashboard
   font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.25s ease;
-  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 4px 15px rgba(13, 148, 136, 0.2);
 }
 
 .btn-primary:hover {
@@ -476,9 +476,9 @@ CLINICAL TEAL — Healthtech Dashboard
 }
 
 .patient-card.selected {
-  border-color: #2563eb;
-  background: rgba(37, 99, 235, 0.04);
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+  border-color: #0d9488;
+  background: rgba(13, 148, 136, 0.04);
+  box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.15);
 }
 
 .patient-info {
@@ -650,7 +650,7 @@ tr:hover {
   .dashboard-sidebar {
     min-height: auto;
     border-right: none;
-    border-bottom: 1px solid rgba(147, 197, 253, 0.25);
+    border-bottom: 1px solid rgba(153, 246, 228, 0.25);
     padding: 1rem;
   }
 

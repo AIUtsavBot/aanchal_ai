@@ -40,7 +40,7 @@ export default function RiskChart({ type = 'pie', data = [] }) {
           <Tooltip />
           <Legend />
           <Bar dataKey="compliance" fill="#10b981" name="Compliance %" />
-          <Bar dataKey="visits" fill="#3b82f6" name="Visits" />
+          <Bar dataKey="visits" fill="#14b8a6" name="Visits" />
         </BarChart>
       </ResponsiveContainer>
     </div>

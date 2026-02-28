@@ -152,9 +152,9 @@ export default function GrowthChart({ data = [] }) {
                         type="monotone"
                         dataKey="childWeight"
                         name="Child's Weight"
-                        stroke="#3b82f6"
+                        stroke="#14b8a6"
                         strokeWidth={3}
-                        dot={{ r: 4, fill: "#3b82f6", strokeWidth: 2, stroke: "#fff" }}
+                        dot={{ r: 4, fill: "#14b8a6", strokeWidth: 2, stroke: "#fff" }}
                         connectNulls
                     />
 
