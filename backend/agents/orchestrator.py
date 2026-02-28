@@ -87,8 +87,6 @@ class MessageIntent:
         'मदत': 7, 'इमर्जन्सी': 10, 'हॉस्पिटल': 4, 'ताप': 5,
     }
 
-    }
-
 # ==================== CLASSIFICATION CACHE ====================
 # LRU cache to avoid repeated Gemini API calls for identical/similar messages
 _classification_cache: Dict[str, tuple] = {}  # hash -> (agent_type, timestamp)
