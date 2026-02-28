@@ -50,7 +50,7 @@ router = APIRouter(prefix="/postnatal", tags=["postnatal"])
 async def get_postnatal_mothers(
     asha_worker_id: Optional[int] = Query(None),
     doctor_id: Optional[int] = Query(None),
-    mother_status: str = Query("postnatal", alias="status"),
+    mother_status: str = Query("delivered", alias="status"),
     limit: int = Query(50, ge=1, le=100),
     offset: int = Query(0, ge=0),
     current_user: dict = Depends(get_current_user)
@@ -77,7 +77,7 @@ async def get_postnatal_mothers(
                 return cached_data
         
         # Build query
-        query = supabase_admin.table("mothers").select("*").eq("status", mother_status)
+        query = supabase_admin.table("mothers").select("*").eq("delivery_status", mother_status)
         
         if asha_worker_id:
             query = query.eq("asha_worker_id", asha_worker_id)
@@ -205,7 +205,7 @@ async def get_postnatal_children(
         # If filtering by asha/doctor, first get mother IDs
         mother_ids = None
         if asha_worker_id or doctor_id:
-            mothers_query = supabase_admin.table("mothers").select("id").eq("status", "postnatal")
+            mothers_query = supabase_admin.table("mothers").select("id").eq("delivery_status", "delivered")
             if asha_worker_id:
                 mothers_query = mothers_query.eq("asha_worker_id", asha_worker_id)
             if doctor_id:

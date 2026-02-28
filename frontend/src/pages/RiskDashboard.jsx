@@ -507,12 +507,12 @@ export default function RiskDashboard() {
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className={`text-2xl font-extrabold ${darkMode ? 'text-white' : 'text-gray-900'}`}>🏥 MaatruRaksha AI</h1>
-            <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>{t('maternal_system')}</p>
+            <h1 className={`text-2xl font-extrabold ${darkMode ? 'text-slate-800' : 'text-slate-800'}`}>🏥 MaatruRaksha AI</h1>
+            <p className={`${darkMode ? 'text-gray-300' : 'text-slate-500'}`}>{t('maternal_system')}</p>
           </div>
           <button
             onClick={() => setDarkMode(!darkMode)}
-            className={`px-4 py-2 rounded-lg font-semibold shadow-sm ${darkMode ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
+            className={`px-4 py-2 rounded-lg font-semibold shadow-sm ${darkMode ? 'bg-gray-700 text-slate-800 hover:bg-gray-600' : 'bg-white/60 text-slate-800 hover:bg-gray-300'}`}
             title={darkMode ? t('light_mode') : t('dark_mode')}
           >
             {darkMode ? `☀️ ${t('light')}` : `🌙 ${t('dark')}`}
@@ -520,14 +520,14 @@ export default function RiskDashboard() {
         </div>
 
         {message && (
-          <div className={`fixed top-5 right-5 rounded-lg shadow-lg text-sm max-w-sm px-5 py-4 animate-fade-in ${message.type === 'success' ? 'bg-green-100 text-green-900 border border-green-200' :
-            message.type === 'error' ? 'bg-red-100 text-red-900 border border-red-200' : 'bg-blue-100 text-blue-900 border border-blue-200'
+          <div className={`fixed top-5 right-5 rounded-lg shadow-xl shadow-blue-500/10 text-sm max-w-sm px-5 py-4 animate-fade-in ${message.type === 'success' ? 'bg-emerald-500/15 text-green-900 border border-emerald-200' :
+            message.type === 'error' ? 'bg-red-500/100/15 text-red-900 border border-red-200' : 'bg-blue-500/100/15 text-blue-900 border border-blue-200'
             }`}>
             {message.text}
           </div>
         )}
 
-        <div className={`mb-6 p-2 rounded-xl shadow ${darkMode ? 'bg-[#262641]' : 'bg-white'}`}>
+        <div className={`mb-6 p-2 rounded-xl shadow ${darkMode ? 'bg-[#262641]' : 'bg-white/60 backdrop-blur-xl'}`}>
           <div className="flex flex-wrap gap-2">
             {[
               { id: 'dashboard', label: `📊 ${t('dashboard')}` },
@@ -541,7 +541,7 @@ export default function RiskDashboard() {
                   ? 'bg-teal-600 text-white'
                   : darkMode
                     ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
-                    : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                    : 'bg-white/50 text-slate-800 hover:bg-white/60'
                   }`}
               >
                 {tab.label}
@@ -563,23 +563,23 @@ export default function RiskDashboard() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-white p-5 rounded-lg border-l-4 border-red-500 shadow">
-                  <div className="text-xs text-gray-600 font-semibold mb-3">🔴 {t('high_risk')}</div>
+                <div className="bg-white/60 backdrop-blur-xl p-5 rounded-lg border-l-4 border-red-500 shadow">
+                  <div className="text-xs text-slate-500 font-semibold mb-3">🔴 {t('high_risk')}</div>
                   <div className="text-4xl font-bold text-red-600">{analytics.highRiskCount}</div>
                 </div>
 
-                <div className="bg-white p-5 rounded-lg border-l-4 border-yellow-500 shadow">
-                  <div className="text-xs text-gray-600 font-semibold mb-3">🟡 {t('moderate_risk')}</div>
+                <div className="bg-white/60 backdrop-blur-xl p-5 rounded-lg border-l-4 border-yellow-500 shadow">
+                  <div className="text-xs text-slate-500 font-semibold mb-3">🟡 {t('moderate_risk')}</div>
                   <div className="text-4xl font-bold text-yellow-600">{analytics.moderateRiskCount}</div>
                 </div>
 
-                <div className="bg-white p-5 rounded-lg border-l-4 border-green-500 shadow">
-                  <div className="text-xs text-gray-600 font-semibold mb-3">🟢 {t('low_risk')}</div>
-                  <div className="text-4xl font-bold text-green-600">{analytics.lowRiskCount}</div>
+                <div className="bg-white/60 backdrop-blur-xl p-5 rounded-lg border-l-4 border-emerald-500 shadow">
+                  <div className="text-xs text-slate-500 font-semibold mb-3">🟢 {t('low_risk')}</div>
+                  <div className="text-4xl font-bold text-emerald-600">{analytics.lowRiskCount}</div>
                 </div>
 
-                <div className="bg-white p-5 rounded-lg border-l-4 border-blue-500 shadow">
-                  <div className="text-xs text-gray-600 font-semibold mb-3">📋 {t('total_assessments')}</div>
+                <div className="bg-white/60 backdrop-blur-xl p-5 rounded-lg border-l-4 border-blue-500 shadow">
+                  <div className="text-xs text-slate-500 font-semibold mb-3">📋 {t('total_assessments')}</div>
                   <div className="text-4xl font-bold text-blue-600">{analytics.totalAssessments}</div>
                 </div>
               </div>
@@ -588,8 +588,8 @@ export default function RiskDashboard() {
             {/* Charts Section */}
             <div className="flex flex-col gap-6">
               {/* Risk Trend Chart */}
-              <div className={`${darkMode ? 'bg-[#262641]' : 'bg-white'} p-5 rounded-lg shadow transition-colors`}>
-                <h3 className={`${darkMode ? 'text-white' : 'text-gray-900'} mb-4 text-base font-semibold`}>📊 {t('risk_trend')}</h3>
+              <div className={`${darkMode ? 'bg-[#262641]' : 'bg-white/60 backdrop-blur-xl'} p-5 rounded-lg shadow transition-colors`}>
+                <h3 className={`${darkMode ? 'text-slate-800' : 'text-slate-800'} mb-4 text-base font-semibold`}>📊 {t('risk_trend')}</h3>
                 {riskTrend.length > 0 ? (
                   <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={riskTrend} margin={{ top: 20, right: 30, left: 0, bottom: 60 }}>
@@ -604,14 +604,14 @@ export default function RiskDashboard() {
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
-                  <p className="text-gray-600 text-center py-10">{t('no_assessment_data')}</p>
+                  <p className="text-slate-500 text-center py-10">{t('no_assessment_data')}</p>
                 )}
               </div>
 
               {/* Age Distribution & Risk Distribution */}
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-                <div className={`${darkMode ? 'bg-[#262641]' : 'bg-white'} p-5 rounded-lg shadow transition-colors`}>
-                  <h3 className={`${darkMode ? 'text-white' : 'text-gray-900'} mb-4 text-base font-semibold`}>👶 {t('age_distribution')}</h3>
+                <div className={`${darkMode ? 'bg-[#262641]' : 'bg-white/60 backdrop-blur-xl'} p-5 rounded-lg shadow transition-colors`}>
+                  <h3 className={`${darkMode ? 'text-slate-800' : 'text-slate-800'} mb-4 text-base font-semibold`}>👶 {t('age_distribution')}</h3>
                   {ageDistribution.some(d => d.value > 0) ? (
                     <ResponsiveContainer width="100%" height={300}>
                       <PieChart>
@@ -624,12 +624,12 @@ export default function RiskDashboard() {
                       </PieChart>
                     </ResponsiveContainer>
                   ) : (
-                    <p className="text-gray-600 text-center py-10">{t('no_data')}</p>
+                    <p className="text-slate-500 text-center py-10">{t('no_data')}</p>
                   )}
                 </div>
 
-                <div className={`${darkMode ? 'bg-[#262641]' : 'bg-white'} p-5 rounded-lg shadow transition-colors`}>
-                  <h3 className={`${darkMode ? 'text-white' : 'text-gray-900'} mb-4 text-base font-semibold`}>⚠️ {t('overall_risk_distribution')}</h3>
+                <div className={`${darkMode ? 'bg-[#262641]' : 'bg-white/60 backdrop-blur-xl'} p-5 rounded-lg shadow transition-colors`}>
+                  <h3 className={`${darkMode ? 'text-slate-800' : 'text-slate-800'} mb-4 text-base font-semibold`}>⚠️ {t('overall_risk_distribution')}</h3>
                   {analytics && (analytics.highRiskCount + analytics.moderateRiskCount + analytics.lowRiskCount) > 0 ? (
                     <ResponsiveContainer width="100%" height={300}>
                       <PieChart>
@@ -653,14 +653,14 @@ export default function RiskDashboard() {
                       </PieChart>
                     </ResponsiveContainer>
                   ) : (
-                    <p className="text-gray-600 text-center py-10">{t('no_data')}</p>
+                    <p className="text-slate-500 text-center py-10">{t('no_data')}</p>
                   )}
                 </div>
               </div>
 
               {/* Vital Signs Chart */}
-              <div className={`${darkMode ? 'bg-[#262641]' : 'bg-white'} p-5 rounded-lg shadow transition-colors`}>
-                <h3 className={`${darkMode ? 'text-white' : 'text-gray-900'} mb-4 text-base font-semibold`}>💓 {t('avg_vitals_vs_normal')}</h3>
+              <div className={`${darkMode ? 'bg-[#262641]' : 'bg-white/60 backdrop-blur-xl'} p-5 rounded-lg shadow transition-colors`}>
+                <h3 className={`${darkMode ? 'text-slate-800' : 'text-slate-800'} mb-4 text-base font-semibold`}>💓 {t('avg_vitals_vs_normal')}</h3>
                 {vitalStats.some(v => v.value > 0) ? (
                   <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={vitalStats} margin={{ top: 20, right: 30, left: 0, bottom: 100 }}>
@@ -674,7 +674,7 @@ export default function RiskDashboard() {
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
-                  <p className="text-gray-600 text-center py-10">{t('no_vitals')}</p>
+                  <p className="text-slate-500 text-center py-10">{t('no_vitals')}</p>
                 )}
               </div>
 
@@ -694,9 +694,9 @@ export default function RiskDashboard() {
 
         {/* Register Tab */}
         {activeTab === 'register' && (
-          <div className={`${darkMode ? 'bg-[#262641]' : 'bg-white'} p-6 rounded-lg shadow max-w-[600px] transition-colors`}>
-            <h2 className={`${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>📝 {t('register_pregnant_mother')}</h2>
-            <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-5 text-sm`}>{t('register_helptext')}</p>
+          <div className={`${darkMode ? 'bg-[#262641]' : 'bg-white/60 backdrop-blur-xl'} p-6 rounded-lg shadow max-w-[600px] transition-colors`}>
+            <h2 className={`${darkMode ? 'text-slate-800' : 'text-slate-800'} mb-2`}>📝 {t('register_pregnant_mother')}</h2>
+            <p className={`${darkMode ? 'text-slate-400' : 'text-slate-500'} mb-5 text-sm`}>{t('register_helptext')}</p>
 
             <form onSubmit={handleRegisterSubmit}>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
@@ -769,8 +769,8 @@ export default function RiskDashboard() {
 
         {/* Risk Assessment Tab */}
         {activeTab === 'risk-assessment' && (
-          <div className="bg-white p-6 rounded-lg shadow max-w-[600px]">
-            <h2 className="mb-4 text-gray-900">⚕️ {t('risk_assessment')}</h2>
+          <div className="bg-white/60 backdrop-blur-xl p-6 rounded-lg shadow max-w-[600px]">
+            <h2 className="mb-4 text-slate-800">⚕️ {t('risk_assessment')}</h2>
 
             <form onSubmit={handleAssessRisk}>
               <div className="mb-4">
@@ -806,8 +806,8 @@ export default function RiskDashboard() {
               </div>
 
               <div className="mb-4">
-                <h4 className="text-gray-900 mb-3 font-semibold">{t('clinical_symptoms_optional')}</h4>
-                <div className="grid [grid-template-columns:repeat(auto-fit,minmax(200px,1fr))] gap-3 bg-gray-50 p-3 rounded-lg">
+                <h4 className="text-slate-800 mb-3 font-semibold">{t('clinical_symptoms_optional')}</h4>
+                <div className="grid [grid-template-columns:repeat(auto-fit,minmax(200px,1fr))] gap-3 bg-blue-50/50 p-3 rounded-lg">
                   {[
                     { key: 'proteinuria', label: t('proteinuria') },
                     { key: 'edema', label: t('edema') },
@@ -841,10 +841,10 @@ export default function RiskDashboard() {
 
             {riskResult && (
               <div className={`mt-5 p-4 rounded-lg border ${riskResult.risk_level === 'HIGH'
-                ? 'bg-red-50 border-red-200 text-red-800'
+                ? 'bg-red-500/10 border-red-200 text-red-700'
                 : riskResult.risk_level === 'MODERATE'
-                  ? 'bg-yellow-50 border-yellow-200 text-yellow-800'
-                  : 'bg-green-50 border-green-200 text-green-800'
+                  ? 'bg-yellow-500/10 border-yellow-200 text-yellow-700'
+                  : 'bg-emerald-500/10 border-emerald-200 text-emerald-600'
                 }`}>
                 <h3 className="mb-3 font-bold">
                   {riskResult.risk_level === 'HIGH' ? '🔴' : riskResult.risk_level === 'MODERATE' ? '🟡' : '🟢'}
@@ -855,7 +855,7 @@ export default function RiskDashboard() {
                   <p><strong>{t('risk_level')}:</strong> <span className="font-bold">{riskResult.risk_level}</span></p>
                   <p><strong>{t('risk_factors')}:</strong> {riskResult.risk_factors?.join(', ') || t('none')}</p>
                   {riskResult.telegram_sent && (
-                    <p className="mt-3 p-2 bg-blue-100 rounded text-blue-800">
+                    <p className="mt-3 p-2 bg-blue-500/100/15 rounded text-blue-700">
                       📱 <strong>Summary sent to mother via Telegram!</strong>
                     </p>
                   )}

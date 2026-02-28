@@ -35,7 +35,7 @@ export default function PostnatalAssessmentsScreen({ route }) {
         if (!user?.id) return;
         const loadMothersAndChildren = async () => {
             try {
-                let mQuery = supabase.from('mothers').select('id, name').eq('delivery_status', 'delivered');
+                let mQuery = supabase.from('mothers').select('id, name').eq('status', 'postnatal');
                 if (user.role === 'ASHA_WORKER') {
                     const { data: asha } = await supabase.from('asha_workers').select('id').eq('user_id', user.id).maybeSingle();
                     if (asha) mQuery = mQuery.eq('asha_worker_id', asha.id);

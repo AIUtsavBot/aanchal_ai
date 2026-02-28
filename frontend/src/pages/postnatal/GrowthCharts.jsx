@@ -16,7 +16,7 @@ const Z_SCORE_CLASSIFICATIONS = {
     '-3': { label: 'Severely Wasted', color: '#ef4444', severity: 'high' },
 };
 
-export const GrowthCharts = ({ ashaWorkerId }) => {
+export const GrowthCharts = ({ ashaWorkerId, doctorId }) => {
     const [children, setChildren] = useState([]);
     const [growthRecords, setGrowthRecords] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -34,7 +34,7 @@ export const GrowthCharts = ({ ashaWorkerId }) => {
 
     useEffect(() => {
         loadChildren();
-    }, [ashaWorkerId]);
+    }, [ashaWorkerId, doctorId]);
 
     useEffect(() => {
         if (selectedChild) {
@@ -47,7 +47,7 @@ export const GrowthCharts = ({ ashaWorkerId }) => {
     const loadChildren = async () => {
         try {
             setLoading(true);
-            const response = await postnatalAPI.getChildren(null, ashaWorkerId);
+            const response = await postnatalAPI.getChildren(null, ashaWorkerId, doctorId);
             setChildren(response.children || []);
         } catch (err) {
             console.error('Error loading children:', err);

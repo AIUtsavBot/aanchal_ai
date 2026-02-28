@@ -27,7 +27,7 @@ const IAP_SCHEDULE = [
     { vaccine: 'DPT Booster-1', due_age_days: 540, description: '18 months - DPT booster' },
 ];
 
-export const VaccinationCalendar = ({ ashaWorkerId }) => {
+export const VaccinationCalendar = ({ ashaWorkerId, doctorId }) => {
     const [children, setChildren] = useState([]);
     const [vaccinations, setVaccinations] = useState([]); // Currently loaded vaccinations (for selected child)
     const [loading, setLoading] = useState(true);
@@ -38,7 +38,7 @@ export const VaccinationCalendar = ({ ashaWorkerId }) => {
 
     useEffect(() => {
         loadChildren();
-    }, [ashaWorkerId]);
+    }, [ashaWorkerId, doctorId]);
 
     useEffect(() => {
         if (selectedChild) {
@@ -51,7 +51,7 @@ export const VaccinationCalendar = ({ ashaWorkerId }) => {
     const loadChildren = async () => {
         try {
             setLoading(true);
-            const response = await postnatalAPI.getChildren(null, ashaWorkerId);
+            const response = await postnatalAPI.getChildren(null, ashaWorkerId, doctorId);
             setChildren(response.children || []);
         } catch (err) {
             console.error('Error loading children:', err);
@@ -216,7 +216,7 @@ export const VaccinationCalendar = ({ ashaWorkerId }) => {
                                                     );
                                                 })}
                                                 {filteredSchedule.length === 0 && (
-                                                    <div className="text-center p-3 text-gray-500">No vaccines found for this filter</div>
+                                                    <div className="text-center p-3 text-slate-400">No vaccines found for this filter</div>
                                                 )}
                                             </div>
                                         </>

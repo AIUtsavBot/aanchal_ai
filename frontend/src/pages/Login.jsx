@@ -6,19 +6,12 @@ import { useAuth } from '../contexts/AuthContext'
 const Login = () => {
   const navigate = useNavigate()
   const { signIn, signInWithGoogle } = useAuth()
-
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  })
+  const [formData, setFormData] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    })
+    setFormData({ ...formData, [e.target.name]: e.target.value })
     setError('')
   }
 
@@ -26,49 +19,30 @@ const Login = () => {
     e.preventDefault()
     setError('')
     setLoading(true)
-
-    // Show warning if it takes too long (Cold Start)
     const timeout = setTimeout(() => {
       setError('Connection is taking longer than usual. The server might be waking up (Cold Start). Please wait...')
     }, 5000)
-
     try {
       const result = await signIn(formData.email, formData.password)
       clearTimeout(timeout)
-
-      // Redirect based on role
-      if (result.user.role === 'ADMIN') {
-        navigate('/admin/dashboard')
-      } else if (result.user.role === 'DOCTOR') {
-        navigate('/doctor/dashboard')
-      } else if (result.user.role === 'ASHA_WORKER') {
-        navigate('/asha/dashboard')
-      } else {
-        navigate('/dashboard')
-      }
+      if (result.user.role === 'ADMIN') navigate('/admin/dashboard')
+      else if (result.user.role === 'DOCTOR') navigate('/doctor/dashboard')
+      else if (result.user.role === 'ASHA_WORKER') navigate('/asha/dashboard')
+      else navigate('/dashboard')
     } catch (err) {
       clearTimeout(timeout)
       setError(err.message || 'Failed to sign in')
-    } finally {
-      setLoading(false)
-    }
+    } finally { setLoading(false) }
   }
 
   const handleGoogleSignIn = async () => {
-    try {
-      setLoading(true)
-      await signInWithGoogle()
-      // Google OAuth will redirect automatically
-    } catch (err) {
-      setError(err.message || 'Failed to sign in with Google')
-      setLoading(false)
-    }
+    try { setLoading(true); await signInWithGoogle() }
+    catch (err) { setError(err.message || 'Failed to sign in with Google'); setLoading(false) }
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 via-white to-blue-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-        {/* Header */}
         <div className="text-center">
           <h1 className="text-4xl font-bold text-teal-600 mb-2">🤰 Aanchal AI</h1>
           <h2 className="text-2xl font-bold text-gray-900">Welcome Back</h2>
@@ -77,17 +51,12 @@ const Login = () => {
           </p>
         </div>
 
-        {/* Error Message */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-            {error}
-          </div>
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl">{error}</div>
         )}
 
-        {/* Login Form */}
-        <form className="mt-8 space-y-6 bg-white p-8 rounded-xl shadow-lg" onSubmit={handleSubmit}>
+        <form className="mt-8 space-y-6 glass-card-strong p-8 rounded-2xl" onSubmit={handleSubmit}>
           <div className="space-y-4">
-            {/* Email */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                 Email Address
@@ -103,8 +72,6 @@ const Login = () => {
                 placeholder="your@email.com"
               />
             </div>
-
-            {/* Password */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                 Password
@@ -122,7 +89,6 @@ const Login = () => {
             </div>
           </div>
 
-          {/* Forgot Password Link */}
           <div className="flex items-center justify-between">
             <div className="text-sm">
               <Link to="/auth/forgot-password" className="font-medium text-teal-600 hover:text-teal-500">
@@ -140,13 +106,10 @@ const Login = () => {
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
 
-          {/* Divider */}
           <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
+            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-blue-200/40"></div></div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or continue with</span>
+              <span className="px-3 bg-white/60 backdrop-blur-sm rounded-full text-slate-400 text-xs">Or continue with</span>
             </div>
           </div>
 
@@ -166,7 +129,6 @@ const Login = () => {
             Sign in with Google
           </button>
 
-          {/* Sign Up Link */}
           <div className="text-center mt-4">
             <p className="text-sm text-gray-600">
               Don't have an account?{' '}

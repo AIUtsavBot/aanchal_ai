@@ -466,11 +466,11 @@ export default function DoctorDashboard() {
   const getRiskColor = (risk) => {
     switch (risk) {
       case "HIGH":
-        return "bg-red-50 border-red-200 hover:border-red-300";
+        return "bg-red-500/10 border-red-200 hover:border-red-300";
       case "MODERATE":
-        return "bg-yellow-50 border-yellow-200 hover:border-yellow-300";
+        return "bg-yellow-500/10 border-yellow-200 hover:border-yellow-300";
       default:
-        return "bg-green-50 border-green-200 hover:border-green-300";
+        return "bg-emerald-500/10 border-emerald-200 hover:border-emerald-300";
     }
   };
 
@@ -481,7 +481,7 @@ export default function DoctorDashboard() {
       case "MODERATE":
         return <AlertCircle className="w-5 h-5 text-yellow-600" />;
       default:
-        return <CheckCircle className="w-5 h-5 text-green-600" />;
+        return <CheckCircle className="w-5 h-5 text-emerald-600" />;
     }
   };
 
@@ -502,10 +502,10 @@ export default function DoctorDashboard() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-teal-100 flex items-center justify-center p-6">
         <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
           <Loader className="w-12 h-12 animate-spin mx-auto text-blue-600 mb-4" />
-          <h1 className="text-xl font-bold text-gray-900">
+          <h1 className="text-xl font-bold text-slate-800">
             Loading Doctor Portal
           </h1>
-          <p className="text-gray-600 mt-2">Finding your profile...</p>
+          <p className="text-slate-500 mt-2">Finding your profile...</p>
         </div>
       </div>
     );
@@ -517,13 +517,13 @@ export default function DoctorDashboard() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-teal-100 flex items-center justify-center p-6">
         <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full">
           <div className="text-center mb-6">
-            <div className="bg-red-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="bg-red-500/100/15 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
               <AlertCircle className="w-8 h-8 text-red-600" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-slate-800">
               Profile Not Found
             </h1>
-            <p className="text-gray-600 mt-2">
+            <p className="text-slate-500 mt-2">
               {user?.email
                 ? `No doctor found for: ${user.email}`
                 : "Please login first"}
@@ -531,16 +531,16 @@ export default function DoctorDashboard() {
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 p-4 rounded-lg mb-4">
-              <p className="text-red-800 text-sm">{error}</p>
+            <div className="bg-red-500/10 border border-red-200 p-4 rounded-lg mb-4">
+              <p className="text-red-700 text-sm">{error}</p>
             </div>
           )}
 
-          <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
-            <p className="text-yellow-800 text-sm font-semibold mb-2">
+          <div className="bg-yellow-500/10 border border-yellow-200 p-4 rounded-lg">
+            <p className="text-yellow-700 text-sm font-semibold mb-2">
               📋 To fix this:
             </p>
-            <ul className="text-yellow-700 text-sm list-disc pl-5 space-y-1">
+            <ul className="text-yellow-600 text-sm list-disc pl-5 space-y-1">
               <li>Ensure your email is registered in the doctors list</li>
               <li>Contact admin to link your account</li>
             </ul>
@@ -558,11 +558,11 @@ export default function DoctorDashboard() {
   return (
     <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Sidebar */}
-      <div className="w-96 bg-white border-r border-gray-200 flex flex-col shadow-lg">
+      <div className="w-96 bg-white/60 backdrop-blur-xl border-r border-blue-200/40 flex flex-col shadow-xl shadow-blue-500/10">
         {/* Header */}
-        <div className="bg-gradient-to-br from-blue-600 to-blue-800 text-white px-6 py-6">
+        <div className="bg-gradient-to-br from-blue-600 to-blue-800 text-slate-800 px-6 py-6">
           <div className="flex items-center gap-4">
-            <div className="bg-blue-500 p-3 rounded-lg">
+            <div className="bg-blue-500/100 p-3 rounded-lg">
               <Stethoscope className="w-6 h-6" />
             </div>
             <div>
@@ -573,20 +573,20 @@ export default function DoctorDashboard() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-3 px-4 py-4 bg-gray-50 border-b border-gray-200">
-          <div className="bg-white p-3 rounded-lg text-center border border-gray-200">
-            <div className="text-2xl font-bold text-gray-900">
+        <div className="grid grid-cols-3 gap-3 px-4 py-4 bg-blue-50/50 border-b border-blue-200/40">
+          <div className="bg-white/60 backdrop-blur-xl p-3 rounded-lg text-center border border-blue-200/40">
+            <div className="text-2xl font-bold text-slate-800">
               {mothers.length}
             </div>
-            <div className="text-xs text-gray-600 mt-1">Patients</div>
+            <div className="text-xs text-slate-500 mt-1">Patients</div>
           </div>
-          <div className="bg-red-50 p-3 rounded-lg text-center border border-red-200">
+          <div className="bg-red-500/10 p-3 rounded-lg text-center border border-red-200">
             <div className="text-2xl font-bold text-red-600">
               {highRiskCount}
             </div>
             <div className="text-xs text-red-600 mt-1">High Risk</div>
           </div>
-          <div className="bg-yellow-50 p-3 rounded-lg text-center border border-yellow-200">
+          <div className="bg-yellow-500/10 p-3 rounded-lg text-center border border-yellow-200">
             <div className="text-2xl font-bold text-yellow-600">
               {moderateRiskCount}
             </div>
@@ -595,15 +595,15 @@ export default function DoctorDashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="flex border-b border-gray-200">
+        <div className="flex border-b border-blue-200/40">
           <button
             onClick={() => {
               setMainView("patients");
               setSelected(null);
             }}
             className={`flex-1 py-3 text-xs font-semibold flex flex-col items-center gap-1 ${mainView === "patients"
-              ? "text-blue-600 bg-blue-50"
-              : "text-gray-500"
+              ? "text-blue-600 bg-blue-500/10"
+              : "text-slate-400"
               }`}
           >
             <Stethoscope className="w-4 h-4" />
@@ -616,7 +616,7 @@ export default function DoctorDashboard() {
             }}
             className={`flex-1 py-3 text-xs font-semibold flex flex-col items-center gap-1 ${mainView === "register"
               ? "text-pink-600 bg-pink-50"
-              : "text-gray-500"
+              : "text-slate-400"
               }`}
           >
             <UserPlus className="w-4 h-4" />
@@ -639,7 +639,7 @@ export default function DoctorDashboard() {
 
         {/* Success Message */}
         {successMsg && (
-          <div className="mx-4 mt-3 p-2 bg-green-50 border border-green-200 rounded-lg text-green-800 text-xs">
+          <div className="mx-4 mt-3 p-2 bg-emerald-500/10 border border-emerald-200 rounded-lg text-emerald-600 text-xs">
             {successMsg}
             <button onClick={() => setSuccessMsg("")} className="float-right">
               ×
@@ -648,15 +648,15 @@ export default function DoctorDashboard() {
         )}
 
         {/* Search */}
-        <div className="px-4 py-4 border-b border-gray-200">
+        <div className="px-4 py-4 border-b border-blue-200/40">
           <div className="relative">
-            <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
             <input
               type="text"
               placeholder="Search patients..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              className="w-full pl-9 pr-4 py-2 border border-blue-200/50 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent text-sm"
             />
           </div>
         </div>
@@ -666,7 +666,7 @@ export default function DoctorDashboard() {
           {loading ? (
             <div className="text-center py-8">
               <RefreshCw className="w-6 h-6 animate-spin mx-auto text-blue-600 mb-2" />
-              <p className="text-gray-600 text-sm">Loading patients...</p>
+              <p className="text-slate-500 text-sm">Loading patients...</p>
             </div>
           ) : sorted.length > 0 ? (
             <div className="space-y-3">
@@ -680,36 +680,36 @@ export default function DoctorDashboard() {
                     role="button"
                     tabIndex={0}
                     className={`p-4 rounded-lg border-2 cursor-pointer transition-all transform hover:scale-102 ${selected?.id === m.id
-                      ? "border-blue-600 bg-blue-50 shadow-md"
-                      : `border-gray-200 ${getRiskColor(risk)}`
+                      ? "border-blue-600 bg-blue-500/10 shadow-md"
+                      : `border-blue-200/40 ${getRiskColor(risk)}`
                       }`}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <div className="font-semibold text-gray-900 text-sm">
+                        <div className="font-semibold text-slate-800 text-sm">
                           {m.name}
                         </div>
-                        <div className="flex items-center gap-1 text-xs text-gray-600 mt-1">
+                        <div className="flex items-center gap-1 text-xs text-slate-500 mt-1">
                           <MapPin className="w-3 h-3" />
                           {m.location}
                         </div>
                       </div>
                       {getRiskIcon(risk)}
                     </div>
-                    <div className="mt-3 pt-3 border-t border-gray-200 flex items-center justify-between text-xs">
+                    <div className="mt-3 pt-3 border-t border-blue-200/40 flex items-center justify-between text-xs">
                       <span
                         className={`px-2 py-1 rounded-full font-semibold ${m.delivery_status === 'delivered' || m.active_system === 'santanraksha'
                           ? "bg-teal-100 text-teal-700"
                           : risk === "HIGH"
-                            ? "bg-red-100 text-red-700"
+                            ? "bg-red-500/100/15 text-red-600"
                             : risk === "MODERATE"
-                              ? "bg-yellow-100 text-yellow-700"
-                              : "bg-green-100 text-green-700"
+                              ? "bg-yellow-500/100/15 text-yellow-600"
+                              : "bg-emerald-500/15 text-emerald-600"
                           }`}
                       >
                         {m.delivery_status === 'delivered' || m.active_system === 'santanraksha' ? 'Delivered' : risk}
                       </span>
-                      <span className="text-gray-500">Age: {m.age}</span>
+                      <span className="text-slate-400">Age: {m.age}</span>
                     </div>
                   </div>
                 );
@@ -718,8 +718,8 @@ export default function DoctorDashboard() {
           ) : (
             <div className="text-center py-12">
               <Heart className="w-12 h-12 mx-auto text-gray-300 mb-3" />
-              <p className="text-gray-600 font-medium">No patients assigned</p>
-              <p className="text-gray-500 text-sm mt-1">
+              <p className="text-slate-500 font-medium">No patients assigned</p>
+              <p className="text-slate-400 text-sm mt-1">
                 Patients will appear when assigned to you
               </p>
             </div>
@@ -732,11 +732,11 @@ export default function DoctorDashboard() {
         {selected ? (
           <div className="flex flex-col h-full">
             {/* Patient Header */}
-            <div className="bg-white border-b border-gray-200 px-8 py-6 shadow-sm">
+            <div className="bg-white/60 backdrop-blur-xl border-b border-blue-200/40 px-8 py-6 shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="flex items-center gap-3">
-                    <h2 className="text-2xl font-bold text-gray-900">
+                    <h2 className="text-2xl font-bold text-slate-800">
                       {selected.name}
                     </h2>
                     {(selected.delivery_status === 'delivered' || selected.active_system === 'santanraksha') && (
@@ -745,17 +745,17 @@ export default function DoctorDashboard() {
                       </span>
                     )}
                   </div>
-                  <p className="text-gray-600 mt-1 flex items-center gap-2 text-sm">
+                  <p className="text-slate-500 mt-1 flex items-center gap-2 text-sm">
                     <MapPin className="w-4 h-4" /> {selected.location} · Age{" "}
                     {selected.age}
                   </p>
                 </div>
                 <div
                   className={`px-5 py-3 rounded-lg font-semibold flex items-center gap-2 ${riskMap[selected.id] === "HIGH"
-                    ? "bg-red-100 text-red-700"
+                    ? "bg-red-500/100/15 text-red-600"
                     : riskMap[selected.id] === "MODERATE"
-                      ? "bg-yellow-100 text-yellow-700"
-                      : "bg-green-100 text-green-700"
+                      ? "bg-yellow-500/100/15 text-yellow-600"
+                      : "bg-emerald-500/15 text-emerald-600"
                     }`}
                 >
                   <span className="text-xl">
@@ -770,8 +770,8 @@ export default function DoctorDashboard() {
                 <button
                   onClick={() => setActiveTab("history")}
                   className={`px-4 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 ${activeTab === "history"
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-100 text-gray-700"
+                    ? "bg-gradient-to-r from-sky-600 to-pink-600 text-slate-800"
+                    : "bg-white/50 text-slate-600"
                     }`}
                 >
                   <FileText className="w-4 h-4" /> Assessment History
@@ -788,8 +788,8 @@ export default function DoctorDashboard() {
                 <button
                   onClick={() => setActiveTab("chat")}
                   className={`px-4 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 ${activeTab === "chat"
-                    ? "bg-green-600 text-white"
-                    : "bg-gray-100 text-gray-700"
+                    ? "bg-green-600 text-slate-800"
+                    : "bg-white/50 text-slate-600"
                     }`}
                 >
                   <MessageCircle className="w-4 h-4" /> Chat History
@@ -809,60 +809,60 @@ export default function DoctorDashboard() {
             {/* Content Grid */}
             <div className="flex-1 overflow-hidden flex gap-6 p-6">
               {/* Patient Details Card */}
-              <div className="w-80 bg-white rounded-xl shadow-md border border-gray-200 p-5 overflow-y-auto">
-                <h3 className="text-lg font-bold text-gray-900 mb-5 flex items-center gap-2">
+              <div className="w-80 bg-white/60 backdrop-blur-xl rounded-xl shadow-md border border-blue-200/40 p-5 overflow-y-auto">
+                <h3 className="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2">
                   <Activity className="w-5 h-5 text-blue-600" />
                   Clinical Profile
                 </h3>
                 <div className="space-y-4 text-sm">
                   <div className="pb-3 border-b">
-                    <label className="text-xs font-bold text-gray-500 uppercase">
+                    <label className="text-xs font-bold text-slate-400 uppercase">
                       Phone
                     </label>
-                    <p className="text-gray-900 font-semibold mt-1">
+                    <p className="text-slate-800 font-semibold mt-1">
                       {selected.phone || "N/A"}
                     </p>
                   </div>
                   <div className="grid grid-cols-2 gap-3 pb-3 border-b">
                     <div>
-                      <label className="text-xs font-bold text-gray-500 uppercase">
+                      <label className="text-xs font-bold text-slate-400 uppercase">
                         BMI
                       </label>
-                      <p className="text-gray-900 font-semibold mt-1">
+                      <p className="text-slate-800 font-semibold mt-1">
                         {selected.bmi?.toFixed(1)}
                       </p>
                     </div>
                     <div>
-                      <label className="text-xs font-bold text-gray-500 uppercase">
+                      <label className="text-xs font-bold text-slate-400 uppercase">
                         Gravida
                       </label>
-                      <p className="text-gray-900 font-semibold mt-1">
+                      <p className="text-slate-800 font-semibold mt-1">
                         {selected.gravida}
                       </p>
                     </div>
                     <div>
-                      <label className="text-xs font-bold text-gray-500 uppercase">
+                      <label className="text-xs font-bold text-slate-400 uppercase">
                         Parity
                       </label>
-                      <p className="text-gray-900 font-semibold mt-1">
+                      <p className="text-slate-800 font-semibold mt-1">
                         {selected.parity}
                       </p>
                     </div>
                     <div>
-                      <label className="text-xs font-bold text-gray-500 uppercase">
+                      <label className="text-xs font-bold text-slate-400 uppercase">
                         Language
                       </label>
-                      <p className="text-gray-900 font-semibold mt-1 capitalize">
+                      <p className="text-slate-800 font-semibold mt-1 capitalize">
                         {selected.preferred_language}
                       </p>
                     </div>
                   </div>
                   {selected.due_date && (
                     <div>
-                      <label className="text-xs font-bold text-gray-500 uppercase">
+                      <label className="text-xs font-bold text-slate-400 uppercase">
                         Due Date
                       </label>
-                      <p className="text-gray-900 font-semibold mt-1">
+                      <p className="text-slate-800 font-semibold mt-1">
                         {new Date(selected.due_date).toLocaleDateString()}
                       </p>
                     </div>
@@ -871,10 +871,10 @@ export default function DoctorDashboard() {
               </div>
 
               {/* Main Content Area */}
-              <div className="flex-1 bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden flex flex-col">
+              <div className="flex-1 bg-white/60 backdrop-blur-xl rounded-xl shadow-md border border-blue-200/40 overflow-hidden flex flex-col">
                 {activeTab === "history" ? (
                   <>
-                    <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4">
+                    <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-slate-800 px-6 py-4">
                       <h3 className="text-lg font-bold flex items-center gap-2">
                         <FileText className="w-5 h-5" />
                         Assessment History ({assessments.length})
@@ -902,9 +902,9 @@ export default function DoctorDashboard() {
                               <div
                                 key={a.id || idx}
                                 className={`p-4 rounded-lg border-2 ${riskLevel === "HIGH"
-                                  ? "bg-red-50 border-red-200"
+                                  ? "bg-red-500/10 border-red-200"
                                   : riskLevel === "MODERATE"
-                                    ? "bg-yellow-50 border-yellow-200"
+                                    ? "bg-yellow-500/10 border-yellow-200"
                                     : riskLevel === "CONSULTATION"
                                       ? "bg-teal-50 border-teal-200"
                                       : "bg-green-50 border-green-200"
@@ -912,7 +912,7 @@ export default function DoctorDashboard() {
                               >
                                 <div className="flex justify-between items-start mb-3">
                                   <div>
-                                    <p className="text-xs text-gray-600 flex items-center gap-1">
+                                    <p className="text-xs text-slate-500 flex items-center gap-1">
                                       <Calendar className="w-3 h-3" />
                                       {new Date(a.created_at).toLocaleString()}
                                     </p>
@@ -924,9 +924,9 @@ export default function DoctorDashboard() {
                                   </div>
                                   <div
                                     className={`px-3 py-1 rounded-full text-sm font-bold ${riskLevel === "HIGH"
-                                      ? "bg-red-200 text-red-800"
+                                      ? "bg-red-200 text-red-700"
                                       : riskLevel === "MODERATE"
-                                        ? "bg-yellow-200 text-yellow-800"
+                                        ? "bg-yellow-200 text-yellow-700"
                                         : riskLevel === "CONSULTATION"
                                           ? "bg-teal-200 text-teal-800"
                                           : "bg-green-200 text-green-800"
@@ -939,7 +939,7 @@ export default function DoctorDashboard() {
                                 <div className="grid grid-cols-4 gap-3 text-sm">
                                   {systolic && diastolic && (
                                     <div className="bg-white/60 p-2 rounded">
-                                      <p className="text-xs text-gray-500">
+                                      <p className="text-xs text-slate-400">
                                         Blood Pressure
                                       </p>
                                       <p className="font-bold">
@@ -949,7 +949,7 @@ export default function DoctorDashboard() {
                                   )}
                                   {heartRate && (
                                     <div className="bg-white/60 p-2 rounded">
-                                      <p className="text-xs text-gray-500">
+                                      <p className="text-xs text-slate-400">
                                         Heart Rate
                                       </p>
                                       <p className="font-bold">
@@ -959,7 +959,7 @@ export default function DoctorDashboard() {
                                   )}
                                   {glucose && (
                                     <div className="bg-white/60 p-2 rounded">
-                                      <p className="text-xs text-gray-500">
+                                      <p className="text-xs text-slate-400">
                                         Glucose
                                       </p>
                                       <p className="font-bold">
@@ -969,7 +969,7 @@ export default function DoctorDashboard() {
                                   )}
                                   {hemoglobin && (
                                     <div className="bg-white/60 p-2 rounded">
-                                      <p className="text-xs text-gray-500">
+                                      <p className="text-xs text-slate-400">
                                         Hemoglobin
                                       </p>
                                       <p className="font-bold">
@@ -979,14 +979,14 @@ export default function DoctorDashboard() {
                                   )}
                                 </div>
                                 {a.summary && (
-                                  <div className="mt-3 text-sm bg-white/50 p-2 rounded border border-gray-100">
-                                    <span className="font-semibold text-gray-700">Notes: </span>
-                                    <span className="text-gray-600 block mt-1">{a.summary}</span>
+                                  <div className="mt-3 text-sm bg-white/500 p-2 rounded border border-blue-100/30">
+                                    <span className="font-semibold text-slate-600">Notes: </span>
+                                    <span className="text-slate-500 block mt-1">{a.summary}</span>
                                   </div>
                                 )}
 
                                 {isConsultation && a.event_data && (
-                                  <div className="mt-3 space-y-3 border-t border-gray-200 pt-2">
+                                  <div className="mt-3 space-y-3 border-t border-blue-200/40 pt-2">
                                     {/* Medications */}
                                     {a.event_data.medications && a.event_data.medications.length > 0 && (
                                       <div className="bg-teal-50 p-2 rounded text-xs">
@@ -996,7 +996,7 @@ export default function DoctorDashboard() {
                                             <li key={i} className="flex justify-between border-b border-teal-100 last:border-0 pb-1">
                                               <span className="font-medium text-gray-700">{m.name || m}</span>
                                               {typeof m === 'object' && (
-                                                <span className="text-gray-500">{m.dosage || ''} {m.schedule ? `- ${m.schedule}` : ''}</span>
+                                                <span className="text-slate-400">{m.dosage || ''} {m.schedule ? `- ${m.schedule}` : ''}</span>
                                               )}
                                             </li>
                                           ))}
@@ -1006,16 +1006,16 @@ export default function DoctorDashboard() {
 
                                     {/* Nutrition */}
                                     {a.event_data.nutrition_plan && (
-                                      <div className="bg-green-50 p-2 rounded text-xs">
-                                        <p className="font-bold text-green-800 mb-1 flex items-center gap-1">🍎 Nutrition</p>
-                                        <p className="text-gray-700 whitespace-pre-wrap line-clamp-3 hover:line-clamp-none transition-all">{a.event_data.nutrition_plan}</p>
+                                      <div className="bg-emerald-500/10 p-2 rounded text-xs">
+                                        <p className="font-bold text-emerald-600 mb-1 flex items-center gap-1">🍎 Nutrition</p>
+                                        <p className="text-slate-600 whitespace-pre-wrap line-clamp-3 hover:line-clamp-none transition-all">{a.event_data.nutrition_plan}</p>
                                       </div>
                                     )}
 
                                     {/* Next Visit */}
                                     {a.event_data.next_consultation && (
-                                      <div className="bg-blue-50 p-2 rounded text-xs flex justify-between items-center">
-                                        <span className="font-bold text-blue-800">📅 Next Visit:</span>
+                                      <div className="bg-blue-500/10 p-2 rounded text-xs flex justify-between items-center">
+                                        <span className="font-bold text-blue-700">📅 Next Visit:</span>
                                         <span className="text-blue-900 font-medium">
                                           {typeof a.event_data.next_consultation === 'object'
                                             ? `${new Date(a.event_data.next_consultation.date).toLocaleDateString()} at ${a.event_data.next_consultation.time}`
@@ -1033,10 +1033,10 @@ export default function DoctorDashboard() {
                       ) : (
                         <div className="text-center py-12">
                           <FileText className="w-12 h-12 mx-auto text-gray-300 mb-3" />
-                          <p className="text-gray-600 font-medium">
+                          <p className="text-slate-500 font-medium">
                             No assessments yet
                           </p>
-                          <p className="text-gray-500 text-sm mt-1">
+                          <p className="text-slate-400 text-sm mt-1">
                             ASHA worker will perform assessments
                           </p>
                         </div>
@@ -1053,7 +1053,7 @@ export default function DoctorDashboard() {
                   />
                 ) : activeTab === "chat" ? (
                   <>
-                    <div className="bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-4">
+                    <div className="bg-gradient-to-r from-green-600 to-green-700 text-slate-800 px-6 py-4">
                       <h3 className="text-lg font-bold flex items-center gap-2">
                         <MessageCircle className="w-5 h-5" />
                         Chat History
@@ -1114,10 +1114,10 @@ export default function DoctorDashboard() {
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <Stethoscope className="w-20 h-20 mx-auto mb-4 text-gray-300" />
-              <p className="text-xl font-semibold text-gray-900">
+              <p className="text-xl font-semibold text-slate-800">
                 Select a Patient
               </p>
-              <p className="text-gray-600 mt-2">
+              <p className="text-slate-500 mt-2">
                 Choose a patient to view their records and assessments
               </p>
             </div>

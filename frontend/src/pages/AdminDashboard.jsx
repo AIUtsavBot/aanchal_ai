@@ -324,7 +324,7 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-blue-50/50">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-500"></div>
           <p className="mt-4 text-gray-600">Loading admin dashboard...</p>
@@ -334,7 +334,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-blue-50/50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -343,21 +343,21 @@ export default function AdminDashboard() {
               <Shield className="w-8 h-8 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-              <p className="text-gray-500">Manage system users and assignments</p>
+              <h1 className="text-2xl font-bold text-slate-800">Admin Dashboard</h1>
+              <p className="text-slate-400">Manage system users and assignments</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <Link
               to="/admin/approvals"
-              className="flex items-center gap-2 px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg hover:bg-yellow-200"
+              className="flex items-center gap-2 px-4 py-2 bg-yellow-500/100/15 text-yellow-700 rounded-lg hover:bg-yellow-200"
             >
               <Shield className="w-4 h-4" />
               Approvals ({stats?.pending_approvals || 0})
             </Link>
             <button
               onClick={loadData}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+              className="flex items-center gap-2 px-4 py-2 bg-white/60 text-slate-600 rounded-lg hover:bg-gray-300"
             >
               <RefreshCw className="w-4 h-4" />
               Refresh
@@ -367,13 +367,13 @@ export default function AdminDashboard() {
 
         {/* Alerts */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 flex justify-between">
+          <div className="bg-red-500/10 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-4 flex justify-between">
             {error}
             <button onClick={() => setError('')}>&times;</button>
           </div>
         )}
         {success && (
-          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-4 flex justify-between items-center">
+          <div className="bg-emerald-500/10 border border-emerald-200 text-emerald-600 px-4 py-3 rounded-lg mb-4 flex justify-between items-center">
             <span>✅ {success}</span>
             <button onClick={() => setSuccess('')}>&times;</button>
           </div>
@@ -381,13 +381,13 @@ export default function AdminDashboard() {
 
         {/* Stats Overview - MatruRaksha + SantanRaksha */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-          <div className="bg-white rounded-xl shadow-sm p-5 border-l-4 border-pink-500">
-            <p className="text-sm text-gray-500">Total Mothers</p>
-            <p className="text-3xl font-bold text-gray-900">{stats?.total_mothers ?? '-'}</p>
+          <div className="bg-white/60 backdrop-blur-xl rounded-xl shadow-sm p-5 border-l-4 border-pink-500">
+            <p className="text-sm text-slate-400">Total Mothers</p>
+            <p className="text-3xl font-bold text-slate-800">{stats?.total_mothers ?? '-'}</p>
           </div>
-          <div className="bg-white rounded-xl shadow-sm p-5 border-l-4 border-cyan-500">
-            <p className="text-sm text-gray-500">Total Children</p>
-            <p className="text-3xl font-bold text-gray-900">{santanStats?.total_children ?? children.length}</p>
+          <div className="bg-white/60 backdrop-blur-xl rounded-xl shadow-sm p-5 border-l-4 border-cyan-500">
+            <p className="text-sm text-slate-400">Total Children</p>
+            <p className="text-3xl font-bold text-slate-800">{santanStats?.total_children ?? children.length}</p>
           </div>
           <div className="bg-white rounded-xl shadow-sm p-5 border-l-4 border-teal-500">
             <p className="text-sm text-gray-500">Doctors</p>
@@ -397,16 +397,16 @@ export default function AdminDashboard() {
             <p className="text-sm text-gray-500">ASHA Workers</p>
             <p className="text-3xl font-bold text-gray-900">{stats?.total_asha_workers ?? '-'}</p>
           </div>
-          <div className="bg-white rounded-xl shadow-sm p-5 border-l-4 border-green-500">
-            <p className="text-sm text-gray-500">Fully Assigned</p>
-            <p className="text-3xl font-bold text-gray-900">
+          <div className="bg-white/60 backdrop-blur-xl rounded-xl shadow-sm p-5 border-l-4 border-emerald-500">
+            <p className="text-sm text-slate-400">Fully Assigned</p>
+            <p className="text-3xl font-bold text-slate-800">
               {mothers.filter(m => m.doctor_id && m.asha_worker_id).length}
             </p>
           </div>
         </div>
 
         {/* Tab Navigation */}
-        <div className="bg-white rounded-xl shadow-sm mb-6">
+        <div className="bg-white/60 backdrop-blur-xl rounded-xl shadow-sm mb-6">
           <div className="flex border-b overflow-x-auto">
             {['overview', 'analytics', 'doctors', 'asha', 'mothers', 'children'].map(tab => (
               <button
@@ -430,17 +430,17 @@ export default function AdminDashboard() {
                 <div>
                   <h3 className="font-semibold text-lg mb-4">📊 System Overview</h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="bg-green-50 p-4 rounded-lg text-center border border-green-200">
-                      <p className="text-3xl font-bold text-green-600">
+                    <div className="bg-emerald-500/10 p-4 rounded-lg text-center border border-emerald-200">
+                      <p className="text-3xl font-bold text-emerald-600">
                         {mothers.filter(m => m.doctor_id && m.asha_worker_id).length}
                       </p>
-                      <p className="text-sm text-green-700">Fully Assigned</p>
+                      <p className="text-sm text-emerald-600">Fully Assigned</p>
                     </div>
-                    <div className="bg-yellow-50 p-4 rounded-lg text-center border border-yellow-200">
+                    <div className="bg-yellow-500/10 p-4 rounded-lg text-center border border-yellow-200">
                       <p className="text-3xl font-bold text-yellow-600">
                         {mothers.filter(m => !m.doctor_id || !m.asha_worker_id).length}
                       </p>
-                      <p className="text-sm text-yellow-700">Needs Assignment</p>
+                      <p className="text-sm text-yellow-600">Needs Assignment</p>
                     </div>
                     <div className="bg-teal-50 p-4 rounded-lg text-center border border-teal-200">
                       <p className="text-3xl font-bold text-teal-600">{doctors.length}</p>
@@ -456,10 +456,10 @@ export default function AdminDashboard() {
                 {/* Workload Distribution */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Doctor Workload */}
-                  <div className="bg-white border rounded-lg p-4">
+                  <div className="bg-white/60 backdrop-blur-xl border rounded-lg p-4">
                     <h4 className="font-semibold text-indigo-800 mb-3">👨‍⚕️ Doctor Workload</h4>
                     {doctors.length === 0 ? (
-                      <p className="text-gray-500 text-sm">No doctors registered</p>
+                      <p className="text-slate-400 text-sm">No doctors registered</p>
                     ) : (
                       <div className="space-y-2">
                         {doctors.slice(0, 5).map(d => {
@@ -469,7 +469,7 @@ export default function AdminDashboard() {
                           return (
                             <div key={d.id} className="flex items-center gap-3">
                               <span className="text-sm w-24 truncate" title={d.name}>{d.name}</span>
-                              <div className="flex-1 bg-gray-200 rounded-full h-3">
+                              <div className="flex-1 bg-white/60 rounded-full h-3">
                                 <div
                                   className="bg-teal-500 h-3 rounded-full transition-all"
                                   style={{ width: `${percentage}%` }}
@@ -480,7 +480,7 @@ export default function AdminDashboard() {
                           )
                         })}
                         {doctors.length > 5 && (
-                          <p className="text-xs text-gray-500 mt-2">+{doctors.length - 5} more doctors</p>
+                          <p className="text-xs text-slate-400 mt-2">+{doctors.length - 5} more doctors</p>
                         )}
                       </div>
                     )}
@@ -490,7 +490,7 @@ export default function AdminDashboard() {
                   <div className="bg-white border rounded-lg p-4">
                     <h4 className="font-semibold text-teal-800 mb-3">👩‍⚕️ ASHA Worker Workload</h4>
                     {ashaWorkers.length === 0 ? (
-                      <p className="text-gray-500 text-sm">No ASHA workers registered</p>
+                      <p className="text-slate-400 text-sm">No ASHA workers registered</p>
                     ) : (
                       <div className="space-y-2">
                         {ashaWorkers.slice(0, 5).map(a => {
@@ -500,7 +500,7 @@ export default function AdminDashboard() {
                           return (
                             <div key={a.id} className="flex items-center gap-3">
                               <span className="text-sm w-24 truncate" title={a.name}>{a.name}</span>
-                              <div className="flex-1 bg-gray-200 rounded-full h-3">
+                              <div className="flex-1 bg-white/60 rounded-full h-3">
                                 <div
                                   className="bg-teal-500 h-3 rounded-full transition-all"
                                   style={{ width: `${percentage}%` }}
@@ -511,7 +511,7 @@ export default function AdminDashboard() {
                           )
                         })}
                         {ashaWorkers.length > 5 && (
-                          <p className="text-xs text-gray-500 mt-2">+{ashaWorkers.length - 5} more workers</p>
+                          <p className="text-xs text-slate-400 mt-2">+{ashaWorkers.length - 5} more workers</p>
                         )}
                       </div>
                     )}
@@ -519,20 +519,20 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* Assignment Status */}
-                <div className="bg-white border rounded-lg p-4">
-                  <h4 className="font-semibold text-gray-800 mb-3">📋 Assignment Status Breakdown</h4>
+                <div className="bg-white/60 backdrop-blur-xl border rounded-lg p-4">
+                  <h4 className="font-semibold text-slate-800 mb-3">📋 Assignment Status Breakdown</h4>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="text-center p-3 bg-green-50 rounded-lg">
-                      <p className="text-2xl font-bold text-green-600">
+                    <div className="text-center p-3 bg-emerald-500/10 rounded-lg">
+                      <p className="text-2xl font-bold text-emerald-600">
                         {mothers.filter(m => m.doctor_id && m.asha_worker_id).length}
                       </p>
-                      <p className="text-xs text-green-700">Both Assigned</p>
+                      <p className="text-xs text-emerald-600">Both Assigned</p>
                     </div>
-                    <div className="text-center p-3 bg-blue-50 rounded-lg">
+                    <div className="text-center p-3 bg-blue-500/10 rounded-lg">
                       <p className="text-2xl font-bold text-blue-600">
                         {mothers.filter(m => m.doctor_id && !m.asha_worker_id).length}
                       </p>
-                      <p className="text-xs text-blue-700">Doctor Only</p>
+                      <p className="text-xs text-blue-600">Doctor Only</p>
                     </div>
                     <div className="text-center p-3 bg-teal-50 rounded-lg">
                       <p className="text-2xl font-bold text-teal-600">
@@ -540,24 +540,24 @@ export default function AdminDashboard() {
                       </p>
                       <p className="text-xs text-teal-700">ASHA Only</p>
                     </div>
-                    <div className="text-center p-3 bg-red-50 rounded-lg">
+                    <div className="text-center p-3 bg-red-500/10 rounded-lg">
                       <p className="text-2xl font-bold text-red-600">
                         {mothers.filter(m => !m.doctor_id && !m.asha_worker_id).length}
                       </p>
-                      <p className="text-xs text-red-700">Unassigned</p>
+                      <p className="text-xs text-red-600">Unassigned</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Quick Actions */}
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h4 className="font-semibold text-gray-800 mb-3">🚀 Quick Actions</h4>
+                <div className="bg-blue-50/50 rounded-lg p-4">
+                  <h4 className="font-semibold text-slate-800 mb-3">🚀 Quick Actions</h4>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <Link
                       to="/admin/approvals"
-                      className="p-4 bg-yellow-100 border border-yellow-300 rounded-lg hover:bg-yellow-200 transition-colors"
+                      className="p-4 bg-yellow-500/100/15 border border-yellow-300 rounded-lg hover:bg-yellow-200 transition-colors"
                     >
-                      <h5 className="font-semibold text-yellow-800">Review Approvals</h5>
+                      <h5 className="font-semibold text-yellow-700">Review Approvals</h5>
                       <p className="text-sm text-yellow-600">{stats?.pending_approvals || 0} pending requests</p>
                     </Link>
                     <button
@@ -569,9 +569,9 @@ export default function AdminDashboard() {
                     </button>
                     <button
                       onClick={loadData}
-                      className="p-4 bg-blue-100 border border-blue-300 rounded-lg hover:bg-blue-200 transition-colors text-left"
+                      className="p-4 bg-blue-500/100/15 border border-blue-300 rounded-lg hover:bg-blue-200 transition-colors text-left"
                     >
-                      <h5 className="font-semibold text-blue-800">Refresh Data</h5>
+                      <h5 className="font-semibold text-blue-700">Refresh Data</h5>
                       <p className="text-sm text-blue-600">Sync latest information</p>
                     </button>
                   </div>
@@ -591,27 +591,27 @@ export default function AdminDashboard() {
                       </p>
                       <p className="text-sm text-teal-700">Estimated Tokens</p>
                     </div>
-                    <div className="bg-yellow-50 p-4 rounded-lg text-center border border-yellow-200">
+                    <div className="bg-yellow-500/10 p-4 rounded-lg text-center border border-yellow-200">
                       <p className="text-3xl font-bold text-yellow-600">
                         ${metrics?.cost_usd_estimated?.toFixed(4) || "0.0000"}
                       </p>
-                      <p className="text-sm text-yellow-700">Estimated USD Cost</p>
+                      <p className="text-sm text-yellow-600">Estimated USD Cost</p>
                     </div>
-                    <div className="bg-green-50 p-4 rounded-lg text-center border border-green-200">
-                      <p className="text-3xl font-bold text-green-600">
+                    <div className="bg-emerald-500/10 p-4 rounded-lg text-center border border-emerald-200">
+                      <p className="text-3xl font-bold text-emerald-600">
                         {metrics?.ai_calls_total?.toLocaleString() || 0}
                       </p>
-                      <p className="text-sm text-green-700">Total AI Inferences</p>
+                      <p className="text-sm text-emerald-600">Total AI Inferences</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Word Cloud */}
-                <div className="bg-white border rounded-lg p-4 mt-6">
-                  <h4 className="font-semibold text-gray-800 mb-3">🗣️ Common Risk Topics (Word Cloud)</h4>
-                  <div className="flex flex-wrap gap-2 p-4 bg-gray-50 rounded-lg min-h-[200px] items-center justify-center">
+                <div className="bg-white/60 backdrop-blur-xl border rounded-lg p-4 mt-6">
+                  <h4 className="font-semibold text-slate-800 mb-3">🗣️ Common Risk Topics (Word Cloud)</h4>
+                  <div className="flex flex-wrap gap-2 p-4 bg-blue-50/50 rounded-lg min-h-[200px] items-center justify-center">
                     {!metrics?.word_cloud || !Array.isArray(metrics.word_cloud) ? (
-                      <p className="text-gray-400">No word data available</p>
+                      <p className="text-slate-400">No word data available</p>
                     ) : (
                       metrics.word_cloud.map((w, idx) => (
                         <span
@@ -619,7 +619,7 @@ export default function AdminDashboard() {
                           className="px-3 py-1 bg-white border border-gray-200 shadow-sm rounded-full text-teal-600 font-medium whitespace-nowrap"
                           style={{ fontSize: `${Math.max(0.8, Math.min(2, w.value / 10))}rem`, opacity: Math.max(0.5, Math.min(1, w.value / 20)) }}
                         >
-                          {w.text} <span className="text-xs text-gray-400 ml-1">({w.value})</span>
+                          {w.text} <span className="text-xs text-slate-400 ml-1">({w.value})</span>
                         </span>
                       ))
                     )}
@@ -633,7 +633,7 @@ export default function AdminDashboard() {
               <div className="space-y-4">
                 <h3 className="font-semibold text-lg">Manage Doctors ({doctors.length})</h3>
                 {doctors.length === 0 ? (
-                  <p className="text-gray-500 text-center py-8">No doctors registered</p>
+                  <p className="text-slate-400 text-center py-8">No doctors registered</p>
                 ) : (
                   <div className="space-y-3">
                     {doctors.map(d => (
@@ -674,13 +674,13 @@ export default function AdminDashboard() {
                             <div className="flex gap-2">
                               <button
                                 onClick={() => saveDoctor(d.id)}
-                                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                                className="px-4 py-2 bg-green-600 text-slate-800 rounded-lg hover:bg-green-700"
                               >
                                 <Check className="w-4 h-4 inline mr-1" /> Save
                               </button>
                               <button
                                 onClick={() => setEditingId(null)}
-                                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                                className="px-4 py-2 bg-white/60 text-slate-600 rounded-lg hover:bg-gray-300"
                               >
                                 <X className="w-4 h-4 inline mr-1" /> Cancel
                               </button>
@@ -690,18 +690,18 @@ export default function AdminDashboard() {
                           <div className="flex items-center justify-between">
                             <div>
                               <div className="flex items-center gap-2">
-                                <div className={`w-2 h-2 rounded-full ${d.is_active ? 'bg-green-500' : 'bg-gray-400'}`}></div>
-                                <span className="font-semibold text-gray-900">{d.name}</span>
+                                <div className={`w-2 h-2 rounded-full ${d.is_active ? 'bg-emerald-500/100' : 'bg-gray-400'}`}></div>
+                                <span className="font-semibold text-slate-800">{d.name}</span>
                               </div>
-                              <p className="text-sm text-gray-500 mt-1">{d.email}</p>
-                              <p className="text-xs text-gray-400">{d.assigned_area || 'No area'} · {d.phone || 'No phone'}</p>
+                              <p className="text-sm text-slate-400 mt-1">{d.email}</p>
+                              <p className="text-xs text-slate-400">{d.assigned_area || 'No area'} · {d.phone || 'No phone'}</p>
                               {/* View Certificate Link */}
                               {d.degree_cert_url && (
                                 <a
                                   href={d.degree_cert_url}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="mt-2 inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800"
+                                  className="mt-2 inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-700"
                                 >
                                   <FileText className="w-3.5 h-3.5" />
                                   View Certificate
@@ -715,14 +715,14 @@ export default function AdminDashboard() {
                               </span>
                               <button
                                 onClick={() => handleEditDoctor(d)}
-                                className="p-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                                className="p-2 bg-white/50 text-slate-600 rounded-lg hover:bg-white/60"
                                 title="Edit"
                               >
                                 <Edit2 className="w-4 h-4" />
                               </button>
                               <button
                                 onClick={() => deleteDoctor(d.id, d.name)}
-                                className="p-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200"
+                                className="p-2 bg-red-500/100/15 text-red-600 rounded-lg hover:bg-red-200"
                                 title="Delete"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -742,7 +742,7 @@ export default function AdminDashboard() {
               <div className="space-y-4">
                 <h3 className="font-semibold text-lg">Manage ASHA Workers ({ashaWorkers.length})</h3>
                 {ashaWorkers.length === 0 ? (
-                  <p className="text-gray-500 text-center py-8">No ASHA workers registered</p>
+                  <p className="text-slate-400 text-center py-8">No ASHA workers registered</p>
                 ) : (
                   <div className="space-y-3">
                     {ashaWorkers.map(a => (
@@ -783,13 +783,13 @@ export default function AdminDashboard() {
                             <div className="flex gap-2">
                               <button
                                 onClick={() => saveAsha(a.id)}
-                                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                                className="px-4 py-2 bg-green-600 text-slate-800 rounded-lg hover:bg-green-700"
                               >
                                 <Check className="w-4 h-4 inline mr-1" /> Save
                               </button>
                               <button
                                 onClick={() => setEditingId(null)}
-                                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                                className="px-4 py-2 bg-white/60 text-slate-600 rounded-lg hover:bg-gray-300"
                               >
                                 <X className="w-4 h-4 inline mr-1" /> Cancel
                               </button>
@@ -799,11 +799,11 @@ export default function AdminDashboard() {
                           <div className="flex items-center justify-between">
                             <div>
                               <div className="flex items-center gap-2">
-                                <div className={`w-2 h-2 rounded-full ${a.is_active ? 'bg-green-500' : 'bg-gray-400'}`}></div>
-                                <span className="font-semibold text-gray-900">{a.name}</span>
+                                <div className={`w-2 h-2 rounded-full ${a.is_active ? 'bg-emerald-500/100' : 'bg-gray-400'}`}></div>
+                                <span className="font-semibold text-slate-800">{a.name}</span>
                               </div>
-                              <p className="text-sm text-gray-500 mt-1">{a.email}</p>
-                              <p className="text-xs text-gray-400">{a.assigned_area || 'No area'} · {a.phone || 'No phone'}</p>
+                              <p className="text-sm text-slate-400 mt-1">{a.email}</p>
+                              <p className="text-xs text-slate-400">{a.assigned_area || 'No area'} · {a.phone || 'No phone'}</p>
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="bg-teal-100 text-teal-700 text-xs px-2 py-1 rounded-full">
@@ -811,14 +811,14 @@ export default function AdminDashboard() {
                               </span>
                               <button
                                 onClick={() => handleEditAsha(a)}
-                                className="p-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                                className="p-2 bg-white/50 text-slate-600 rounded-lg hover:bg-white/60"
                                 title="Edit"
                               >
                                 <Edit2 className="w-4 h-4" />
                               </button>
                               <button
                                 onClick={() => deleteAsha(a.id, a.name)}
-                                className="p-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200"
+                                className="p-2 bg-red-500/100/15 text-red-600 rounded-lg hover:bg-red-200"
                                 title="Delete"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -850,7 +850,7 @@ export default function AdminDashboard() {
                       <option value="delivered">✅ Delivered</option>
                     </select>
                     <div className="relative">
-                      <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                      <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
                       <input
                         type="text"
                         placeholder="Search..."
@@ -863,7 +863,7 @@ export default function AdminDashboard() {
                       <button
                         onClick={saveAllChanges}
                         disabled={saving}
-                        className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                        className="flex items-center gap-2 px-4 py-2 bg-green-600 text-slate-800 rounded-lg hover:bg-green-700 disabled:opacity-50"
                       >
                         {saving ? (
                           <RefreshCw className="w-4 h-4 animate-spin" />
@@ -877,13 +877,13 @@ export default function AdminDashboard() {
                 </div>
 
                 {filteredMothers.length === 0 ? (
-                  <p className="text-gray-500 py-8 text-center">
+                  <p className="text-slate-400 py-8 text-center">
                     {searchTerm ? 'No mothers match your search' : 'No mothers registered yet'}
                   </p>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
-                      <thead className="bg-gray-50">
+                      <thead className="bg-blue-50/50">
                         <tr>
                           <th className="px-4 py-3 text-left font-semibold">Name</th>
                           <th className="px-4 py-3 text-left font-semibold">Phone</th>
@@ -902,17 +902,17 @@ export default function AdminDashboard() {
                           const hasChanges = pendingChanges[mother.id]
 
                           return (
-                            <tr key={mother.id} className={`border-b hover:bg-gray-50 ${hasChanges ? 'bg-yellow-50' : ''}`}>
+                            <tr key={mother.id} className={`border-b hover:bg-blue-50/50 ${hasChanges ? 'bg-yellow-500/10' : ''}`}>
                               <td className="px-4 py-3 font-medium">
                                 {mother.name}
                                 {hasChanges && <span className="ml-2 text-yellow-600 text-xs">*</span>}
                               </td>
-                              <td className="px-4 py-3 text-gray-600">{mother.phone}</td>
-                              <td className="px-4 py-3 text-gray-600">{mother.location || '-'}</td>
+                              <td className="px-4 py-3 text-slate-500">{mother.phone}</td>
+                              <td className="px-4 py-3 text-slate-500">{mother.location || '-'}</td>
                               <td className="px-4 py-3">
                                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${mother.delivery_status === 'pregnant' ? 'bg-pink-100 text-pink-700' :
-                                  mother.delivery_status === 'delivered' ? 'bg-green-100 text-green-700' :
-                                    'bg-gray-100 text-gray-600'
+                                  mother.delivery_status === 'delivered' ? 'bg-emerald-500/15 text-emerald-600' :
+                                    'bg-white/50 text-slate-500'
                                   }`}>
                                   {mother.delivery_status === 'pregnant' ? '🤰 Pregnant' :
                                     mother.delivery_status === 'delivered' ? '✅ Delivered' :
@@ -949,11 +949,11 @@ export default function AdminDashboard() {
                               </td>
                               <td className="px-4 py-3">
                                 {isFullyAssigned ? (
-                                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
+                                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-500/15 text-emerald-600 rounded-full text-xs font-semibold">
                                     <Check className="w-3 h-3" /> OK
                                   </span>
                                 ) : (
-                                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-semibold">
+                                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-yellow-500/100/15 text-yellow-600 rounded-full text-xs font-semibold">
                                     ⚠️
                                   </span>
                                 )}
@@ -975,7 +975,7 @@ export default function AdminDashboard() {
                   <h3 className="font-semibold text-lg">Manage Children ({children.length})</h3>
                   <div className="flex items-center gap-3">
                     <div className="relative">
-                      <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                      <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
                       <input
                         type="text"
                         placeholder="Search by name/mother..."
@@ -988,13 +988,13 @@ export default function AdminDashboard() {
                 </div>
 
                 {filteredChildren.length === 0 ? (
-                  <p className="text-gray-500 py-8 text-center">
+                  <p className="text-slate-400 py-8 text-center">
                     {searchTerm ? 'No children match your search' : 'No children registered yet'}
                   </p>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
-                      <thead className="bg-gray-50">
+                      <thead className="bg-blue-50/50">
                         <tr>
                           <th className="px-4 py-3 text-left font-semibold">Child Name</th>
                           <th className="px-4 py-3 text-left font-semibold">Age</th>
@@ -1007,7 +1007,7 @@ export default function AdminDashboard() {
                       </thead>
                       <tbody>
                         {filteredChildren.map(child => (
-                          <tr key={child.id} className="border-b hover:bg-gray-50">
+                          <tr key={child.id} className="border-b hover:bg-blue-50/50">
                             {editingId === `child-${child.id}` ? (
                               // Edit mode
                               <>
@@ -1040,21 +1040,21 @@ export default function AdminDashboard() {
                                     <option value="other">Other</option>
                                   </select>
                                 </td>
-                                <td className="px-4 py-3 text-gray-500">{child.mother_name}</td>
-                                <td className="px-4 py-3 text-gray-500">{child.asha_worker_name}</td>
-                                <td className="px-4 py-3 text-gray-500">{child.doctor_name}</td>
+                                <td className="px-4 py-3 text-slate-400">{child.mother_name}</td>
+                                <td className="px-4 py-3 text-slate-400">{child.asha_worker_name}</td>
+                                <td className="px-4 py-3 text-slate-400">{child.doctor_name}</td>
                                 <td className="px-4 py-3">
                                   <div className="flex gap-2">
                                     <button
                                       onClick={() => saveChild(child.id)}
-                                      className="p-1.5 bg-green-100 text-green-700 rounded hover:bg-green-200"
+                                      className="p-1.5 bg-emerald-500/15 text-emerald-600 rounded hover:bg-green-200"
                                       title="Save"
                                     >
                                       <Check className="w-4 h-4" />
                                     </button>
                                     <button
                                       onClick={() => setEditingId(null)}
-                                      className="p-1.5 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                                      className="p-1.5 bg-white/50 text-slate-600 rounded hover:bg-white/60"
                                       title="Cancel"
                                     >
                                       <X className="w-4 h-4" />
@@ -1066,20 +1066,20 @@ export default function AdminDashboard() {
                               // View mode
                               <>
                                 <td className="px-4 py-3 font-medium">{child.name}</td>
-                                <td className="px-4 py-3 text-gray-600">
+                                <td className="px-4 py-3 text-slate-500">
                                   <span className="bg-cyan-100 text-cyan-700 px-2 py-0.5 rounded-full text-xs">
                                     {child.age_display || 'N/A'}
                                   </span>
                                 </td>
-                                <td className="px-4 py-3 text-gray-600 capitalize">{child.gender || '-'}</td>
+                                <td className="px-4 py-3 text-slate-500 capitalize">{child.gender || '-'}</td>
                                 <td className="px-4 py-3">
                                   <div>
                                     <p className="font-medium">{child.mother_name}</p>
-                                    <p className="text-xs text-gray-400">{child.mother_phone}</p>
+                                    <p className="text-xs text-slate-400">{child.mother_phone}</p>
                                     {child.mother_status && (
-                                      <span className={`text-xs px-1.5 py-0.5 rounded ${child.mother_status === 'postnatal' ? 'bg-green-100 text-green-700' :
+                                      <span className={`text-xs px-1.5 py-0.5 rounded ${child.mother_status === 'postnatal' ? 'bg-emerald-500/15 text-emerald-600' :
                                         child.mother_status === 'pregnant' ? 'bg-pink-100 text-pink-700' :
-                                          'bg-gray-100 text-gray-600'
+                                          'bg-white/50 text-slate-500'
                                         }`}>
                                         {child.mother_status}
                                       </span>
@@ -1100,14 +1100,14 @@ export default function AdminDashboard() {
                                   <div className="flex gap-2">
                                     <button
                                       onClick={() => handleEditChild(child)}
-                                      className="p-1.5 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                                      className="p-1.5 bg-white/50 text-slate-600 rounded hover:bg-white/60"
                                       title="Edit"
                                     >
                                       <Edit2 className="w-4 h-4" />
                                     </button>
                                     <button
                                       onClick={() => deleteChild(child.id, child.name)}
-                                      className="p-1.5 bg-red-100 text-red-700 rounded hover:bg-red-200"
+                                      className="p-1.5 bg-red-500/100/15 text-red-600 rounded hover:bg-red-200"
                                       title="Delete"
                                     >
                                       <Trash2 className="w-4 h-4" />

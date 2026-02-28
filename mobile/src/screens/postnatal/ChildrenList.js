@@ -21,7 +21,7 @@ export default function ChildrenListScreen({ navigation }) {
             if (!user?.id) return;
 
             // 1. Build mothers query
-            let mothersQuery = supabase.from('mothers').select('id, name').eq('delivery_status', 'delivered');
+            let mothersQuery = supabase.from('mothers').select('id, name').eq('status', 'postnatal');
 
             if (user.role === 'ASHA_WORKER') {
                 const { data: asha } = await supabase.from('asha_workers').select('id').eq('user_id', user.id).maybeSingle();

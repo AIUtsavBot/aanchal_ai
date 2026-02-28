@@ -23,7 +23,7 @@ export default function MothersListScreen({ navigation }) {
             // Delay on first load to avoid GoTrue lock conflicts
             if (retryCount === 0) await new Promise(r => setTimeout(r, 300));
 
-            let query = supabase.from('mothers').select('*').eq('delivery_status', 'delivered');
+            let query = supabase.from('mothers').select('*').eq('status', 'postnatal');
 
             // Filter by role-specific ID
             if (user.role === 'ASHA_WORKER') {
@@ -107,13 +107,13 @@ export default function MothersListScreen({ navigation }) {
                             <View style={{ flex: 1, marginLeft: spacing.md }}>
                                 <Text style={[typography.bodyBold, { color: theme.text }]}>{m.name || m.full_name || 'Mother'}</Text>
                                 <Text style={[typography.caption, { color: theme.textSecondary }]}>
-                                    Status: {m.delivery_status || m.status || '–'}
+                                    Status: {m.status || '–'}
                                 </Text>
                             </View>
                             <View style={{ alignItems: 'flex-end' }}>
-                                <View style={[styles.statusBadge, { backgroundColor: m.delivery_status === 'delivered' ? '#10B98120' : '#3B82F620' }]}>
-                                    <Text style={{ fontSize: 10, fontWeight: '700', color: m.delivery_status === 'delivered' ? '#10B981' : '#3B82F6' }}>
-                                        {m.delivery_status === 'delivered' ? '✓ Delivered' : m.status || 'Active'}
+                                <View style={[styles.statusBadge, { backgroundColor: m.status === 'postnatal' ? '#10B98120' : '#3B82F620' }]}>
+                                    <Text style={{ fontSize: 10, fontWeight: '700', color: m.status === 'postnatal' ? '#10B981' : '#3B82F6' }}>
+                                        {m.status === 'postnatal' ? '✓ Delivered' : m.status || 'Active'}
                                     </Text>
                                 </View>
                             </View>

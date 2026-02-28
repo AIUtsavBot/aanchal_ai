@@ -182,13 +182,13 @@ export const PostnatalDashboard = ({ ashaWorkerId, doctorId, userRole }) => {
                     onUpdate={loadStats}
                 />;
             case 'children':
-                return <ChildrenList ashaWorkerId={ashaWorkerId} />;
+                return <ChildrenList ashaWorkerId={ashaWorkerId} doctorId={doctorId} />;
             case 'vaccines':
-                return <VaccinationCalendar ashaWorkerId={ashaWorkerId} />;
+                return <VaccinationCalendar ashaWorkerId={ashaWorkerId} doctorId={doctorId} />;
             case 'growth':
-                return <GrowthCharts ashaWorkerId={ashaWorkerId} />;
+                return <GrowthCharts ashaWorkerId={ashaWorkerId} doctorId={doctorId} />;
             case 'milestones':
-                return <MilestonesTracker ashaWorkerId={ashaWorkerId} />;
+                return <MilestonesTracker ashaWorkerId={ashaWorkerId} doctorId={doctorId} />;
             default:
                 return renderDashboard();
         }

@@ -5,21 +5,21 @@ import doctoeImg2 from '../assets/doctor2.png'
 import dashboardImg from '../assets/dashboard.png'
 import dashboardImg2 from '../assets/dashboard2.png'
 import mermaidImg from '../assets/mermaid.png'
-import { HeartPulse, FileText, Users, AlertTriangle, Pill, MessageSquare, PlayCircle, Building2, ShieldCheck, Workflow, BrainCircuit, Github } from 'lucide-react'
+import { HeartPulse, FileText, Users, AlertTriangle, Pill, MessageSquare, PlayCircle, Building2, ShieldCheck, Workflow, BrainCircuit } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 
 function SectionTitle({ title, subtitle }) {
   return (
     <div className="text-center mb-8">
-      <h2 className="text-3xl font-bold text-gray-900">{title}</h2>
-      {subtitle && <p className="mt-2 text-gray-600">{subtitle}</p>}
+      <h2 className="text-3xl font-bold text-slate-800">{title}</h2>
+      {subtitle && <p className="mt-2 text-slate-500">{subtitle}</p>}
     </div>
   )
 }
 
 function CTAButton({ children, variant = 'primary', href = '#' }) {
-  const base = 'inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition focus:outline-none focus:ring-2 focus:ring-offset-2'
+  const base = 'inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-offset-2'
   const styles = variant === 'primary'
     ? 'bg-teal-600 text-white hover:bg-teal-700 focus:ring-teal-600 shadow-lg shadow-teal-600/25'
     : 'bg-white text-teal-700 hover:bg-teal-50 border border-teal-200 focus:ring-teal-600'
@@ -35,7 +35,7 @@ function FeatureCard({ icon: Icon, title, desc }) {
         </div>
         <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
       </div>
-      <p className="text-gray-600 text-sm">{desc}</p>
+      <p className="text-slate-500 text-sm leading-relaxed">{desc}</p>
     </div>
   )
 }
@@ -50,13 +50,18 @@ function DemoCard({ id, src, caption }) {
 }
 
 function AudienceCard({ title, desc, icon: Icon, color }) {
+  const colorMap = {
+    'text-pink-600': 'text-pink-500',
+    'text-green-600': 'text-emerald-500',
+    'text-indigo-600': 'text-blue-500'
+  }
   return (
     <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
       <div className="flex items-center gap-3 mb-2">
-        <Icon className={`w-6 h-6 ${color}`} />
-        <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+        <Icon className={`w-6 h-6 ${colorMap[color] || 'text-blue-500'}`} />
+        <h3 className="text-lg font-semibold text-slate-800">{title}</h3>
       </div>
-      <p className="text-gray-600 text-sm">{desc}</p>
+      <p className="text-slate-500 text-sm leading-relaxed">{desc}</p>
     </div>
   )
 }
@@ -72,7 +77,6 @@ function StatCard({ value, label }) {
 
 export default function Home() {
   const { i18n } = useTranslation()
-  const changeLang = (e) => i18n.changeLanguage(e.target.value)
   return (
     <main className="bg-gradient-to-b from-teal-50 via-white to-pink-50">
       <section className="max-w-7xl mx-auto px-6 pt-16 pb-12">
@@ -111,15 +115,10 @@ export default function Home() {
 
       <section className="max-w-6xl mx-auto px-6 py-12">
         <SectionTitle title="The Solution – Aanchal AI" />
-        <div className="bg-white rounded-xl shadow-sm p-8 border border-gray-200">
-          <p className="text-gray-800">A multi-agent AI platform that detects maternal risk early, analyzes medical documents instantly, and coordinates care across Telegram, WhatsApp, and web dashboards.</p>
+        <div className="glass-card-no-hover p-8">
+          <p className="text-slate-600">A multi-agent AI platform that detects maternal risk early, analyzes medical documents instantly, and coordinates care across Telegram, WhatsApp, and web dashboards.</p>
           <div className="mt-6">
-            <img
-              id="flow-diagram"
-              src={mermaidImg}
-              alt="System flow diagram"
-              className="w-full max-w-4xl mx-auto rounded-md object-contain"
-            />
+            <img id="flow-diagram" src={mermaidImg} alt="System flow diagram" className="w-full max-w-4xl mx-auto rounded-lg object-contain" />
           </div>
         </div>
       </section>
@@ -175,14 +174,12 @@ export default function Home() {
         </div>
       </section>
 
-
-
-      <footer id="contact" className="bg-white border-t border-gray-200">
+      <footer id="contact" className="bg-white/40 backdrop-blur-xl border-t border-blue-200/30">
         <div className="max-w-7xl mx-auto px-6 py-12">
           <div className="flex flex-col items-center text-center gap-4">
             <div className="flex items-center gap-2">
-              <HeartPulse className="w-6 h-6 text-pink-600" />
-              <span className="font-bold text-gray-900">Aanchal AI</span>
+              <HeartPulse className="w-6 h-6 text-pink-500" />
+              <span className="font-bold text-slate-700">Aanchal AI</span>
             </div>
             <div className="text-sm text-gray-700">
               <Link to="/" className="hover:underline hover:text-teal-600 transition-colors">Home</Link>

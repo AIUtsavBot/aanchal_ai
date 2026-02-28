@@ -4,7 +4,7 @@ import { Search, Plus, User, Calendar, Weight, Ruler, Activity, ChevronRight, Ba
 import { showToast } from '../../utils/FixedPatterns';
 import './PostnatalPages.css';
 
-export const ChildrenList = ({ ashaWorkerId }) => {
+export const ChildrenList = ({ ashaWorkerId, doctorId }) => {
     const [children, setChildren] = useState([]);
     const [mothers, setMothers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -24,12 +24,12 @@ export const ChildrenList = ({ ashaWorkerId }) => {
     useEffect(() => {
         loadChildren();
         loadMothers();
-    }, [ashaWorkerId]);
+    }, [ashaWorkerId, doctorId]);
 
     const loadChildren = async () => {
         try {
             setLoading(true);
-            const response = await postnatalAPI.getChildren(null, ashaWorkerId);
+            const response = await postnatalAPI.getChildren(null, ashaWorkerId, doctorId);
             setChildren(response.children || []);
         } catch (err) {
             console.error('Error loading children:', err);
@@ -40,7 +40,7 @@ export const ChildrenList = ({ ashaWorkerId }) => {
 
     const loadMothers = async () => {
         try {
-            const response = await postnatalAPI.getMothers(ashaWorkerId);
+            const response = await postnatalAPI.getMothers(ashaWorkerId, doctorId);
             setMothers(response.mothers || []);
         } catch (err) {
             console.error('Error loading mothers:', err);
