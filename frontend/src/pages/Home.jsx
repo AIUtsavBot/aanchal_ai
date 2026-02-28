@@ -85,7 +85,7 @@ export default function Home() {
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-teal-50 text-teal-700 text-sm font-medium mb-4 border border-teal-100">
               <HeartPulse className="w-4 h-4" /> AI-Powered Maternal Health
             </div>
-            <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight">AI-Powered 24/7 Maternal Health Monitoring for Mothers in Low-Resource Settings.</h1>
+            <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight">AI-Powered 24/7 Maternal Health Monitoring for Mothers in Low-Resource Settings.</h1>
             <p className="mt-4 text-lg text-gray-700">Aanchal AI automates maternal risk assessment, report analysis, and care coordination using multi-agent AI and chat-first interfaces—no app required.</p>
             <div className="mt-6 flex flex-wrap gap-4">
               <CTAButton href="https://t.me/aanchal_ai_bot">Start a Chat on Telegram</CTAButton>
