@@ -79,7 +79,7 @@ export default function Home() {
             <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900">AI-Powered 24/7 Maternal Health Monitoring for Mothers in Low-Resource Settings.</h1>
             <p className="mt-4 text-lg text-gray-700">Aanchal AI automates maternal risk assessment, report analysis, and care coordination using multi-agent AI and chat-first interfaces—no app required.</p>
             <div className="mt-6 flex flex-wrap gap-4">
-              <CTAButton href="https://t.me/MatruRaksha_AI_Bot">Start a Chat on Telegram</CTAButton>
+              <CTAButton href="https://t.me/aanchal_ai_bot">Start a Chat on Telegram</CTAButton>
               <CTAButton variant="secondary" href="/auth/login"><PlayCircle className="w-5 h-5" /> View Dashboard</CTAButton>
             </div>
           </div>
@@ -122,12 +122,12 @@ export default function Home() {
       <section className="max-w-7xl mx-auto px-6 py-12">
         <SectionTitle title="Key Features" />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <FeatureCard icon={HeartPulse} title="AI Risk Agent — automated maternal risk scoring" desc="" />
-          <FeatureCard icon={FileText} title="Document Analyzer — extract vitals & insights from PDFs/images" desc="" />
-          <FeatureCard icon={Users} title="ASHA Dashboard — manage mothers, tasks, and follow-ups" desc="" />
-          <FeatureCard icon={AlertTriangle} title="Emergency Agent — triage & escalation workflows" desc="" />
-          <FeatureCard icon={Pill} title="Nutrition & Medication Guidance — personalized recommendations" desc="" />
-          <FeatureCard icon={MessageSquare} title="No-App Adoption — available on Telegram & WhatsApp in multiple languages" desc="" />
+          <FeatureCard icon={HeartPulse} title="AI Risk Agent" desc="Automatically scores pregnancy risk using 12+ clinical parameters and flags high-risk cases for urgent follow-up by doctors." />
+          <FeatureCard icon={FileText} title="Document Analyzer" desc="Upload medical reports (PDF/Images) for instant AI-powered extraction of vitals, insights, and risk indicators." />
+          <FeatureCard icon={Users} title="ASHA Dashboard" desc="Manage assigned mothers, track follow-ups, record postnatal assessments, and monitor child growth — all in one place." />
+          <FeatureCard icon={AlertTriangle} title="Emergency Agent" desc="Detects urgent symptoms like bleeding, seizures, or severe pain and triggers real-time escalation to nearby facilities." />
+          <FeatureCard icon={Pill} title="Nutrition & Medication" desc="Personalized trimester-specific diet plans, anaemia management, and pregnancy-safe medication guidance." />
+          <FeatureCard icon={MessageSquare} title="No-App Adoption" desc="Mothers chat naturally on Telegram in Hindi, Marathi, or English — with voice notes, document sharing, and multi-profile support." />
         </div>
       </section>
 
@@ -143,9 +143,9 @@ export default function Home() {
       <section className="max-w-7xl mx-auto px-6 py-12">
         <SectionTitle title="Who It's For" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <AudienceCard icon={MessageSquare} color="text-pink-600" title="Mothers — health reminders & summaries" desc="" />
-          <AudienceCard icon={Users} color="text-green-600" title="ASHAs — automated tasks & simplified workflows" desc="" />
-          <AudienceCard icon={Building2} color="text-indigo-600" title="Clinics / Govt Programs — population-level monitoring" desc="" />
+          <AudienceCard icon={MessageSquare} color="text-pink-600" title="Mothers & Families" desc="Get health reminders, medication alerts, AI-powered report summaries, and 24/7 care guidance — right on Telegram." />
+          <AudienceCard icon={Users} color="text-green-600" title="ASHA Workers" desc="Automated risk scoring, task management, and simplified workflows so no mother is missed during field visits." />
+          <AudienceCard icon={Building2} color="text-indigo-600" title="Clinics & Govt Programs" desc="Population-level monitoring, high-risk dashboards, and data-driven insights for maternal health policy." />
         </div>
       </section>
 
@@ -190,15 +190,15 @@ export default function Home() {
               <span className="mx-2">·</span>
               <a href="#terms" className="hover:underline">Terms</a>
             </div>
-            <a href="https://t.me/MatruRaksha_AI_Bot" className="inline-flex items-center gap-2 px-5 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700">
-              Start Chat on Telegram <span className="text-white/80">@MatruRaksha_AI_Bot</span>
+            <a href="https://t.me/aanchal_ai_bot" className="inline-flex items-center gap-2 px-5 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700">
+              Start Chat on Telegram <span className="text-white/80">@aanchal_ai_bot</span>
             </a>
             {/* <select aria-label="Language" onChange={changeLang} defaultValue={i18n.language || 'en'} className="px-3 py-2 border border-gray-300 rounded-lg text-sm">
               <option value="en">EN</option>
               <option value="hi">HI</option>
               <option value="mr">MR</option>
             </select> */}
-            <div className="text-xs text-gray-600">© 2025 Aanchal AI · React · FastAPI · Supabase · Gemini</div>
+            <div className="text-xs text-gray-600">© {new Date().getFullYear()} Aanchal AI · React · FastAPI · Supabase · Gemini</div>
           </div>
         </div>
       </footer>
