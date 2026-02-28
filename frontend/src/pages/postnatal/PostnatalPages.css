@@ -134,7 +134,7 @@
 
 .btn-mark {
     padding: 0.25rem 0.75rem;
-    background: #8b5cf6;
+    background: #0d9488;
     color: white;
     border: none;
     border-radius: 4px;
@@ -1137,7 +1137,7 @@
 }
 
 .milestone-item.toggling .milestone-check {
-    border-color: #8b5cf6;
+    border-color: #0d9488;
     background: transparent;
 }
 

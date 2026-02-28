@@ -1,18 +1,18 @@
-// Color system matching the web frontend
-// Web uses: purple-600 primary, indigo-600 accent, pink-50/purple-50 gradients
+// Color system — Clinical Teal Healthtech Palette
+// Primary: Teal (#0d9488), Accent: Pink (#ec4899)
 export const colors = {
     light: {
-        // Core palette — matches website
-        primary: '#7C3AED',       // purple-600 (website primary)
-        primaryDark: '#6D28D9',   // purple-700
-        primaryLight: '#EDE9FE',  // purple-50
-        accent: '#4F46E5',        // indigo-600 (website accent)
-        accentLight: '#EEF2FF',   // indigo-50
+        // Core palette — Clinical Teal
+        primary: '#0d9488',       // teal-600
+        primaryDark: '#0f766e',   // teal-700
+        primaryLight: '#f0fdfa',  // teal-50
+        accent: '#ec4899',        // pink-500 (maternal accent)
+        accentLight: '#fdf2f8',   // pink-50
 
-        // Backgrounds — matches website gradient
-        background: '#FAFAFA',
-        backgroundGradientFrom: '#FDF2F8', // pink-50
-        backgroundGradientTo: '#FAF5FF',   // purple-50
+        // Backgrounds
+        background: '#f8fafa',
+        backgroundGradientFrom: '#f0fdfa', // teal-50
+        backgroundGradientTo: '#fdf2f8',   // pink-50
         surface: '#FFFFFF',
         surfaceElevated: '#F9FAFB',
 
@@ -29,8 +29,8 @@ export const colors = {
         warningLight: '#FEF3C7',
         error: '#EF4444',
         errorLight: '#FEE2E2',
-        info: '#3B82F6',
-        infoLight: '#DBEAFE',
+        info: '#0EA5E9',
+        infoLight: '#F0F9FF',
 
         // Borders
         border: '#E5E7EB',       // gray-200
@@ -39,19 +39,19 @@ export const colors = {
         // Navigation
         tabBar: '#FFFFFF',
         tabBarBorder: '#E5E7EB',
-        cardShadow: '#000',
+        cardShadow: '#0d9488',
         statusBar: 'dark',
     },
     dark: {
-        primary: '#A78BFA',
-        primaryDark: '#7C3AED',
-        primaryLight: '#2D1B69',
-        accent: '#818CF8',
-        accentLight: '#1E1B4B',
+        primary: '#2dd4bf',       // teal-400
+        primaryDark: '#0d9488',   // teal-600
+        primaryLight: '#042f2e',  // teal-950
+        accent: '#f472b6',        // pink-400
+        accentLight: '#500724',   // pink-950
 
         background: '#0F172A',
         backgroundGradientFrom: '#0F172A',
-        backgroundGradientTo: '#1E1B4B',
+        backgroundGradientTo: '#042f2e',
         surface: '#1E293B',
         surfaceElevated: '#334155',
 
@@ -66,8 +66,8 @@ export const colors = {
         warningLight: '#78350F',
         error: '#F87171',
         errorLight: '#7F1D1D',
-        info: '#60A5FA',
-        infoLight: '#1E3A5F',
+        info: '#38bdf8',
+        infoLight: '#0c4a6e',
 
         border: '#334155',
         divider: '#1E293B',

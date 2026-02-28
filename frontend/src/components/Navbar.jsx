@@ -19,7 +19,7 @@ export default function Navbar() {
     ? 'bg-red-600'
     : user?.role === 'DOCTOR'
       ? 'bg-green-600'
-      : 'bg-purple-600'
+      : 'bg-teal-600'
 
   // Only show toggle on ASHA/Doctor dashboard pages
   const showToggle = isAuthenticated &&
@@ -28,7 +28,7 @@ export default function Navbar() {
       location.pathname === '/asha' || location.pathname === '/doctor/dashboard')
 
   return (
-    <nav aria-label="Main Navigation" className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-xl">
+    <nav aria-label="Main Navigation" className="bg-gradient-to-r from-blue-600 to-teal-700 text-white shadow-xl">
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-3">

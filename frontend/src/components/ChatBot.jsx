@@ -37,7 +37,7 @@ export default function ChatBot() {
             <div
               className={`px-4 py-2 rounded-lg max-w-xs ${
                 msg.type === 'user'
-                  ? 'bg-indigo-600 text-white'
+                  ? 'bg-teal-600 text-white'
                   : 'bg-gray-200 text-gray-900'
               }`}
             >
@@ -54,11 +54,11 @@ export default function ChatBot() {
           onChange={(e) => setInput(e.target.value)}
           onKeyPress={(e) => e.key === 'Enter' && handleSend()}
           placeholder="Type your message..."
-          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
         />
         <button
           onClick={handleSend}
-          className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition"
+          className="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition"
         >
           <Send className="w-4 h-4" />
         </button>

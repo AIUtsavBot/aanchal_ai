@@ -499,7 +499,7 @@ export default function RiskDashboard() {
     MODERATE: '#f59e0b',
     LOW: '#10b981',
     primary: '#6366f1',
-    secondary: '#8b5cf6'
+    secondary: '#0d9488'
   }
 
   return (
@@ -538,7 +538,7 @@ export default function RiskDashboard() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`px-5 py-2 rounded-lg font-semibold text-sm transition-colors ${activeTab === tab.id
-                  ? 'bg-indigo-600 text-white'
+                  ? 'bg-teal-600 text-white'
                   : darkMode
                     ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
                     : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
@@ -555,7 +555,7 @@ export default function RiskDashboard() {
           <div className="flex flex-col gap-6">
             {/* Top KPI Cards */}
             <div>
-              <div className="flex items-center justify-between mb-5 px-5 py-4 rounded-xl text-white bg-gradient-to-r from-indigo-600 to-purple-700">
+              <div className="flex items-center justify-between mb-5 px-5 py-4 rounded-xl text-white bg-gradient-to-r from-teal-600 to-teal-700">
                 <h2 className="m-0 text-lg font-bold">📈 {t('health_analytics')}</h2>
                 <div className="bg-white/20 px-4 py-2 rounded-lg text-base font-semibold">
                   {t('total_mothers')}: <strong>{analytics.totalMothers}</strong>
@@ -617,7 +617,7 @@ export default function RiskDashboard() {
                       <PieChart>
                         <Pie data={ageDistribution} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
                           {ageDistribution.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={['#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899', '#f43f5e'][index % 6]} />
+                            <Cell key={`cell-${index}`} fill={['#6366f1', '#0d9488', '#a855f7', '#d946ef', '#ec4899', '#f43f5e'][index % 6]} />
                           ))}
                         </Pie>
                         <Tooltip />
@@ -683,7 +683,7 @@ export default function RiskDashboard() {
                 <button
                   onClick={fetchAnalyticsData}
                   disabled={chartsLoading}
-                  className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold text-sm disabled:opacity-60 disabled:cursor-not-allowed hover:bg-indigo-700 transition"
+                  className="px-6 py-3 bg-teal-600 text-white rounded-lg font-semibold text-sm disabled:opacity-60 disabled:cursor-not-allowed hover:bg-teal-700 transition"
                 >
                   {chartsLoading ? `⏳ ${t('refreshing')}` : `🔄 ${t('refresh_analytics')}`}
                 </button>
@@ -702,29 +702,29 @@ export default function RiskDashboard() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
                   <label className={`${darkMode ? 'text-gray-200' : 'text-gray-700'} block text-sm font-semibold mb-1`}>{t('full_name')} *</label>
-                  <input type="text" name="name" placeholder={t('full_name_placeholder')} value={registerForm.name} onChange={handleRegisterChange} required className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${darkMode ? 'bg-[#1a1a2e] text-white border-gray-700' : 'bg-white text-black border-gray-300'}`} />
+                  <input type="text" name="name" placeholder={t('full_name_placeholder')} value={registerForm.name} onChange={handleRegisterChange} required className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent ${darkMode ? 'bg-[#1a1a2e] text-white border-gray-700' : 'bg-white text-black border-gray-300'}`} />
                 </div>
                 <div>
                   <label className="text-gray-700 block text-sm font-semibold mb-1">📱 {t('phone_number')} *</label>
-                  <input type="tel" name="phone" placeholder="9876543210" value={registerForm.phone} onChange={handleRegisterChange} required className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+                  <input type="tel" name="phone" placeholder="9876543210" value={registerForm.phone} onChange={handleRegisterChange} required className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent" />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
                   <label className="text-gray-700 block text-sm font-semibold mb-1">👤 {t('age_years')} *</label>
-                  <input type="number" name="age" placeholder="28" value={registerForm.age} onChange={handleRegisterChange} required className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+                  <input type="number" name="age" placeholder="28" value={registerForm.age} onChange={handleRegisterChange} required className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent" />
                 </div>
                 <div>
                   <label className="text-gray-700 block text-sm font-semibold mb-1">⚖️ {t('bmi')} *</label>
-                  <input type="number" name="bmi" placeholder="22.5" step="0.1" value={registerForm.bmi} onChange={handleRegisterChange} required className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+                  <input type="number" name="bmi" placeholder="22.5" step="0.1" value={registerForm.bmi} onChange={handleRegisterChange} required className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent" />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
                   <label className="text-gray-700 block text-sm font-semibold mb-1">{t('gravida')}</label>
-                  <select name="gravida" value={registerForm.gravida} onChange={handleRegisterChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                  <select name="gravida" value={registerForm.gravida} onChange={handleRegisterChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent">
                     <option>Gravida 1</option>
                     <option>Gravida 2</option>
                     <option>Gravida 3</option>
@@ -732,7 +732,7 @@ export default function RiskDashboard() {
                 </div>
                 <div>
                   <label className="text-gray-700 block text-sm font-semibold mb-1">{t('parity')}</label>
-                  <select name="parity" value={registerForm.parity} onChange={handleRegisterChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                  <select name="parity" value={registerForm.parity} onChange={handleRegisterChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent">
                     <option>Parity 0</option>
                     <option>Parity 1</option>
                     <option>Parity 2</option>
@@ -742,13 +742,13 @@ export default function RiskDashboard() {
 
               <div className="mb-4">
                 <label className="text-gray-700 block text-sm font-semibold mb-1">📍 {t('location')} *</label>
-                <input type="text" name="location" placeholder="e.g., Dharavi, Mumbai" value={registerForm.location} onChange={handleRegisterChange} required className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+                <input type="text" name="location" placeholder="e.g., Dharavi, Mumbai" value={registerForm.location} onChange={handleRegisterChange} required className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent" />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
                   <label className="text-gray-700 block text-sm font-semibold mb-1">🌍 {t('preferred_language')}</label>
-                  <select name="preferred_language" value={registerForm.preferred_language} onChange={handleRegisterChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                  <select name="preferred_language" value={registerForm.preferred_language} onChange={handleRegisterChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent">
                     <option value="en">English</option>
                     <option value="mr">Marathi</option>
                     <option value="hi">Hindi</option>
@@ -756,11 +756,11 @@ export default function RiskDashboard() {
                 </div>
                 <div>
                   <label className="text-gray-700 block text-sm font-semibold mb-1">💬 {t('telegram_chat_id')}</label>
-                  <input type="text" name="telegram_chat_id" placeholder="Optional: Chat ID" value={registerForm.telegram_chat_id} onChange={handleRegisterChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+                  <input type="text" name="telegram_chat_id" placeholder="Optional: Chat ID" value={registerForm.telegram_chat_id} onChange={handleRegisterChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent" />
                 </div>
               </div>
 
-              <button type="submit" disabled={loading} className="w-full px-4 py-3 bg-indigo-600 text-white rounded-lg font-semibold text-sm disabled:opacity-60 disabled:cursor-not-allowed hover:bg-indigo-700 transition">
+              <button type="submit" disabled={loading} className="w-full px-4 py-3 bg-teal-600 text-white rounded-lg font-semibold text-sm disabled:opacity-60 disabled:cursor-not-allowed hover:bg-teal-700 transition">
                 {loading ? t('registering') : t('register_mother')}
               </button>
             </form>
@@ -775,7 +775,7 @@ export default function RiskDashboard() {
             <form onSubmit={handleAssessRisk}>
               <div className="mb-4">
                 <label className="text-gray-700 block text-sm font-semibold mb-1">{t('select_mother')} *</label>
-                <select name="mother_id" value={assessmentForm.mother_id} onChange={handleAssessmentChange} required className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                <select name="mother_id" value={assessmentForm.mother_id} onChange={handleAssessmentChange} required className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent">
                   <option value="">{t('choose_mother')}</option>
                   {mothers.map(mother => (
                     <option key={mother.id} value={mother.id}>{mother.name} ({mother.phone})</option>
@@ -786,22 +786,22 @@ export default function RiskDashboard() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
                   <label className="text-gray-700 block text-sm font-semibold mb-1">{t('systolic_bp')}</label>
-                  <input type="number" name="systolic_bp" placeholder="120" value={assessmentForm.systolic_bp} onChange={handleAssessmentChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+                  <input type="number" name="systolic_bp" placeholder="120" value={assessmentForm.systolic_bp} onChange={handleAssessmentChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent" />
                 </div>
                 <div>
                   <label className="text-gray-700 block text-sm font-semibold mb-1">{t('diastolic_bp')}</label>
-                  <input type="number" name="diastolic_bp" placeholder="80" value={assessmentForm.diastolic_bp} onChange={handleAssessmentChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+                  <input type="number" name="diastolic_bp" placeholder="80" value={assessmentForm.diastolic_bp} onChange={handleAssessmentChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent" />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
                   <label className="text-gray-700 block text-sm font-semibold mb-1">{t('heart_rate')}</label>
-                  <input type="number" name="heart_rate" placeholder="80" value={assessmentForm.heart_rate} onChange={handleAssessmentChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+                  <input type="number" name="heart_rate" placeholder="80" value={assessmentForm.heart_rate} onChange={handleAssessmentChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent" />
                 </div>
                 <div>
                   <label className="text-gray-700 block text-sm font-semibold mb-1">{t('blood_glucose')}</label>
-                  <input type="number" name="blood_glucose" placeholder="100" value={assessmentForm.blood_glucose} onChange={handleAssessmentChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+                  <input type="number" name="blood_glucose" placeholder="100" value={assessmentForm.blood_glucose} onChange={handleAssessmentChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent" />
                 </div>
               </div>
 
@@ -834,7 +834,7 @@ export default function RiskDashboard() {
                 </div>
               </div>
 
-              <button type="submit" disabled={loading} className="w-full px-4 py-3 bg-indigo-600 text-white rounded-lg font-semibold text-sm disabled:opacity-60 disabled:cursor-not-allowed hover:bg-indigo-700 transition">
+              <button type="submit" disabled={loading} className="w-full px-4 py-3 bg-teal-600 text-white rounded-lg font-semibold text-sm disabled:opacity-60 disabled:cursor-not-allowed hover:bg-teal-700 transition">
                 {loading ? t('assessing') : t('assess_risk')}
               </button>
             </form>

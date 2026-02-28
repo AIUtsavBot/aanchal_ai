@@ -499,7 +499,7 @@ export default function DoctorDashboard() {
   // Show loading while detecting doctor
   if (loadingProfile) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-teal-100 flex items-center justify-center p-6">
         <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
           <Loader className="w-12 h-12 animate-spin mx-auto text-blue-600 mb-4" />
           <h1 className="text-xl font-bold text-gray-900">
@@ -514,7 +514,7 @@ export default function DoctorDashboard() {
   // Show error if doctor not found
   if (!doctorId) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-teal-100 flex items-center justify-center p-6">
         <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full">
           <div className="text-center mb-6">
             <div className="bg-red-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -628,7 +628,7 @@ export default function DoctorDashboard() {
               setSelected(null);
             }}
             className={`flex-1 py-3 text-xs font-semibold flex flex-col items-center gap-1 ${mainView === "delivery"
-              ? "text-purple-600 bg-purple-50"
+              ? "text-teal-600 bg-teal-50"
               : "text-gray-500"
               }`}
           >
@@ -699,7 +699,7 @@ export default function DoctorDashboard() {
                     <div className="mt-3 pt-3 border-t border-gray-200 flex items-center justify-between text-xs">
                       <span
                         className={`px-2 py-1 rounded-full font-semibold ${m.delivery_status === 'delivered' || m.active_system === 'santanraksha'
-                          ? "bg-purple-100 text-purple-700"
+                          ? "bg-teal-100 text-teal-700"
                           : risk === "HIGH"
                             ? "bg-red-100 text-red-700"
                             : risk === "MODERATE"
@@ -740,7 +740,7 @@ export default function DoctorDashboard() {
                       {selected.name}
                     </h2>
                     {(selected.delivery_status === 'delivered' || selected.active_system === 'santanraksha') && (
-                      <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-xs font-bold border border-purple-200 uppercase tracking-wide">
+                      <span className="bg-teal-100 text-teal-700 px-3 py-1 rounded-full text-xs font-bold border border-teal-200 uppercase tracking-wide">
                         Delivered
                       </span>
                     )}
@@ -779,7 +779,7 @@ export default function DoctorDashboard() {
                 <button
                   onClick={() => setActiveTab("documents")}
                   className={`px-4 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 ${activeTab === "documents"
-                    ? "bg-indigo-600 text-white"
+                    ? "bg-teal-600 text-white"
                     : "bg-gray-100 text-gray-700"
                     }`}
                 >
@@ -797,7 +797,7 @@ export default function DoctorDashboard() {
                 <button
                   onClick={() => setActiveTab("consultation")}
                   className={`px-4 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 ${activeTab === "consultation"
-                    ? "bg-purple-600 text-white"
+                    ? "bg-teal-600 text-white"
                     : "bg-gray-100 text-gray-700"
                     }`}
                 >
@@ -906,7 +906,7 @@ export default function DoctorDashboard() {
                                   : riskLevel === "MODERATE"
                                     ? "bg-yellow-50 border-yellow-200"
                                     : riskLevel === "CONSULTATION"
-                                      ? "bg-purple-50 border-purple-200"
+                                      ? "bg-teal-50 border-teal-200"
                                       : "bg-green-50 border-green-200"
                                   }`}
                               >
@@ -917,7 +917,7 @@ export default function DoctorDashboard() {
                                       {new Date(a.created_at).toLocaleString()}
                                     </p>
                                     {isConsultation && a.event_data?.doctor_name && (
-                                      <p className="text-xs text-purple-700 font-medium mt-1">
+                                      <p className="text-xs text-teal-700 font-medium mt-1">
                                         Dr. {a.event_data.doctor_name}
                                       </p>
                                     )}
@@ -928,7 +928,7 @@ export default function DoctorDashboard() {
                                       : riskLevel === "MODERATE"
                                         ? "bg-yellow-200 text-yellow-800"
                                         : riskLevel === "CONSULTATION"
-                                          ? "bg-purple-200 text-purple-800"
+                                          ? "bg-teal-200 text-teal-800"
                                           : "bg-green-200 text-green-800"
                                       }`}
                                   >
@@ -989,11 +989,11 @@ export default function DoctorDashboard() {
                                   <div className="mt-3 space-y-3 border-t border-gray-200 pt-2">
                                     {/* Medications */}
                                     {a.event_data.medications && a.event_data.medications.length > 0 && (
-                                      <div className="bg-purple-50 p-2 rounded text-xs">
-                                        <p className="font-bold text-purple-800 mb-1 flex items-center gap-1">💊 Medications</p>
+                                      <div className="bg-teal-50 p-2 rounded text-xs">
+                                        <p className="font-bold text-teal-800 mb-1 flex items-center gap-1">💊 Medications</p>
                                         <ul className="space-y-1">
                                           {a.event_data.medications.map((m, i) => (
-                                            <li key={i} className="flex justify-between border-b border-purple-100 last:border-0 pb-1">
+                                            <li key={i} className="flex justify-between border-b border-teal-100 last:border-0 pb-1">
                                               <span className="font-medium text-gray-700">{m.name || m}</span>
                                               {typeof m === 'object' && (
                                                 <span className="text-gray-500">{m.dosage || ''} {m.schedule ? `- ${m.schedule}` : ''}</span>
@@ -1069,7 +1069,7 @@ export default function DoctorDashboard() {
                   </>
                 ) : (
                   <>
-                    <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-6 py-4">
+                    <div className="bg-gradient-to-r from-teal-600 to-teal-700 text-white px-6 py-4">
                       <h3 className="text-lg font-bold flex items-center gap-2">
                         <ClipboardList className="w-5 h-5" />
                         Consultation Details
@@ -1101,7 +1101,7 @@ export default function DoctorDashboard() {
             />
           </div>
         ) : mainView === "delivery" ? (
-          <div className="flex-1 overflow-y-auto p-8 bg-gradient-to-br from-purple-50 to-pink-50">
+          <div className="flex-1 overflow-y-auto p-8 bg-gradient-to-br from-teal-50 to-pink-50">
             <DeliveryForm
               doctorId={doctorId}
               onSuccess={(result) => {

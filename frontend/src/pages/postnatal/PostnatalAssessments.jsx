@@ -394,8 +394,8 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
 
         // Type-based styling
         const typeColor = type === 'mother' ? 'purple' : 'blue';
-        const typeBg = type === 'mother' ? 'bg-purple-50' : 'bg-blue-50';
-        const typeBorder = type === 'mother' ? 'border-purple-100' : 'border-blue-100';
+        const typeBg = type === 'mother' ? 'bg-teal-50' : 'bg-blue-50';
+        const typeBorder = type === 'mother' ? 'border-teal-100' : 'border-blue-100';
 
         // Risk still overrides border if high/critical
         let borderClass = typeBorder;
@@ -413,7 +413,7 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
                             {type === 'mother' && <span className="bg-white/50 px-1.5 rounded border border-gray-200">Day {a.days_postpartum !== undefined && a.days_postpartum !== null ? a.days_postpartum : '?'}</span>}
                             {type === 'child' && <span className="bg-white/50 px-1.5 rounded border border-gray-200">Age: {a.age_days !== undefined && a.age_days !== null ? a.age_days : '?'} days</span>}
                         </p>
-                        <p className="text-xs text-purple-700 font-medium mt-1 flex items-center gap-1">
+                        <p className="text-xs text-teal-700 font-medium mt-1 flex items-center gap-1">
                             {a.assessor_role === 'doctor' ? '👨‍⚕️' : '👩‍⚕️'} {a.assessor_role === 'doctor' ? 'Doctor Checked' : 'ASHA Checked'}
                         </p>
                     </div>
@@ -512,8 +512,8 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
                 <div className="space-y-2 border-t border-gray-200/50 pt-2">
                     {/* Medications */}
                     {a.medications && (
-                        <div className="bg-purple-50 p-2 rounded text-xs">
-                            <p className="font-bold text-purple-800 mb-1">💊 Medications</p>
+                        <div className="bg-teal-50 p-2 rounded text-xs">
+                            <p className="font-bold text-teal-800 mb-1">💊 Medications</p>
                             <p className="text-gray-700">{a.medications}</p>
                         </div>
                     )}
@@ -741,7 +741,7 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
                             <div>
                                 <div className="flex items-center gap-3">
                                     <h2 className="text-2xl font-bold text-gray-900">{selectedMother.name}</h2>
-                                    <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-xs font-bold border border-purple-200 uppercase tracking-wide">
+                                    <span className="bg-teal-100 text-teal-700 px-3 py-1 rounded-full text-xs font-bold border border-teal-200 uppercase tracking-wide">
                                         Postnatal
                                     </span>
                                 </div>

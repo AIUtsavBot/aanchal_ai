@@ -21,16 +21,18 @@ function SectionTitle({ title, subtitle }) {
 function CTAButton({ children, variant = 'primary', href = '#' }) {
   const base = 'inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition focus:outline-none focus:ring-2 focus:ring-offset-2'
   const styles = variant === 'primary'
-    ? 'bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-600'
-    : 'bg-white text-indigo-700 hover:bg-indigo-50 border border-indigo-200 focus:ring-indigo-600'
+    ? 'bg-teal-600 text-white hover:bg-teal-700 focus:ring-teal-600 shadow-lg shadow-teal-600/25'
+    : 'bg-white text-teal-700 hover:bg-teal-50 border border-teal-200 focus:ring-teal-600'
   return <a href={href} className={`${base} ${styles}`}>{children}</a>
 }
 
 function FeatureCard({ icon: Icon, title, desc }) {
   return (
-    <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+    <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-lg hover:shadow-teal-600/8 hover:-translate-y-1 transition-all duration-300">
       <div className="flex items-center gap-3 mb-3">
-        <Icon className="w-6 h-6 text-indigo-600" />
+        <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center">
+          <Icon className="w-5 h-5 text-teal-600" />
+        </div>
         <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
       </div>
       <p className="text-gray-600 text-sm">{desc}</p>
@@ -40,7 +42,7 @@ function FeatureCard({ icon: Icon, title, desc }) {
 
 function DemoCard({ id, src, caption }) {
   return (
-    <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200">
+    <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200 hover:shadow-lg transition-all duration-300">
       <img id={id} src={src} alt={caption} className="w-full h-56 object-cover rounded-md" />
       <p className="text-sm text-gray-700 mt-3">{caption}</p>
     </div>
@@ -49,7 +51,7 @@ function DemoCard({ id, src, caption }) {
 
 function AudienceCard({ title, desc, icon: Icon, color }) {
   return (
-    <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+    <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
       <div className="flex items-center gap-3 mb-2">
         <Icon className={`w-6 h-6 ${color}`} />
         <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
@@ -61,8 +63,8 @@ function AudienceCard({ title, desc, icon: Icon, color }) {
 
 function StatCard({ value, label }) {
   return (
-    <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 text-center">
-      <div className="text-3xl font-bold text-indigo-600">{value}</div>
+    <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 text-center hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+      <div className="text-3xl font-bold text-teal-600">{value}</div>
       <div className="text-sm text-gray-700 mt-2">{label}</div>
     </div>
   )
@@ -72,11 +74,14 @@ export default function Home() {
   const { i18n } = useTranslation()
   const changeLang = (e) => i18n.changeLanguage(e.target.value)
   return (
-    <main className="bg-gradient-to-b from-indigo-50 via-white to-pink-50">
+    <main className="bg-gradient-to-b from-teal-50 via-white to-pink-50">
       <section className="max-w-7xl mx-auto px-6 pt-16 pb-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
           <div>
-            <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900">AI-Powered 24/7 Maternal Health Monitoring for Mothers in Low-Resource Settings.</h1>
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-teal-50 text-teal-700 text-sm font-medium mb-4 border border-teal-100">
+              <HeartPulse className="w-4 h-4" /> AI-Powered Maternal Health
+            </div>
+            <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight">AI-Powered 24/7 Maternal Health Monitoring for Mothers in Low-Resource Settings.</h1>
             <p className="mt-4 text-lg text-gray-700">Aanchal AI automates maternal risk assessment, report analysis, and care coordination using multi-agent AI and chat-first interfaces—no app required.</p>
             <div className="mt-6 flex flex-wrap gap-4">
               <CTAButton href="https://t.me/aanchal_ai_bot">Start a Chat on Telegram</CTAButton>
@@ -84,7 +89,7 @@ export default function Home() {
             </div>
           </div>
           <div>
-            <div className="bg-white rounded-2xl shadow-lg p-4 border border-gray-200">
+            <div className="bg-white rounded-2xl shadow-xl shadow-teal-600/10 p-4 border border-gray-200">
               <img id="hero-visual" src={motherImg} alt="Telegram bot + dashboard screenshot" className="w-full h-80 object-cover rounded-lg" />
             </div>
           </div>
@@ -98,7 +103,7 @@ export default function Home() {
           <ul className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-3 text-gray-700">
             <li className="flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-red-600" /> Fragmented medical records</li>
             <li className="flex items-center gap-2"><FileText className="w-4 h-4 text-yellow-600" /> Reports are unanalyzed PDFs</li>
-            <li className="flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-indigo-600" /> No proactive alerts</li>
+            <li className="flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-teal-600" /> No proactive alerts</li>
             <li className="flex items-center gap-2"><Users className="w-4 h-4 text-green-600" /> High workload for ASHAs</li>
           </ul>
         </div>
@@ -145,7 +150,7 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <AudienceCard icon={MessageSquare} color="text-pink-600" title="Mothers & Families" desc="Get health reminders, medication alerts, AI-powered report summaries, and 24/7 care guidance — right on Telegram." />
           <AudienceCard icon={Users} color="text-green-600" title="ASHA Workers" desc="Automated risk scoring, task management, and simplified workflows so no mother is missed during field visits." />
-          <AudienceCard icon={Building2} color="text-indigo-600" title="Clinics & Govt Programs" desc="Population-level monitoring, high-risk dashboards, and data-driven insights for maternal health policy." />
+          <AudienceCard icon={Building2} color="text-teal-600" title="Clinics & Govt Programs" desc="Population-level monitoring, high-risk dashboards, and data-driven insights for maternal health policy." />
         </div>
       </section>
 
@@ -162,10 +167,10 @@ export default function Home() {
         <SectionTitle title="Why Aanchal AI Wins (Competitive Advantage)" />
         <div className="bg-white rounded-xl shadow-sm p-8 border border-gray-200">
           <ul className="space-y-2 text-gray-800">
-            <li className="flex items-center gap-2"><Workflow className="w-4 h-4 text-indigo-600" /> Multi-agent orchestration</li>
+            <li className="flex items-center gap-2"><Workflow className="w-4 h-4 text-teal-600" /> Multi-agent orchestration</li>
             <li className="flex items-center gap-2"><BrainCircuit className="w-4 h-4 text-pink-600" /> Report intelligence powered by Gemini</li>
             <li className="flex items-center gap-2"><MessageSquare className="w-4 h-4 text-green-600" /> Chat-first UX lowers literacy barriers</li>
-            <li className="flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-indigo-600" /> Designed for Bharat-scale healthcare systems</li>
+            <li className="flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-teal-600" /> Designed for Bharat-scale healthcare systems</li>
           </ul>
         </div>
       </section>
@@ -180,24 +185,19 @@ export default function Home() {
               <span className="font-bold text-gray-900">Aanchal AI</span>
             </div>
             <div className="text-sm text-gray-700">
-              <Link to="/" className="hover:underline">Home</Link>
+              <Link to="/" className="hover:underline hover:text-teal-600 transition-colors">Home</Link>
               <span className="mx-2">·</span>
-              <Link to="/auth/login" className="hover:underline">Login</Link>
+              <Link to="/auth/login" className="hover:underline hover:text-teal-600 transition-colors">Login</Link>
               <span className="mx-2">·</span>
-              <Link to="/auth/signup" className="hover:underline">Signup</Link>
+              <Link to="/auth/signup" className="hover:underline hover:text-teal-600 transition-colors">Signup</Link>
               <span className="mx-2">·</span>
-              <a href="#privacy" className="hover:underline">Privacy Policy</a>
+              <a href="#privacy" className="hover:underline hover:text-teal-600 transition-colors">Privacy Policy</a>
               <span className="mx-2">·</span>
-              <a href="#terms" className="hover:underline">Terms</a>
+              <a href="#terms" className="hover:underline hover:text-teal-600 transition-colors">Terms</a>
             </div>
-            <a href="https://t.me/aanchal_ai_bot" className="inline-flex items-center gap-2 px-5 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700">
+            <a href="https://t.me/aanchal_ai_bot" className="inline-flex items-center gap-2 px-5 py-2 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 shadow-lg shadow-teal-600/25 transition-all">
               Start Chat on Telegram <span className="text-white/80">@aanchal_ai_bot</span>
             </a>
-            {/* <select aria-label="Language" onChange={changeLang} defaultValue={i18n.language || 'en'} className="px-3 py-2 border border-gray-300 rounded-lg text-sm">
-              <option value="en">EN</option>
-              <option value="hi">HI</option>
-              <option value="mr">MR</option>
-            </select> */}
             <div className="text-xs text-gray-600">© {new Date().getFullYear()} Aanchal AI · React · FastAPI · Supabase · Gemini</div>
           </div>
         </div>
@@ -205,4 +205,3 @@ export default function Home() {
     </main>
   )
 }
-

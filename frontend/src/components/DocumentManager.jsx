@@ -265,7 +265,7 @@ export default function DocumentManager({
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-4">
+      <div className="bg-gradient-to-r from-teal-600 to-teal-600 text-white px-6 py-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold flex items-center gap-2">
             <FileText className="w-5 h-5" />
@@ -295,7 +295,7 @@ export default function DocumentManager({
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {uploading ? (
               <>
@@ -345,7 +345,7 @@ export default function DocumentManager({
       <div className="flex-1 overflow-y-auto p-4">
         {loading ? (
           <div className="text-center py-8">
-            <Loader className="w-8 h-8 animate-spin mx-auto text-indigo-600" />
+            <Loader className="w-8 h-8 animate-spin mx-auto text-teal-600" />
             <p className="text-gray-600 mt-2">Loading documents...</p>
           </div>
         ) : documents.length > 0 ? (
@@ -358,7 +358,7 @@ export default function DocumentManager({
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <FileText className="w-5 h-5 text-indigo-600" />
+                      <FileText className="w-5 h-5 text-teal-600" />
                       <span className="font-semibold text-gray-900">
                         {doc.filename || doc.file_name || "Document"}
                       </span>
@@ -390,7 +390,7 @@ export default function DocumentManager({
                           <User className="w-3 h-3" />
                           Uploaded by: {doc.uploader_name}
                           {doc.uploader_role && (
-                            <span className="px-1.5 py-0.5 bg-indigo-100 text-indigo-700 rounded text-xs ml-1">
+                            <span className="px-1.5 py-0.5 bg-teal-100 text-teal-700 rounded text-xs ml-1">
                               {doc.uploader_role}
                             </span>
                           )}
@@ -447,7 +447,7 @@ export default function DocumentManager({
                         href={doc.file_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                        className="p-2 text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
                         title="View Document"
                       >
                         <ExternalLink className="w-5 h-5" />

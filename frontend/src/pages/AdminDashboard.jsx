@@ -326,7 +326,7 @@ export default function AdminDashboard() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-500"></div>
           <p className="mt-4 text-gray-600">Loading admin dashboard...</p>
         </div>
       </div>
@@ -339,7 +339,7 @@ export default function AdminDashboard() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
-            <div className="bg-indigo-600 p-3 rounded-lg">
+            <div className="bg-teal-600 p-3 rounded-lg">
               <Shield className="w-8 h-8 text-white" />
             </div>
             <div>
@@ -389,11 +389,11 @@ export default function AdminDashboard() {
             <p className="text-sm text-gray-500">Total Children</p>
             <p className="text-3xl font-bold text-gray-900">{santanStats?.total_children ?? children.length}</p>
           </div>
-          <div className="bg-white rounded-xl shadow-sm p-5 border-l-4 border-indigo-500">
+          <div className="bg-white rounded-xl shadow-sm p-5 border-l-4 border-teal-500">
             <p className="text-sm text-gray-500">Doctors</p>
             <p className="text-3xl font-bold text-gray-900">{stats?.total_doctors ?? '-'}</p>
           </div>
-          <div className="bg-white rounded-xl shadow-sm p-5 border-l-4 border-purple-500">
+          <div className="bg-white rounded-xl shadow-sm p-5 border-l-4 border-teal-500">
             <p className="text-sm text-gray-500">ASHA Workers</p>
             <p className="text-3xl font-bold text-gray-900">{stats?.total_asha_workers ?? '-'}</p>
           </div>
@@ -413,7 +413,7 @@ export default function AdminDashboard() {
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`px-6 py-4 text-sm font-medium whitespace-nowrap ${activeTab === tab
-                  ? 'border-b-2 border-indigo-500 text-indigo-600'
+                  ? 'border-b-2 border-teal-500 text-teal-600'
                   : 'text-gray-500 hover:text-gray-700'
                   }`}
               >
@@ -442,13 +442,13 @@ export default function AdminDashboard() {
                       </p>
                       <p className="text-sm text-yellow-700">Needs Assignment</p>
                     </div>
-                    <div className="bg-indigo-50 p-4 rounded-lg text-center border border-indigo-200">
-                      <p className="text-3xl font-bold text-indigo-600">{doctors.length}</p>
-                      <p className="text-sm text-indigo-700">Active Doctors</p>
+                    <div className="bg-teal-50 p-4 rounded-lg text-center border border-teal-200">
+                      <p className="text-3xl font-bold text-teal-600">{doctors.length}</p>
+                      <p className="text-sm text-teal-700">Active Doctors</p>
                     </div>
-                    <div className="bg-purple-50 p-4 rounded-lg text-center border border-purple-200">
-                      <p className="text-3xl font-bold text-purple-600">{ashaWorkers.length}</p>
-                      <p className="text-sm text-purple-700">Active ASHA Workers</p>
+                    <div className="bg-teal-50 p-4 rounded-lg text-center border border-teal-200">
+                      <p className="text-3xl font-bold text-teal-600">{ashaWorkers.length}</p>
+                      <p className="text-sm text-teal-700">Active ASHA Workers</p>
                     </div>
                   </div>
                 </div>
@@ -471,11 +471,11 @@ export default function AdminDashboard() {
                               <span className="text-sm w-24 truncate" title={d.name}>{d.name}</span>
                               <div className="flex-1 bg-gray-200 rounded-full h-3">
                                 <div
-                                  className="bg-indigo-500 h-3 rounded-full transition-all"
+                                  className="bg-teal-500 h-3 rounded-full transition-all"
                                   style={{ width: `${percentage}%` }}
                                 ></div>
                               </div>
-                              <span className="text-sm font-semibold text-indigo-600 w-8">{count}</span>
+                              <span className="text-sm font-semibold text-teal-600 w-8">{count}</span>
                             </div>
                           )
                         })}
@@ -488,7 +488,7 @@ export default function AdminDashboard() {
 
                   {/* ASHA Worker Workload */}
                   <div className="bg-white border rounded-lg p-4">
-                    <h4 className="font-semibold text-purple-800 mb-3">👩‍⚕️ ASHA Worker Workload</h4>
+                    <h4 className="font-semibold text-teal-800 mb-3">👩‍⚕️ ASHA Worker Workload</h4>
                     {ashaWorkers.length === 0 ? (
                       <p className="text-gray-500 text-sm">No ASHA workers registered</p>
                     ) : (
@@ -502,11 +502,11 @@ export default function AdminDashboard() {
                               <span className="text-sm w-24 truncate" title={a.name}>{a.name}</span>
                               <div className="flex-1 bg-gray-200 rounded-full h-3">
                                 <div
-                                  className="bg-purple-500 h-3 rounded-full transition-all"
+                                  className="bg-teal-500 h-3 rounded-full transition-all"
                                   style={{ width: `${percentage}%` }}
                                 ></div>
                               </div>
-                              <span className="text-sm font-semibold text-purple-600 w-8">{count}</span>
+                              <span className="text-sm font-semibold text-teal-600 w-8">{count}</span>
                             </div>
                           )
                         })}
@@ -534,11 +534,11 @@ export default function AdminDashboard() {
                       </p>
                       <p className="text-xs text-blue-700">Doctor Only</p>
                     </div>
-                    <div className="text-center p-3 bg-purple-50 rounded-lg">
-                      <p className="text-2xl font-bold text-purple-600">
+                    <div className="text-center p-3 bg-teal-50 rounded-lg">
+                      <p className="text-2xl font-bold text-teal-600">
                         {mothers.filter(m => !m.doctor_id && m.asha_worker_id).length}
                       </p>
-                      <p className="text-xs text-purple-700">ASHA Only</p>
+                      <p className="text-xs text-teal-700">ASHA Only</p>
                     </div>
                     <div className="text-center p-3 bg-red-50 rounded-lg">
                       <p className="text-2xl font-bold text-red-600">
@@ -585,11 +585,11 @@ export default function AdminDashboard() {
                 <div>
                   <h3 className="font-semibold text-lg mb-4">📈 AI Token & Cost Analytics</h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="bg-indigo-50 p-4 rounded-lg text-center border border-indigo-200">
-                      <p className="text-3xl font-bold text-indigo-600">
+                    <div className="bg-teal-50 p-4 rounded-lg text-center border border-teal-200">
+                      <p className="text-3xl font-bold text-teal-600">
                         {metrics?.token_usage_estimated?.toLocaleString() || 0}
                       </p>
-                      <p className="text-sm text-indigo-700">Estimated Tokens</p>
+                      <p className="text-sm text-teal-700">Estimated Tokens</p>
                     </div>
                     <div className="bg-yellow-50 p-4 rounded-lg text-center border border-yellow-200">
                       <p className="text-3xl font-bold text-yellow-600">
@@ -616,7 +616,7 @@ export default function AdminDashboard() {
                       metrics.word_cloud.map((w, idx) => (
                         <span
                           key={idx}
-                          className="px-3 py-1 bg-white border border-gray-200 shadow-sm rounded-full text-indigo-600 font-medium whitespace-nowrap"
+                          className="px-3 py-1 bg-white border border-gray-200 shadow-sm rounded-full text-teal-600 font-medium whitespace-nowrap"
                           style={{ fontSize: `${Math.max(0.8, Math.min(2, w.value / 10))}rem`, opacity: Math.max(0.5, Math.min(1, w.value / 20)) }}
                         >
                           {w.text} <span className="text-xs text-gray-400 ml-1">({w.value})</span>
@@ -710,7 +710,7 @@ export default function AdminDashboard() {
                               )}
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded-full">
+                              <span className="bg-teal-100 text-teal-700 text-xs px-2 py-1 rounded-full">
                                 {d.mothers_count || 0} mothers
                               </span>
                               <button
@@ -806,7 +806,7 @@ export default function AdminDashboard() {
                               <p className="text-xs text-gray-400">{a.assigned_area || 'No area'} · {a.phone || 'No phone'}</p>
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded-full">
+                              <span className="bg-teal-100 text-teal-700 text-xs px-2 py-1 rounded-full">
                                 {a.mothers_count || 0} mothers
                               </span>
                               <button
@@ -889,8 +889,8 @@ export default function AdminDashboard() {
                           <th className="px-4 py-3 text-left font-semibold">Phone</th>
                           <th className="px-4 py-3 text-left font-semibold">Location</th>
                           <th className="px-4 py-3 text-left font-semibold">Delivery Status</th>
-                          <th className="px-4 py-3 text-left font-semibold text-purple-600">ASHA Worker</th>
-                          <th className="px-4 py-3 text-left font-semibold text-indigo-600">Doctor</th>
+                          <th className="px-4 py-3 text-left font-semibold text-teal-600">ASHA Worker</th>
+                          <th className="px-4 py-3 text-left font-semibold text-teal-600">Doctor</th>
                           <th className="px-4 py-3 text-left font-semibold">Assignment</th>
                         </tr>
                       </thead>
@@ -924,7 +924,7 @@ export default function AdminDashboard() {
                                   value={effectiveAsha || ''}
                                   onChange={e => handleAssignmentChange(mother.id, 'asha', e.target.value)}
                                   className={`text-sm border rounded px-2 py-1.5 w-36 ${hasChanges && 'asha_worker_id' in pendingChanges[mother.id] ? 'border-yellow-400 bg-yellow-50' :
-                                    effectiveAsha ? 'border-purple-300 bg-purple-50' : 'border-gray-300'
+                                    effectiveAsha ? 'border-purple-300 bg-teal-50' : 'border-gray-300'
                                     }`}
                                 >
                                   <option value="">-- Select --</option>
@@ -938,7 +938,7 @@ export default function AdminDashboard() {
                                   value={effectiveDoctor || ''}
                                   onChange={e => handleAssignmentChange(mother.id, 'doctor', e.target.value)}
                                   className={`text-sm border rounded px-2 py-1.5 w-36 ${hasChanges && 'doctor_id' in pendingChanges[mother.id] ? 'border-yellow-400 bg-yellow-50' :
-                                    effectiveDoctor ? 'border-indigo-300 bg-indigo-50' : 'border-gray-300'
+                                    effectiveDoctor ? 'border-indigo-300 bg-teal-50' : 'border-gray-300'
                                     }`}
                                 >
                                   <option value="">-- Select --</option>
@@ -1000,8 +1000,8 @@ export default function AdminDashboard() {
                           <th className="px-4 py-3 text-left font-semibold">Age</th>
                           <th className="px-4 py-3 text-left font-semibold">Gender</th>
                           <th className="px-4 py-3 text-left font-semibold">Mother</th>
-                          <th className="px-4 py-3 text-left font-semibold text-purple-600">ASHA Worker</th>
-                          <th className="px-4 py-3 text-left font-semibold text-indigo-600">Doctor</th>
+                          <th className="px-4 py-3 text-left font-semibold text-teal-600">ASHA Worker</th>
+                          <th className="px-4 py-3 text-left font-semibold text-teal-600">Doctor</th>
                           <th className="px-4 py-3 text-left font-semibold">Actions</th>
                         </tr>
                       </thead>
@@ -1087,12 +1087,12 @@ export default function AdminDashboard() {
                                   </div>
                                 </td>
                                 <td className="px-4 py-3">
-                                  <span className={child.asha_worker_name !== 'Unassigned' ? 'text-purple-600' : 'text-gray-400'}>
+                                  <span className={child.asha_worker_name !== 'Unassigned' ? 'text-teal-600' : 'text-gray-400'}>
                                     {child.asha_worker_name}
                                   </span>
                                 </td>
                                 <td className="px-4 py-3">
-                                  <span className={child.doctor_name !== 'Unassigned' ? 'text-indigo-600' : 'text-gray-400'}>
+                                  <span className={child.doctor_name !== 'Unassigned' ? 'text-teal-600' : 'text-gray-400'}>
                                     {child.doctor_name}
                                   </span>
                                 </td>

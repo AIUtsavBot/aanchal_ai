@@ -131,7 +131,7 @@ export default function VoiceInput({ onDataReceived }) {
                         ? 'bg-red-500 text-white hover:bg-red-600 scale-110 ring-4 ring-red-100'
                         : isProcessing
                             ? 'bg-blue-100 text-blue-500 cursor-wait'
-                            : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:shadow-xl hover:-translate-y-1'
+                            : 'bg-gradient-to-r from-blue-600 to-teal-600 text-white hover:shadow-xl hover:-translate-y-1'
                     }
                 `}
                 title="Use Voice Entry"

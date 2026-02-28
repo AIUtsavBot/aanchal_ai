@@ -1,4 +1,4 @@
-﻿// Aanchal AI - Login Page
+// Aanchal AI - Login Page
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
@@ -66,11 +66,11 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-blue-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 via-white to-blue-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-indigo-600 mb-2">🤰 Aanchal AI</h1>
+          <h1 className="text-4xl font-bold text-teal-600 mb-2">🤰 Aanchal AI</h1>
           <h2 className="text-2xl font-bold text-gray-900">Welcome Back</h2>
           <p className="mt-2 text-sm text-gray-600">
             Sign in to your account
@@ -99,7 +99,7 @@ const Login = () => {
                 required
                 value={formData.email}
                 onChange={handleChange}
-                className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 placeholder="your@email.com"
               />
             </div>
@@ -116,8 +116,8 @@ const Login = () => {
                 required
                 value={formData.password}
                 onChange={handleChange}
-                className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                placeholder="••••••••"
+                className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                placeholder=""
               />
             </div>
           </div>
@@ -125,7 +125,7 @@ const Login = () => {
           {/* Forgot Password Link */}
           <div className="flex items-center justify-between">
             <div className="text-sm">
-              <Link to="/auth/forgot-password" className="font-medium text-indigo-600 hover:text-indigo-500">
+              <Link to="/auth/forgot-password" className="font-medium text-teal-600 hover:text-teal-500">
                 Forgot your password?
               </Link>
             </div>
@@ -135,7 +135,7 @@ const Login = () => {
           <button
             type="submit"
             disabled={loading}
-            className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
@@ -155,7 +155,7 @@ const Login = () => {
             type="button"
             onClick={handleGoogleSignIn}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -170,7 +170,7 @@ const Login = () => {
           <div className="text-center mt-4">
             <p className="text-sm text-gray-600">
               Don't have an account?{' '}
-              <Link to="/auth/signup" className="font-medium text-indigo-600 hover:text-indigo-500">
+              <Link to="/auth/signup" className="font-medium text-teal-600 hover:text-teal-500">
                 Sign up
               </Link>
             </p>

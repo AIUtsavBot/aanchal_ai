@@ -333,7 +333,7 @@ export default function AdminApprovals() {
         <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <ShieldCheck className="w-7 h-7 text-indigo-600" />
+              <ShieldCheck className="w-7 h-7 text-teal-600" />
               <div>
                 <h2 className="text-xl font-bold">User Approvals</h2>
                 <p className="text-sm text-gray-500">Approve or reject registration requests</p>
@@ -369,7 +369,7 @@ export default function AdminApprovals() {
             {pendingRoleRequestsCount > 0 && (
               <div className="mb-8">
                 <div className="flex items-center gap-2 mb-4">
-                  <Clock className="w-5 h-5 text-purple-600" />
+                  <Clock className="w-5 h-5 text-teal-600" />
                   <h3 className="text-lg font-semibold">Pending Approvals ({pendingRoleRequestsCount})</h3>
                 </div>
                 <div className="grid grid-cols-1 gap-4">
@@ -520,7 +520,7 @@ export default function AdminApprovals() {
             {pendingRequestsCount > 0 && (
               <div className="mb-8">
                 <div className="flex items-center gap-2 mb-4">
-                  <UserPlus className="w-5 h-5 text-indigo-600" />
+                  <UserPlus className="w-5 h-5 text-teal-600" />
                   <h3 className="text-lg font-semibold">Form Registrations ({pendingRequestsCount})</h3>
                 </div>
                 <div className="grid grid-cols-1 gap-4">
@@ -530,7 +530,7 @@ export default function AdminApprovals() {
                         <div>
                           <div className="font-semibold text-gray-900">
                             {req.full_name}
-                            <span className="ml-2 text-xs px-2 py-1 rounded bg-indigo-100 text-indigo-700">{req.role_requested}</span>
+                            <span className="ml-2 text-xs px-2 py-1 rounded bg-teal-100 text-teal-700">{req.role_requested}</span>
                           </div>
                           <div className="text-sm text-gray-600">{req.email}</div>
                           {req.role_requested === 'DOCTOR' && req.degree_cert_url && (
@@ -538,7 +538,7 @@ export default function AdminApprovals() {
                               href={req.degree_cert_url}
                               target="_blank"
                               rel="noreferrer"
-                              className="mt-2 inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-800 text-sm"
+                              className="mt-2 inline-flex items-center gap-2 text-teal-600 hover:text-indigo-800 text-sm"
                             >
                               <FileText className="w-4 h-4" /> View Certificate
                             </a>

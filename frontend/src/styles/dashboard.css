@@ -1,14 +1,14 @@
 /* ========================================
 FILE: frontend/src/styles/dashboard.css
-COMPLETE CSS WITH ALL STYLES
+CLINICAL TEAL — Healthtech Dashboard
 ======================================== */
 
 /* Dashboard Layout & Grid */
 .dashboard-container {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #0d9488 0%, #06b6d4 100%);
   min-height: 100vh;
   padding: 20px;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .dashboard-wrapper {
@@ -25,7 +25,7 @@ COMPLETE CSS WITH ALL STYLES
   background: white;
   padding: 8px;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .tab-button {
@@ -41,13 +41,15 @@ COMPLETE CSS WITH ALL STYLES
 }
 
 .tab-button:hover {
-  background: #e5e7eb;
+  background: #f0fdfa;
+  color: #0d9488;
 }
 
 .tab-button.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #0d9488 0%, #06b6d4 100%);
   color: white;
-  border-color: #667eea;
+  border-color: #0d9488;
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
 }
 
 /* Analytics/Dashboard Cards Section */
@@ -65,6 +67,7 @@ COMPLETE CSS WITH ALL STYLES
 .analytics-title {
   font-size: 20px;
   font-weight: 700;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
   color: white;
   margin: 0;
 }
@@ -90,18 +93,18 @@ COMPLETE CSS WITH ALL STYLES
 /* KPI Cards */
 .kpi-card {
   background: white;
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 24px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.08);
   transition: all 0.3s ease;
-  border-left: 4px solid #667eea;
+  border-left: 4px solid #0d9488;
   display: flex;
   flex-direction: column;
 }
 
 .kpi-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 12px 28px rgba(13, 148, 136, 0.16);
 }
 
 .kpi-card.high-risk {
@@ -128,6 +131,7 @@ COMPLETE CSS WITH ALL STYLES
 .kpi-value {
   font-size: 36px;
   font-weight: 700;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
   color: #1f2937;
 }
 
@@ -139,15 +143,16 @@ COMPLETE CSS WITH ALL STYLES
 /* Chart Container */
 .chart-container {
   background: white;
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 24px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.08);
   margin-bottom: 20px;
 }
 
 .chart-title {
   font-size: 18px;
   font-weight: 600;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
   color: #1f2937;
   margin-bottom: 20px;
 }
@@ -155,9 +160,9 @@ COMPLETE CSS WITH ALL STYLES
 /* Form Styles */
 .form-container {
   background: white;
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 32px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.08);
   max-width: 600px;
 }
 
@@ -179,7 +184,7 @@ COMPLETE CSS WITH ALL STYLES
   width: 100%;
   padding: 12px 16px;
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 14px;
   font-family: inherit;
   transition: all 0.3s ease;
@@ -190,9 +195,9 @@ COMPLETE CSS WITH ALL STYLES
 .form-select:focus,
 .form-textarea:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #0d9488;
   background: white;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
 }
 
 .form-input::placeholder {
@@ -207,11 +212,11 @@ COMPLETE CSS WITH ALL STYLES
 
 /* Buttons */
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #0d9488 0%, #06b6d4 100%);
   color: white;
   padding: 12px 24px;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   font-weight: 600;
   font-size: 14px;
   cursor: pointer;
@@ -221,7 +226,7 @@ COMPLETE CSS WITH ALL STYLES
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 8px 20px rgba(13, 148, 136, 0.35);
 }
 
 .btn-primary:active {
@@ -235,11 +240,11 @@ COMPLETE CSS WITH ALL STYLES
 }
 
 .btn-secondary {
-  background: #e5e7eb;
-  color: #374151;
+  background: #f0fdfa;
+  color: #0d9488;
   padding: 12px 24px;
-  border: none;
-  border-radius: 8px;
+  border: 1px solid #99f6e4;
+  border-radius: 10px;
   font-weight: 600;
   font-size: 14px;
   cursor: pointer;
@@ -247,7 +252,7 @@ COMPLETE CSS WITH ALL STYLES
 }
 
 .btn-secondary:hover {
-  background: #d1d5db;
+  background: #ccfbf1;
 }
 
 .btn-group {
@@ -284,15 +289,15 @@ COMPLETE CSS WITH ALL STYLES
 /* Cards & Patient List */
 .card {
   background: white;
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   transition: all 0.3s ease;
   margin-bottom: 16px;
 }
 
 .card:hover {
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 8px 24px rgba(13, 148, 136, 0.12);
   transform: translateY(-2px);
 }
 
@@ -306,6 +311,7 @@ COMPLETE CSS WITH ALL STYLES
 .card-title {
   font-size: 16px;
   font-weight: 600;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
   color: #1f2937;
 }
 
@@ -349,15 +355,15 @@ COMPLETE CSS WITH ALL STYLES
 
 .patient-list-item {
   background: white;
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 16px;
-  border-left: 4px solid #667eea;
+  border-left: 4px solid #0d9488;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .patient-list-item:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 16px rgba(13, 148, 136, 0.12);
   transform: translateX(4px);
 }
 
@@ -380,12 +386,14 @@ COMPLETE CSS WITH ALL STYLES
   height: 20px;
   border: 3px solid rgba(0, 0, 0, 0.1);
   border-radius: 50%;
-  border-top-color: #667eea;
+  border-top-color: #0d9488;
   animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .loading-container {
@@ -409,8 +417,8 @@ COMPLETE CSS WITH ALL STYLES
   right: 20px;
   background: white;
   padding: 16px 24px;
-  border-radius: 8px;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   z-index: 1000;
   animation: slideIn 0.3s ease-out;
   max-width: 400px;
@@ -425,7 +433,7 @@ COMPLETE CSS WITH ALL STYLES
 }
 
 .notification.info {
-  border-left: 4px solid #3b82f6;
+  border-left: 4px solid #0ea5e9;
 }
 
 .notification.warning {
@@ -435,7 +443,7 @@ COMPLETE CSS WITH ALL STYLES
 .alert {
   background: #fee2e2;
   border: 1px solid #fecaca;
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 16px;
   margin-bottom: 16px;
   color: #991b1b;
@@ -464,20 +472,20 @@ table {
   width: 100%;
   border-collapse: collapse;
   background: white;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 th {
-  background: #f3f4f6;
+  background: #f0fdfa;
   padding: 16px;
   text-align: left;
   font-weight: 600;
-  color: #374151;
+  color: #0f766e;
   font-size: 13px;
   text-transform: uppercase;
-  border-bottom: 2px solid #e5e7eb;
+  border-bottom: 2px solid #99f6e4;
 }
 
 td {
@@ -488,7 +496,7 @@ td {
 }
 
 tr:hover {
-  background: #f9fafb;
+  background: #f0fdfa;
 }
 
 /* Animations */
@@ -497,6 +505,7 @@ tr:hover {
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -507,6 +516,7 @@ tr:hover {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -572,7 +582,8 @@ tr:hover {
     font-size: 12px;
   }
 
-  th, td {
+  th,
+  td {
     padding: 12px;
   }
 }

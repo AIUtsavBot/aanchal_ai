@@ -800,7 +800,7 @@ export default function ASHAInterface() {
                     <div className="text-sm font-semibold text-gray-900">
                       {m.name}
                       {['delivered', 'postnatal'].includes(m.delivery_status) && (
-                        <span className="ml-2 inline-block px-1.5 py-0.5 text-[10px] bg-purple-100 text-purple-800 rounded-full border border-purple-200">
+                        <span className="ml-2 inline-block px-1.5 py-0.5 text-[10px] bg-teal-100 text-teal-800 rounded-full border border-teal-200">
                           Delivered
                         </span>
                       )}
@@ -835,7 +835,7 @@ export default function ASHAInterface() {
                   <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
                     {selected.name}
                     {['delivered', 'postnatal'].includes(selected.delivery_status) && (
-                      <span className="px-3 py-1 text-sm bg-purple-100 text-purple-700 rounded-full border border-purple-200">
+                      <span className="px-3 py-1 text-sm bg-teal-100 text-teal-700 rounded-full border border-teal-200">
                         Delivered
                       </span>
                     )}
@@ -928,7 +928,7 @@ export default function ASHAInterface() {
                       setDeliveryMother(selected);
                       setShowDeliveryModal(true);
                     }}
-                    className="w-full mt-3 py-2 bg-purple-600 text-white rounded-lg font-semibold text-sm hover:bg-purple-700 flex items-center justify-center gap-2"
+                    className="w-full mt-3 py-2 bg-teal-600 text-white rounded-lg font-semibold text-sm hover:bg-teal-700 flex items-center justify-center gap-2"
                   >
                     🎉 Complete Delivery
                   </button>
@@ -1300,8 +1300,8 @@ export default function ASHAInterface() {
                       </p>
                       <p className="text-sm text-gray-600">Assigned Mothers</p>
                     </div>
-                    <div className="bg-white p-5 rounded-xl shadow border-l-4 border-purple-500">
-                      <p className="text-3xl font-bold text-purple-600">
+                    <div className="bg-white p-5 rounded-xl shadow border-l-4 border-teal-500">
+                      <p className="text-3xl font-bold text-teal-600">
                         {analytics.total_assessments}
                       </p>
                       <p className="text-sm text-gray-600">Assessments Done</p>
