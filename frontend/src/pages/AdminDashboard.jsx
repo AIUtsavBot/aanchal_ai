@@ -610,8 +610,8 @@ export default function AdminDashboard() {
                 <div className="bg-white border rounded-lg p-4 mt-6">
                   <h4 className="font-semibold text-gray-800 mb-3">🗣️ Common Risk Topics (Word Cloud)</h4>
                   <div className="flex flex-wrap gap-2 p-4 bg-gray-50 rounded-lg min-h-[200px] items-center justify-center">
-                    {!metrics?.word_cloud ? (
-                      <p className="text-gray-400">Loading words...</p>
+                    {!metrics?.word_cloud || !Array.isArray(metrics.word_cloud) ? (
+                      <p className="text-gray-400">No word data available</p>
                     ) : (
                       metrics.word_cloud.map((w, idx) => (
                         <span

@@ -492,27 +492,35 @@ async def lifespan(app: FastAPI):
 
 # ==================== CREATE FASTAPI APP ====================
 # Mount enhanced API router
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
-from slowapi.middleware import SlowAPIMiddleware
+try:
+    from slowapi import Limiter, _rate_limit_exceeded_handler
+    from slowapi.util import get_remote_address
+    from slowapi.errors import RateLimitExceeded
+    from slowapi.middleware import SlowAPIMiddleware
 
-# Initialize SlowAPI limiter (100 requests per minute globally)
-limiter = Limiter(key_func=get_remote_address, default_limits=["100/minute"])
+    # Initialize SlowAPI limiter (100 requests per minute globally)
+    limiter = Limiter(key_func=get_remote_address, default_limits=["100/minute"])
+    SLOWAPI_AVAILABLE = True
+except ImportError:
+    logger.warning("⚠️  slowapi not installed — rate limiting disabled. Install with: pip install slowapi")
+    SLOWAPI_AVAILABLE = False
+    limiter = None
 
 try:
     from routes.enhanced_routes import router as enhanced_router
     app = FastAPI(title="MatruRaksha AI Backend", lifespan=lifespan)
-    app.state.limiter = limiter
-    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-    app.add_middleware(SlowAPIMiddleware)
+    if SLOWAPI_AVAILABLE:
+        app.state.limiter = limiter
+        app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+        app.add_middleware(SlowAPIMiddleware)
     app.include_router(enhanced_router)
 except ImportError:
     logger.warning("⚠️  Enhanced API router not available")
     app = FastAPI(title="MatruRaksha AI Backend", lifespan=lifespan)
-    app.state.limiter = limiter
-    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-    app.add_middleware(SlowAPIMiddleware)
+    if SLOWAPI_AVAILABLE:
+        app.state.limiter = limiter
+        app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+        app.add_middleware(SlowAPIMiddleware)
 
 # Mount Vapi AI Calling routes
 try:

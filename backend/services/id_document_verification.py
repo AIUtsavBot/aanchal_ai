@@ -67,7 +67,7 @@ class IDDocumentInfo:
             today = date.today()
             age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
             return age
-        except:
+        except (ValueError, TypeError):
             return None
 
 

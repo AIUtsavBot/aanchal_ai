@@ -185,7 +185,7 @@ Return ONLY valid JSON:
                         if isinstance(conv_topics, str):
                             try:
                                 conv_topics = json.loads(conv_topics)
-                            except:
+                            except (json.JSONDecodeError, TypeError, ValueError):
                                 conv_topics = []
                         
                         # Check topic overlap
@@ -283,7 +283,7 @@ Return ONLY valid JSON:
                 if isinstance(conv_symptoms, str):
                     try:
                         conv_symptoms = json.loads(conv_symptoms)
-                    except:
+                    except (json.JSONDecodeError, TypeError, ValueError):
                         conv_symptoms = []
                 past_symptoms.extend(conv_symptoms)
                 
