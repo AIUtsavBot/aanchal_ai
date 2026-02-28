@@ -106,7 +106,7 @@ export default function CaseChat({ motherId, userRole = 'DOCTOR', userName = 'Do
     switch (role?.toUpperCase()) {
       case 'DOCTOR': return 'bg-blue-50 border-blue-200'
       case 'ASHA': return 'bg-green-50 border-green-200'
-      case 'ADMIN': return 'bg-purple-50 border-purple-200'
+      case 'ADMIN': return 'bg-sky-50 border-sky-200'
       case 'MOTHER': return 'bg-pink-50 border-pink-200'
       default: return 'bg-gray-50 border-gray-200'
     }
@@ -116,7 +116,7 @@ export default function CaseChat({ motherId, userRole = 'DOCTOR', userName = 'Do
     switch (role?.toUpperCase()) {
       case 'DOCTOR': return 'text-blue-700'
       case 'ASHA': return 'text-green-700'
-      case 'ADMIN': return 'text-purple-700'
+      case 'ADMIN': return 'text-sky-700'
       case 'MOTHER': return 'text-pink-700'
       default: return 'text-gray-700'
     }

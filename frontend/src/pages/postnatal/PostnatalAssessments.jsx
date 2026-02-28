@@ -382,38 +382,38 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
     const renderAssessmentCard = (a, type) => {
         const riskLevel = a.overall_risk_level?.toUpperCase() || 'LOW';
         let emoji = "✅";
-        let textClass = "bg-green-200 text-green-800";
+        let textClass = "bg-green-200 text-emerald-700";
 
         if (riskLevel === 'HIGH' || riskLevel === 'CRITICAL') {
             emoji = "🚨";
             textClass = "bg-red-200 text-red-800";
         } else if (riskLevel === 'MEDIUM' || riskLevel === 'MODERATE') {
             emoji = "⚠️";
-            textClass = "bg-yellow-200 text-yellow-800";
+            textClass = "bg-yellow-200 text-amber-700";
         }
 
         // Type-based styling
         const typeColor = type === 'mother' ? 'purple' : 'blue';
-        const typeBg = type === 'mother' ? 'bg-purple-50' : 'bg-blue-50';
-        const typeBorder = type === 'mother' ? 'border-purple-100' : 'border-blue-100';
+        const typeBg = type === 'mother' ? 'bg-blue-50/50' : 'bg-sky-50/50';
+        const typeBorder = type === 'mother' ? 'border-sky-100' : 'border-blue-100';
 
         // Risk still overrides border if high/critical
         let borderClass = typeBorder;
-        if (riskLevel === 'HIGH' || riskLevel === 'CRITICAL') borderClass = 'border-red-300 bg-red-50';
-        else if (riskLevel === 'MEDIUM' || riskLevel === 'MODERATE') borderClass = 'border-yellow-300 bg-yellow-50';
+        if (riskLevel === 'HIGH' || riskLevel === 'CRITICAL') borderClass = 'border-red-300 bg-red-50/50';
+        else if (riskLevel === 'MEDIUM' || riskLevel === 'MODERATE') borderClass = 'border-yellow-300 bg-amber-50/50';
         else borderClass = `${typeBorder} ${typeBg}`;
 
         return (
-            <div key={a.id || Math.random()} className={`mb-4 p-4 rounded-lg border ${borderClass} shadow-sm transition-all hover:shadow-md`}>
+            <div key={a.id || Math.random()} className={`mb-4 p-4 rounded-lg border ${borderClass} shadow-sm transition-all hover:shadow-md shadow-blue-500/5`}>
                 {/* Header */}
                 <div className="flex justify-between items-start mb-3">
                     <div>
-                        <p className="text-xs text-gray-600 flex items-center gap-2">
+                        <p className="text-xs text-slate-500 flex items-center gap-2">
                             <span className="flex items-center gap-1"><Calendar size={12} /> {new Date(a.assessment_date).toLocaleDateString()}</span>
-                            {type === 'mother' && <span className="bg-white/50 px-1.5 rounded border border-gray-200">Day {a.days_postpartum !== undefined && a.days_postpartum !== null ? a.days_postpartum : '?'}</span>}
-                            {type === 'child' && <span className="bg-white/50 px-1.5 rounded border border-gray-200">Age: {a.age_days !== undefined && a.age_days !== null ? a.age_days : '?'} days</span>}
+                            {type === 'mother' && <span className="bg-white/50 px-1.5 rounded border border-blue-200/40">Day {a.days_postpartum !== undefined && a.days_postpartum !== null ? a.days_postpartum : '?'}</span>}
+                            {type === 'child' && <span className="bg-white/50 px-1.5 rounded border border-blue-200/40">Age: {a.age_days !== undefined && a.age_days !== null ? a.age_days : '?'} days</span>}
                         </p>
-                        <p className="text-xs text-purple-700 font-medium mt-1 flex items-center gap-1">
+                        <p className="text-xs text-blue-600 font-medium mt-1 flex items-center gap-1">
                             {a.assessor_role === 'doctor' ? '👨‍⚕️' : '👩‍⚕️'} {a.assessor_role === 'doctor' ? 'Doctor Checked' : 'ASHA Checked'}
                         </p>
                     </div>
@@ -428,24 +428,24 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
                         <>
                             {a.blood_pressure_systolic && (
                                 <div className="bg-white/60 p-2 rounded">
-                                    <p className="text-xs text-gray-500">BP</p>
+                                    <p className="text-xs text-slate-400">BP</p>
                                     <p className="font-bold">{a.blood_pressure_systolic}/{a.blood_pressure_diastolic}</p>
                                 </div>
                             )}
                             {a.temperature && (
                                 <div className="bg-white/60 p-2 rounded">
-                                    <p className="text-xs text-gray-500">Temp</p>
+                                    <p className="text-xs text-slate-400">Temp</p>
                                     <p className="font-bold">{a.temperature}°C</p>
                                 </div>
                             )}
                             {a.pulse_rate && (
                                 <div className="bg-white/60 p-2 rounded">
-                                    <p className="text-xs text-gray-500">Pulse</p>
+                                    <p className="text-xs text-slate-400">Pulse</p>
                                     <p className="font-bold">{a.pulse_rate} bpm</p>
                                 </div>
                             )}
                             <div className="bg-white/60 p-2 rounded">
-                                <p className="text-xs text-gray-500">Involution</p>
+                                <p className="text-xs text-slate-400">Involution</p>
                                 <p className="font-medium">{a.uterine_involution?.replace('_', ' ') || '-'}</p>
                             </div>
                         </>
@@ -453,22 +453,22 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
                         <>
                             {a.weight_kg && (
                                 <div className="bg-white/60 p-2 rounded">
-                                    <p className="text-xs text-gray-500">Weight</p>
+                                    <p className="text-xs text-slate-400">Weight</p>
                                     <p className="font-bold">{a.weight_kg} kg</p>
                                 </div>
                             )}
                             {a.temperature && (
                                 <div className="bg-white/60 p-2 rounded">
-                                    <p className="text-xs text-gray-500">Temp</p>
+                                    <p className="text-xs text-slate-400">Temp</p>
                                     <p className="font-bold">{a.temperature}°C</p>
                                 </div>
                             )}
                             <div className="bg-white/60 p-2 rounded">
-                                <p className="text-xs text-gray-500">Feeding</p>
+                                <p className="text-xs text-slate-400">Feeding</p>
                                 <p className="font-medium truncate">{a.feeding_type?.replace('_', ' ') || '-'}</p>
                             </div>
                             <div className="bg-white/60 p-2 rounded">
-                                <p className="text-xs text-gray-500">Jaundice</p>
+                                <p className="text-xs text-slate-400">Jaundice</p>
                                 <p className="font-medium">{a.jaundice_level?.replace('_', ' ') || 'None'}</p>
                             </div>
                         </>
@@ -478,63 +478,63 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
                 {/* Danger Signs */}
                 {type === 'mother' ? (
                     (a.fever || a.excessive_bleeding || a.foul_discharge || a.breast_engorgement || a.mastitis || a.urinary_issues) && (
-                        <div className="bg-red-100 p-2 rounded text-xs mb-3 border border-red-200">
+                        <div className="bg-red-100/50 p-2 rounded text-xs mb-3 border border-red-200">
                             <p className="font-bold text-red-800 mb-1 flex items-center gap-1">⚠️ Danger Signs Detected:</p>
                             <div className="flex flex-wrap gap-1">
-                                {a.fever && <span className="bg-white px-2 py-0.5 rounded text-red-700 border border-red-100">Fever</span>}
-                                {a.excessive_bleeding && <span className="bg-white px-2 py-0.5 rounded text-red-700 border border-red-100">Bleeding</span>}
-                                {a.foul_discharge && <span className="bg-white px-2 py-0.5 rounded text-red-700 border border-red-100">Foul Discharge</span>}
-                                {a.breast_engorgement && <span className="bg-white px-2 py-0.5 rounded text-red-700 border border-red-100">Engorgement</span>}
-                                {a.mastitis && <span className="bg-white px-2 py-0.5 rounded text-red-700 border border-red-100">Mastitis</span>}
-                                {a.urinary_issues && <span className="bg-white px-2 py-0.5 rounded text-red-700 border border-red-100">Urinary Issues</span>}
+                                {a.fever && <span className="bg-white/60 backdrop-blur-lg px-2 py-0.5 rounded text-red-700 border border-red-100">Fever</span>}
+                                {a.excessive_bleeding && <span className="bg-white/60 backdrop-blur-lg px-2 py-0.5 rounded text-red-700 border border-red-100">Bleeding</span>}
+                                {a.foul_discharge && <span className="bg-white/60 backdrop-blur-lg px-2 py-0.5 rounded text-red-700 border border-red-100">Foul Discharge</span>}
+                                {a.breast_engorgement && <span className="bg-white/60 backdrop-blur-lg px-2 py-0.5 rounded text-red-700 border border-red-100">Engorgement</span>}
+                                {a.mastitis && <span className="bg-white/60 backdrop-blur-lg px-2 py-0.5 rounded text-red-700 border border-red-100">Mastitis</span>}
+                                {a.urinary_issues && <span className="bg-white/60 backdrop-blur-lg px-2 py-0.5 rounded text-red-700 border border-red-100">Urinary Issues</span>}
                             </div>
                         </div>
                     )
                 ) : (
                     (a.not_feeding_well || a.convulsions || a.fast_breathing || a.chest_indrawing || a.high_fever || a.hypothermia || a.jaundice_extending || a.umbilical_infection) && (
-                        <div className="bg-red-100 p-2 rounded text-xs mb-3 border border-red-200">
+                        <div className="bg-red-100/50 p-2 rounded text-xs mb-3 border border-red-200">
                             <p className="font-bold text-red-800 mb-1 flex items-center gap-1">⚠️ IMNCI Danger Signs:</p>
                             <div className="flex flex-wrap gap-1">
-                                {a.not_feeding_well && <span className="bg-white px-2 py-0.5 rounded text-red-700 border border-red-100">Not Feeding</span>}
-                                {a.convulsions && <span className="bg-white px-2 py-0.5 rounded text-red-700 border border-red-100">Convulsions</span>}
-                                {a.fast_breathing && <span className="bg-white px-2 py-0.5 rounded text-red-700 border border-red-100">Fast Breathing</span>}
-                                {a.chest_indrawing && <span className="bg-white px-2 py-0.5 rounded text-red-700 border border-red-100">Chest Indrawing</span>}
-                                {a.high_fever && <span className="bg-white px-2 py-0.5 rounded text-red-700 border border-red-100">High Fever</span>}
-                                {a.hypothermia && <span className="bg-white px-2 py-0.5 rounded text-red-700 border border-red-100">Hypothermia</span>}
-                                {a.jaundice_extending && <span className="bg-white px-2 py-0.5 rounded text-red-700 border border-red-100">Ext. Jaundice</span>}
-                                {a.umbilical_infection && <span className="bg-white px-2 py-0.5 rounded text-red-700 border border-red-100">Infection</span>}
+                                {a.not_feeding_well && <span className="bg-white/60 backdrop-blur-lg px-2 py-0.5 rounded text-red-700 border border-red-100">Not Feeding</span>}
+                                {a.convulsions && <span className="bg-white/60 backdrop-blur-lg px-2 py-0.5 rounded text-red-700 border border-red-100">Convulsions</span>}
+                                {a.fast_breathing && <span className="bg-white/60 backdrop-blur-lg px-2 py-0.5 rounded text-red-700 border border-red-100">Fast Breathing</span>}
+                                {a.chest_indrawing && <span className="bg-white/60 backdrop-blur-lg px-2 py-0.5 rounded text-red-700 border border-red-100">Chest Indrawing</span>}
+                                {a.high_fever && <span className="bg-white/60 backdrop-blur-lg px-2 py-0.5 rounded text-red-700 border border-red-100">High Fever</span>}
+                                {a.hypothermia && <span className="bg-white/60 backdrop-blur-lg px-2 py-0.5 rounded text-red-700 border border-red-100">Hypothermia</span>}
+                                {a.jaundice_extending && <span className="bg-white/60 backdrop-blur-lg px-2 py-0.5 rounded text-red-700 border border-red-100">Ext. Jaundice</span>}
+                                {a.umbilical_infection && <span className="bg-white/60 backdrop-blur-lg px-2 py-0.5 rounded text-red-700 border border-red-100">Infection</span>}
                             </div>
                         </div>
                     )
                 )}
 
                 {/* Plan Section */}
-                <div className="space-y-2 border-t border-gray-200/50 pt-2">
+                <div className="space-y-2 border-t border-blue-200/40/50 pt-2">
                     {/* Medications */}
                     {a.medications && (
-                        <div className="bg-purple-50 p-2 rounded text-xs">
-                            <p className="font-bold text-purple-800 mb-1">💊 Medications</p>
-                            <p className="text-gray-700">{a.medications}</p>
+                        <div className="bg-blue-50/50 p-2 rounded text-xs">
+                            <p className="font-bold text-blue-700 mb-1">💊 Medications</p>
+                            <p className="text-slate-600">{a.medications}</p>
                         </div>
                     )}
                     {/* Nutrition */}
                     {a.nutrition_advice && (
-                        <div className="bg-green-50 p-2 rounded text-xs">
-                            <p className="font-bold text-green-800 mb-1">🍎 Nutrition</p>
-                            <p className="text-gray-700">{a.nutrition_advice}</p>
+                        <div className="bg-emerald-50/50 p-2 rounded text-xs">
+                            <p className="font-bold text-emerald-700 mb-1">🍎 Nutrition</p>
+                            <p className="text-slate-600">{a.nutrition_advice}</p>
                         </div>
                     )}
                     {/* Notes */}
                     {a.notes && (
-                        <div className="bg-gray-50 p-2 rounded text-xs">
-                            <p className="font-bold text-gray-700 mb-1">📝 Notes</p>
-                            <p className="text-gray-600">{a.notes}</p>
+                        <div className="bg-blue-50/30 p-2 rounded text-xs">
+                            <p className="font-bold text-slate-600 mb-1">📝 Notes</p>
+                            <p className="text-slate-500">{a.notes}</p>
                         </div>
                     )}
                     {/* Next Visit */}
                     {a.next_visit_date && (
-                        <div className="bg-blue-50 p-2 rounded text-xs flex justify-between items-center">
-                            <span className="font-bold text-blue-800">📅 Next Visit:</span>
+                        <div className="bg-sky-50/50 p-2 rounded text-xs flex justify-between items-center">
+                            <span className="font-bold text-sky-700">📅 Next Visit:</span>
                             <span className="text-blue-900 font-medium">
                                 {new Date(a.next_visit_date).toLocaleDateString()}
                             </span>
@@ -614,38 +614,38 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
     );
 
     const renderClinicalProfile = (mother) => (
-        <div className="bg-white rounded-xl shadow-md border border-gray-200 p-5 overflow-y-auto mb-4" style={{ minWidth: '300px' }}>
-            <h3 className="text-lg font-bold text-gray-900 mb-5 flex items-center gap-2">
-                <Activity className="w-5 h-5 text-blue-600" />
+        <div className="bg-white/60 backdrop-blur-lg rounded-xl shadow-md shadow-blue-500/5 border border-blue-200/40 p-5 overflow-y-auto mb-4 flex-shrink-0" style={{ width: '280px' }}>
+            <h3 className="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2">
+                <Activity className="w-5 h-5 text-sky-600" />
                 Clinical Profile
             </h3>
             <div className="space-y-4 text-sm">
                 <div className="pb-3 border-b">
-                    <label className="text-xs font-bold text-gray-500 uppercase">Phone</label>
-                    <p className="text-gray-900 font-semibold mt-1">{mother.phone || "N/A"}</p>
+                    <label className="text-xs font-bold text-slate-400 uppercase">Phone</label>
+                    <p className="text-slate-800 font-semibold mt-1">{mother.phone || "N/A"}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-3 pb-3 border-b">
                     <div>
-                        <label className="text-xs font-bold text-gray-500 uppercase">Age</label>
-                        <p className="text-gray-900 font-semibold mt-1">{mother.age}</p>
+                        <label className="text-xs font-bold text-slate-400 uppercase">Age</label>
+                        <p className="text-slate-800 font-semibold mt-1">{mother.age}</p>
                     </div>
                     <div>
-                        <label className="text-xs font-bold text-gray-500 uppercase">Gravida</label>
-                        <p className="text-gray-900 font-semibold mt-1">{mother.gravida || '-'}</p>
+                        <label className="text-xs font-bold text-slate-400 uppercase">Gravida</label>
+                        <p className="text-slate-800 font-semibold mt-1">{mother.gravida || '-'}</p>
                     </div>
                     <div>
-                        <label className="text-xs font-bold text-gray-500 uppercase">Parity</label>
-                        <p className="text-gray-900 font-semibold mt-1">{mother.parity || '-'}</p>
+                        <label className="text-xs font-bold text-slate-400 uppercase">Parity</label>
+                        <p className="text-slate-800 font-semibold mt-1">{mother.parity || '-'}</p>
                     </div>
                     <div>
-                        <label className="text-xs font-bold text-gray-500 uppercase">Language</label>
-                        <p className="text-gray-900 font-semibold mt-1 capitalize">{mother.preferred_language || '-'}</p>
+                        <label className="text-xs font-bold text-slate-400 uppercase">Language</label>
+                        <p className="text-slate-800 font-semibold mt-1 capitalize">{mother.preferred_language || '-'}</p>
                     </div>
                 </div>
                 {mother.delivery_date && (
                     <div>
-                        <label className="text-xs font-bold text-gray-500 uppercase">Delivery Date</label>
-                        <p className="text-gray-900 font-semibold mt-1">
+                        <label className="text-xs font-bold text-slate-400 uppercase">Delivery Date</label>
+                        <p className="text-slate-800 font-semibold mt-1">
                             {new Date(mother.delivery_date).toLocaleDateString()}
                         </p>
                     </div>
@@ -658,29 +658,29 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
 
 
     const renderChildClinicalProfile = (child) => (
-        <div className="bg-white rounded-xl shadow-md border border-gray-200 p-5 overflow-y-auto mb-4" style={{ minWidth: '300px' }}>
-            <h3 className="text-lg font-bold text-gray-900 mb-5 flex items-center gap-2">
-                <Baby className="w-5 h-5 text-blue-600" />
+        <div className="bg-white/60 backdrop-blur-lg rounded-xl shadow-md shadow-blue-500/5 border border-blue-200/40 p-5 overflow-y-auto mb-4 flex-shrink-0" style={{ width: '280px' }}>
+            <h3 className="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2">
+                <Baby className="w-5 h-5 text-sky-600" />
                 Child Profile
             </h3>
             <div className="space-y-4 text-sm">
                 <div className="pb-3 border-b">
-                    <label className="text-xs font-bold text-gray-500 uppercase">Name</label>
-                    <p className="text-gray-900 font-semibold mt-1">{child.name}</p>
+                    <label className="text-xs font-bold text-slate-400 uppercase">Name</label>
+                    <p className="text-slate-800 font-semibold mt-1">{child.name}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-3 pb-3 border-b">
                     <div>
-                        <label className="text-xs font-bold text-gray-500 uppercase">Gender</label>
-                        <p className="text-gray-900 font-semibold mt-1 capitalize">{child.gender}</p>
+                        <label className="text-xs font-bold text-slate-400 uppercase">Gender</label>
+                        <p className="text-slate-800 font-semibold mt-1 capitalize">{child.gender}</p>
                     </div>
                     <div>
-                        <label className="text-xs font-bold text-gray-500 uppercase">Birth Weight</label>
-                        <p className="text-gray-900 font-semibold mt-1">{child.birth_weight_kg ? `${child.birth_weight_kg} kg` : 'N/A'}</p>
+                        <label className="text-xs font-bold text-slate-400 uppercase">Birth Weight</label>
+                        <p className="text-slate-800 font-semibold mt-1">{child.birth_weight_kg ? `${child.birth_weight_kg} kg` : 'N/A'}</p>
                     </div>
                 </div>
                 <div>
-                    <label className="text-xs font-bold text-gray-500 uppercase">Date of Birth</label>
-                    <p className="text-gray-900 font-semibold mt-1">
+                    <label className="text-xs font-bold text-slate-400 uppercase">Date of Birth</label>
+                    <p className="text-slate-800 font-semibold mt-1">
                         {child.birth_date ? new Date(child.birth_date).toLocaleDateString() : 'N/A'}
                     </p>
                 </div>
@@ -736,16 +736,16 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
             {selectedMother && (
                 <div className="assessment-panel">
                     {/* Header */}
-                    <div className="bg-white border-b border-gray-200 px-8 py-6 shadow-sm mb-6 rounded-lg">
+                    <div className="bg-white/60 backdrop-blur-lg border-b border-blue-200/40 px-8 py-6 shadow-sm mb-6 rounded-lg">
                         <div className="flex items-center justify-between">
                             <div>
                                 <div className="flex items-center gap-3">
-                                    <h2 className="text-2xl font-bold text-gray-900">{selectedMother.name}</h2>
-                                    <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-xs font-bold border border-purple-200 uppercase tracking-wide">
+                                    <h2 className="text-2xl font-bold text-slate-800">{selectedMother.name}</h2>
+                                    <span className="bg-sky-100 text-blue-600 px-3 py-1 rounded-full text-xs font-bold border border-sky-200 uppercase tracking-wide">
                                         Postnatal
                                     </span>
                                 </div>
-                                <p className="text-gray-600 mt-1 flex items-center gap-2 text-sm">
+                                <p className="text-slate-500 mt-1 flex items-center gap-2 text-sm">
                                     <Clock className="w-4 h-4" /> Delivered: {selectedMother.delivery_date ? new Date(selectedMother.delivery_date).toLocaleDateString() : 'N/A'} · Location: {selectedMother.location}
                                 </p>
                             </div>
@@ -753,7 +753,7 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
                             <div className="flex gap-2">
                                 <button
                                     onClick={() => setSelectedMother(null)}
-                                    className="px-4 py-2 rounded-lg font-semibold text-sm bg-gray-100 text-gray-700 flex items-center gap-2 hover:bg-gray-200"
+                                    className="px-4 py-2 rounded-lg font-semibold text-sm bg-blue-50/40 text-slate-600 flex items-center gap-2 hover:bg-blue-100/50"
                                 >
                                     <X size={16} /> Close
                                 </button>
@@ -763,13 +763,13 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
                         {/* Tab buttons */}
                         <div className="flex gap-3 mt-4 flex-wrap">
                             <button
-                                className={`px-4 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 ${showForm !== 'mother' ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700"}`}
+                                className={`px-4 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 ${showForm !== 'mother' ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white" : "bg-blue-50/40 text-slate-600"}`}
                                 onClick={() => setShowForm(null)}
                             >
                                 <FileText className="w-4 h-4" /> Assessment History
                             </button>
                             <button
-                                className={`px-4 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 ${showForm === 'mother' ? "bg-green-600 text-white" : "bg-gray-100 text-gray-700"}`}
+                                className={`px-4 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 ${showForm === 'mother' ? "bg-green-600 text-white" : "bg-blue-50/40 text-slate-600"}`}
                                 onClick={() => setShowForm('mother')}
                             >
                                 <Plus className="w-4 h-4" /> New Assessment
@@ -777,12 +777,12 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
                         </div>
                     </div>
 
-                    <div className="flex gap-6 items-start">
+                    <div className="flex flex-col lg:flex-row gap-6 items-start">
                         {/* Left Panel: Clinical Profile */}
                         {renderClinicalProfile(selectedMother)}
 
                         {/* Right Panel: Content */}
-                        <div className="flex-1 bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden flex flex-col p-4">
+                        <div className="flex-1 min-w-0 bg-white/60 backdrop-blur-lg rounded-xl shadow-md shadow-blue-500/5 border border-blue-200/40 overflow-y-auto flex flex-col p-6">
                             {showForm === 'mother' ? (
                                 <div className="assessment-form">
                                     <h5>📝 Mother Postnatal Assessment Form</h5>
@@ -1022,10 +1022,10 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
                                 <div className="assessment-history">
                                     <div className="flex justify-between items-center mb-4">
                                         <h5>📜 Assessment History</h5>
-                                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">Latest on top</span>
+                                        <span className="text-xs text-slate-400 bg-blue-50/40 px-2 py-1 rounded">Latest on top</span>
                                     </div>
                                     {assessments.length === 0 ? (
-                                        <div className="text-center py-8 text-gray-400">
+                                        <div className="text-center py-8 text-slate-400">
                                             <ClipboardCheck size={32} className="mx-auto mb-2 opacity-50" />
                                             <p>No assessments recorded yet</p>
                                         </div>
@@ -1163,23 +1163,23 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
             {selectedChild && (
                 <div className="assessment-panel">
                     {/* Header */}
-                    <div className="bg-white border-b border-gray-200 px-8 py-6 shadow-sm mb-6 rounded-lg">
+                    <div className="bg-white/60 backdrop-blur-lg border-b border-blue-200/40 px-8 py-6 shadow-sm mb-6 rounded-lg">
                         <div className="flex items-center justify-between">
                             <div>
                                 <div className="flex items-center gap-3">
-                                    <h2 className="text-2xl font-bold text-gray-900">{selectedChild.name}</h2>
-                                    <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold border border-blue-200 uppercase tracking-wide">
+                                    <h2 className="text-2xl font-bold text-slate-800">{selectedChild.name}</h2>
+                                    <span className="bg-sky-100/50 text-blue-700 px-3 py-1 rounded-full text-xs font-bold border border-blue-200 uppercase tracking-wide">
                                         Child
                                     </span>
                                 </div>
-                                <p className="text-gray-600 mt-1 flex items-center gap-2 text-sm">
+                                <p className="text-slate-500 mt-1 flex items-center gap-2 text-sm">
                                     <Calendar className="w-4 h-4" /> Born: {selectedChild.birth_date} · {selectedChild.gender === 'male' ? 'Boy' : 'Girl'}
                                 </p>
                             </div>
                             <div className="flex gap-2">
                                 <button
                                     onClick={() => setSelectedChild(null)}
-                                    className="px-4 py-2 rounded-lg font-semibold text-sm bg-gray-100 text-gray-700 flex items-center gap-2 hover:bg-gray-200"
+                                    className="px-4 py-2 rounded-lg font-semibold text-sm bg-blue-50/40 text-slate-600 flex items-center gap-2 hover:bg-blue-100/50"
                                 >
                                     <X size={16} /> Close
                                 </button>
@@ -1189,13 +1189,13 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
                         {/* Tabs */}
                         <div className="flex gap-3 mt-4 flex-wrap">
                             <button
-                                className={`px-4 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 ${showForm !== 'child' ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700"}`}
+                                className={`px-4 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 ${showForm !== 'child' ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white" : "bg-blue-50/40 text-slate-600"}`}
                                 onClick={() => setShowForm(null)}
                             >
                                 <FileText className="w-4 h-4" /> Health History
                             </button>
                             <button
-                                className={`px-4 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 ${showForm === 'child' ? "bg-green-600 text-white" : "bg-gray-100 text-gray-700"}`}
+                                className={`px-4 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 ${showForm === 'child' ? "bg-green-600 text-white" : "bg-blue-50/40 text-slate-600"}`}
                                 onClick={() => setShowForm('child')}
                             >
                                 <Plus className="w-4 h-4" /> New Health Check
@@ -1203,12 +1203,12 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
                         </div>
                     </div>
 
-                    <div className="flex gap-6 items-start">
+                    <div className="flex flex-col lg:flex-row gap-6 items-start">
                         {/* Left: Clinical Profile */}
                         {renderChildClinicalProfile(selectedChild)}
 
                         {/* Right: Content */}
-                        <div className="flex-1 bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden flex flex-col p-4">
+                        <div className="flex-1 min-w-0 bg-white/60 backdrop-blur-lg rounded-xl shadow-md shadow-blue-500/5 border border-blue-200/40 overflow-y-auto flex flex-col p-6">
                             {showForm === 'child' ? (
                                 <div className="assessment-form">
                                     <h5>📝 Child Health Check Form</h5>
@@ -1534,10 +1534,10 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
                                 <div className="assessment-history">
                                     <div className="flex justify-between items-center mb-4">
                                         <h5>📜 Health Check History</h5>
-                                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">Latest on top</span>
+                                        <span className="text-xs text-slate-400 bg-blue-50/40 px-2 py-1 rounded">Latest on top</span>
                                     </div>
                                     {assessments.length === 0 ? (
-                                        <div className="text-center py-8 text-gray-400">
+                                        <div className="text-center py-8 text-slate-400">
                                             <Baby size={32} className="mx-auto mb-2 opacity-50" />
                                             <p>No health checks recorded yet</p>
                                         </div>

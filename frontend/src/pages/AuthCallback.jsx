@@ -256,11 +256,11 @@ export default function AuthCallback() {
   // Role Selection Screen
   if (stage === "role_selection") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-50 via-pink-50 to-blue-50">
         <div className="max-w-lg w-full mx-4">
           <div className="bg-white rounded-2xl shadow-xl p-8">
             <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-purple-600 mb-2">
+              <h1 className="text-3xl font-bold text-sky-600 mb-2">
                 🤰 MatruRaksha AI
               </h1>
               <h2 className="text-xl font-semibold text-gray-900">Welcome!</h2>
@@ -299,10 +299,10 @@ export default function AuthCallback() {
               {/* ASHA Worker Option */}
               <button
                 onClick={() => handleRoleSelect("ASHA_WORKER")}
-                className="w-full p-6 rounded-xl border-2 border-gray-200 hover:border-purple-500 hover:bg-purple-50 transition-all group text-left"
+                className="w-full p-6 rounded-xl border-2 border-gray-200 hover:border-sky-500 hover:bg-sky-50 transition-all group text-left"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 bg-purple-100 rounded-xl flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+                  <div className="w-14 h-14 bg-sky-100 rounded-xl flex items-center justify-center group-hover:bg-sky-200 transition-colors">
                     <span className="text-3xl">👩‍⚕️</span>
                   </div>
                   <div>
@@ -334,7 +334,7 @@ export default function AuthCallback() {
   // Doctor Document Upload Screen
   if (stage === "doctor_upload") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-sky-50 to-pink-50">
         <div className="max-w-lg w-full mx-4">
           <div className="bg-white rounded-2xl shadow-xl p-8">
             <div className="text-center mb-6">
@@ -357,7 +357,7 @@ export default function AuthCallback() {
                 className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all
                   ${uploadedFile
                     ? "border-green-400 bg-green-50"
-                    : "border-gray-300 hover:border-purple-400 hover:bg-purple-50"
+                    : "border-gray-300 hover:border-sky-400 hover:bg-sky-50"
                   }
                   ${uploadError ? "border-red-400 bg-red-50" : ""}
                 `}
@@ -441,7 +441,7 @@ export default function AuthCallback() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 text-purple-500 animate-spin mx-auto" />
+          <Loader2 className="w-12 h-12 text-sky-500 animate-spin mx-auto" />
           <p className="mt-4 text-gray-600">Submitting your registration...</p>
         </div>
       </div>
@@ -508,7 +508,7 @@ export default function AuthCallback() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="text-center">
-        <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+        <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-sky-500"></div>
         <p className="mt-4 text-gray-600">Signing you in...</p>
       </div>
     </div>

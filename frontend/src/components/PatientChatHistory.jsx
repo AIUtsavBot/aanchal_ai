@@ -230,7 +230,7 @@ export default function PatientChatHistory({
   const getRoleBgColor = (role) => {
     switch (role) {
       case "PATIENT":
-        return "bg-purple-50 border-purple-200";
+        return "bg-sky-50 border-sky-200";
       case "BOT":
         return "bg-blue-50 border-blue-200";
       case "DOCTOR":
@@ -266,7 +266,7 @@ export default function PatientChatHistory({
       "px-2 py-0.5 rounded-full text-xs font-medium flex items-center gap-1";
     switch (role) {
       case "PATIENT":
-        return `${baseClasses} bg-purple-100 text-purple-800`;
+        return `${baseClasses} bg-sky-100 text-sky-800`;
       case "BOT":
         return `${baseClasses} bg-blue-100 text-blue-800`;
       case "DOCTOR":
@@ -283,7 +283,7 @@ export default function PatientChatHistory({
       {/* Header Legend */}
       <div className="bg-white border-b border-gray-200 px-4 py-3">
         <div className="flex flex-wrap gap-2 text-xs">
-          <span className="flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded-full">
+          <span className="flex items-center gap-1 px-2 py-1 bg-sky-100 text-sky-700 rounded-full">
             <User className="w-3 h-3" /> Patient
           </span>
           <span className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full">

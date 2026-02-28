@@ -28,7 +28,7 @@ export default function GrowthChartsScreen({ route }) {
         if (!user?.id) return;
         const loadChildren = async () => {
             try {
-                let mQuery = supabase.from('mothers').select('id').eq('delivery_status', 'delivered');
+                let mQuery = supabase.from('mothers').select('id').eq('status', 'postnatal');
                 if (user.role === 'ASHA_WORKER') {
                     const { data: asha } = await supabase.from('asha_workers').select('id').eq('user_id', user.id).maybeSingle();
                     if (asha) mQuery = mQuery.eq('asha_worker_id', asha.id);

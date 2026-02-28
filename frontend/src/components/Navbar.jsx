@@ -16,96 +16,74 @@ export default function Navbar() {
   }
 
   const roleColor = user?.role === 'ADMIN'
-    ? 'bg-red-600'
+    ? 'bg-red-100 text-red-700 border border-red-200'
     : user?.role === 'DOCTOR'
-      ? 'bg-green-600'
-      : 'bg-purple-600'
+      ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+      : 'bg-blue-100 text-blue-700 border border-blue-200'
 
-  // Only show toggle on ASHA/Doctor dashboard pages
   const showToggle = isAuthenticated &&
     (user?.role === 'ASHA_WORKER' || user?.role === 'DOCTOR') &&
     (location.pathname === '/asha/dashboard' || location.pathname === '/doctor' ||
       location.pathname === '/asha' || location.pathname === '/doctor/dashboard')
 
   return (
-    <nav aria-label="Main Navigation" className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-xl">
+    <nav aria-label="Main Navigation" className="bg-white/60 backdrop-blur-xl border-b border-blue-200/40 text-slate-800">
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-3">
-            <Heart className="w-8 h-8 fill-current" />
+          <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+            <div className="bg-gradient-to-br from-blue-500 to-cyan-500 p-2 rounded-xl shadow-lg shadow-blue-500/20">
+              <Heart className="w-6 h-6 text-white fill-current" />
+            </div>
             <div>
-              <h1 className="text-2xl font-bold">
+              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
                 Aanchal AI
               </h1>
-              <p className="text-blue-100 text-xs">Maternal & Child Health Guardian</p>
+              <p className="text-slate-400 text-xs">Maternal & Child Health Guardian</p>
             </div>
-          </div>
+          </Link>
 
           <div className="flex items-center gap-4">
-            {/* View Toggle - Only on dashboard pages */}
             {showToggle && (
-              <div className="flex bg-white/20 rounded-lg p-1 mr-4">
+              <div className="flex bg-white/50 backdrop-blur-md border border-blue-200/40 rounded-lg p-1 mr-4">
                 <button
                   onClick={() => setCurrentView('pregnancy')}
                   aria-pressed={currentView === 'pregnancy'}
-                  aria-label="Switch to Pregnancy View"
                   className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${currentView === 'pregnancy'
-                    ? 'bg-white text-blue-600 shadow-sm'
-                    : 'text-white/80 hover:text-white'
+                    ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-md shadow-blue-500/20'
+                    : 'text-slate-500 hover:text-slate-700'
                     }`}
-                >
-                  🤰 Pregnancy
-                </button>
+                >🤰 Pregnancy</button>
                 <button
                   onClick={() => setCurrentView('postnatal')}
                   aria-pressed={currentView === 'postnatal'}
-                  aria-label="Switch to Postnatal View"
                   className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${currentView === 'postnatal'
-                    ? 'bg-white text-green-600 shadow-sm'
-                    : 'text-white/80 hover:text-white'
+                    ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-md shadow-blue-500/20'
+                    : 'text-slate-500 hover:text-slate-700'
                     }`}
-                >
-                  🍼 Postnatal
-                </button>
+                >🍼 Postnatal</button>
               </div>
             )}
 
-            <Link to="/" className="text-white/90 hover:text-white">Home</Link>
-
-            {/* Doctor link - visible ONLY to doctors */}
-            {user?.role === 'DOCTOR' && (
-              <Link to="/doctor" className="text-white/90 hover:text-white">Doctor Portal</Link>
-            )}
-
-            {/* ASHA link - visible ONLY to ASHA workers */}
-            {user?.role === 'ASHA_WORKER' && (
-              <Link to="/asha" className="text-white/90 hover:text-white">ASHA Portal</Link>
-            )}
-
-            {/* Admin links - visible ONLY to admin */}
+            <Link to="/" className="text-slate-500 hover:text-blue-600 transition-colors text-sm">Home</Link>
+            {user?.role === 'DOCTOR' && <Link to="/doctor" className="text-slate-500 hover:text-blue-600 transition-colors text-sm">Doctor Portal</Link>}
+            {user?.role === 'ASHA_WORKER' && <Link to="/asha" className="text-slate-500 hover:text-blue-600 transition-colors text-sm">ASHA Portal</Link>}
             {user?.role === 'ADMIN' && (
               <>
-                <Link to="/admin" className="text-white/90 hover:text-white font-medium">Admin</Link>
-                <Link to="/admin/approvals" className="text-white/90 hover:text-white">Approvals</Link>
+                <Link to="/admin" className="text-slate-500 hover:text-blue-600 transition-colors text-sm font-medium">Admin</Link>
+                <Link to="/admin/approvals" className="text-slate-500 hover:text-blue-600 transition-colors text-sm">Approvals</Link>
               </>
             )}
 
             {isAuthenticated ? (
               <div className="flex items-center gap-3">
-                <span className={`px-2 py-1 rounded text-xs ${roleColor}`}>{user?.role}</span>
-                <span className="text-white/90 text-sm">{user?.full_name || user?.email}</span>
-                <button
-                  onClick={handleSignOut}
-                  aria-label="Sign Out"
-                  className="px-3 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm"
-                >
-                  Sign Out
-                </button>
+                <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${roleColor}`}>{user?.role}</span>
+                <span className="text-slate-600 text-sm hidden sm:inline">{user?.full_name || user?.email}</span>
+                <button onClick={handleSignOut} className="px-3 py-2 bg-white/50 hover:bg-white/80 border border-blue-200/40 rounded-lg text-sm transition-all text-slate-600 hover:text-slate-800">Sign Out</button>
               </div>
             ) : (
               <div className="flex items-center gap-3">
-                <Link to="/auth/login" className="px-3 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm">Login</Link>
-                <Link to="/auth/signup" className="px-3 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm">Signup</Link>
+                <Link to="/auth/login" className="px-4 py-2 bg-white/50 hover:bg-white/80 border border-blue-200/40 rounded-lg text-sm transition-all text-slate-600">Login</Link>
+                <Link to="/auth/signup" className="px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 rounded-lg text-sm font-semibold text-white shadow-md shadow-blue-500/20 transition-all">Signup</Link>
               </div>
             )}
           </div>

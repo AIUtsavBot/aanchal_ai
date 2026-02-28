@@ -58,7 +58,7 @@ export default function ASHAInterfaceScreen({ navigation }) {
     if (loading) return <LoadingSpinner />;
 
     const highRisk = mothers.filter((m) => m.risk_level === 'HIGH').length;
-    const delivered = mothers.filter((m) => m.delivery_status === 'delivered').length;
+    const delivered = mothers.filter((m) => m.status === 'postnatal').length;
 
     return (
         <View style={[styles.container, { backgroundColor: theme.background }]}>

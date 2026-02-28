@@ -217,8 +217,8 @@ export default function AssessmentHistoryScreen({ route }) {
                             </View>
                             <View style={styles.detailCell}>
                                 <Text style={[styles.detailLabel, { color: theme.textTertiary }]}>STATUS</Text>
-                                <Text style={[styles.detailValue, { color: motherInfo.delivery_status === 'delivered' ? '#10B981' : theme.primary }]}>
-                                    {motherInfo.delivery_status || motherInfo.status || '–'}
+                                <Text style={[styles.detailValue, { color: motherInfo.status === 'postnatal' ? '#10B981' : theme.primary }]}>
+                                    {motherInfo.status || '–'}
                                 </Text>
                             </View>
                         </View>

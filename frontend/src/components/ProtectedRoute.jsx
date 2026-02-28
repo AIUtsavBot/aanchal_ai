@@ -10,7 +10,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-sky-500"></div>
           <p className="mt-4 text-gray-600">Loading...</p>
         </div>
       </div>
@@ -32,7 +32,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     const hasPermission = allowedRoles.includes(user.role)
     if (!hasPermission) {
       return (
-        <div className="min-h-screen bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center">
+        <div className="min-h-screen bg-gradient-to-br from-indigo-600 via-sky-600 to-pink-500 flex items-center justify-center">
           <div className="max-w-lg w-full bg-white/95 backdrop-blur p-8 rounded-2xl shadow-xl text-center">
             <div className="mx-auto w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-4">
               <span className="text-red-600 text-2xl">⛔</span>
@@ -54,7 +54,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
             <div className="mt-6 flex items-center justify-center gap-3">
               <button
                 onClick={() => window.history.back()}
-                className="px-5 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                className="px-5 py-2.5 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors"
               >
                 Go Back
               </button>

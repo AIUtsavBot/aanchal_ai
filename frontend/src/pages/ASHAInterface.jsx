@@ -607,12 +607,12 @@ export default function ASHAInterface() {
   if (loadingProfile) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center p-6">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
-          <Loader className="w-12 h-12 animate-spin mx-auto text-green-600 mb-4" />
-          <h1 className="text-xl font-bold text-gray-900">
+        <div className="bg-white/60 backdrop-blur-xl rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
+          <Loader className="w-12 h-12 animate-spin mx-auto text-emerald-600 mb-4" />
+          <h1 className="text-xl font-bold text-slate-800">
             Loading ASHA Portal
           </h1>
-          <p className="text-gray-600 mt-2">Finding your profile...</p>
+          <p className="text-slate-500 mt-2">Finding your profile...</p>
         </div>
       </div>
     );
@@ -622,15 +622,15 @@ export default function ASHAInterface() {
   if (!ashaWorkerId) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center p-6">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full">
+        <div className="bg-white/60 backdrop-blur-xl rounded-2xl shadow-xl p-8 max-w-md w-full">
           <div className="text-center mb-6">
-            <div className="bg-red-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="bg-red-500/100/15 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
               <AlertCircle className="w-8 h-8 text-red-600" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-slate-800">
               Profile Not Found
             </h1>
-            <p className="text-gray-600 mt-2">
+            <p className="text-slate-500 mt-2">
               {user?.email
                 ? `No ASHA worker found for: ${user.email}`
                 : "Please login first"}
@@ -638,16 +638,16 @@ export default function ASHAInterface() {
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 p-4 rounded-lg mb-4">
-              <p className="text-red-800 text-sm">{error}</p>
+            <div className="bg-red-500/10 border border-red-200 p-4 rounded-lg mb-4">
+              <p className="text-red-700 text-sm">{error}</p>
             </div>
           )}
 
-          <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
-            <p className="text-yellow-800 text-sm font-semibold mb-2">
+          <div className="bg-yellow-500/10 border border-yellow-200 p-4 rounded-lg">
+            <p className="text-yellow-700 text-sm font-semibold mb-2">
               📋 To fix this:
             </p>
-            <ul className="text-yellow-700 text-sm list-disc pl-5 space-y-1">
+            <ul className="text-yellow-600 text-sm list-disc pl-5 space-y-1">
               <li>Ensure your email is registered in the ASHA workers list</li>
               <li>Contact admin to link your account</li>
             </ul>
@@ -663,13 +663,13 @@ export default function ASHAInterface() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-blue-50/50">
       {/* Sidebar - Mothers List */}
-      <div className="w-80 bg-white border-r flex flex-col shadow-lg">
+      <div className="w-80 bg-white/60 backdrop-blur-xl border-r flex flex-col shadow-xl shadow-blue-500/10">
         {/* Header */}
-        <div className="bg-gradient-to-br from-green-600 to-green-800 text-white px-5 py-4">
+        <div className="bg-gradient-to-br from-green-600 to-green-800 text-slate-800 px-5 py-4">
           <div className="flex items-center gap-3">
-            <div className="bg-green-500 p-2 rounded-lg">
+            <div className="bg-emerald-500/100 p-2 rounded-lg">
               <Users className="w-5 h-5" />
             </div>
             <div>
@@ -688,7 +688,7 @@ export default function ASHAInterface() {
             }}
             className={`flex-1 py-3 text-xs font-semibold flex flex-col items-center gap-1 ${mainView === "register"
               ? "text-pink-600 bg-pink-50"
-              : "text-gray-500"
+              : "text-slate-400"
               }`}
           >
             <UserPlus className="w-4 h-4" />
@@ -700,8 +700,8 @@ export default function ASHAInterface() {
               setMainView("assess");
             }}
             className={`flex-1 py-3 text-xs font-semibold flex flex-col items-center gap-1 ${mainView === "assess"
-              ? "text-green-600 bg-green-50"
-              : "text-gray-500"
+              ? "text-emerald-600 bg-emerald-500/10"
+              : "text-slate-400"
               }`}
           >
             <ClipboardCheck className="w-4 h-4" />
@@ -713,8 +713,8 @@ export default function ASHAInterface() {
               setMainView("stats");
             }}
             className={`flex-1 py-3 text-xs font-semibold flex flex-col items-center gap-1 ${mainView === "stats"
-              ? "text-green-600 bg-green-50"
-              : "text-gray-500"
+              ? "text-emerald-600 bg-emerald-500/10"
+              : "text-slate-400"
               }`}
           >
             <BarChart2 className="w-4 h-4" />
@@ -724,7 +724,7 @@ export default function ASHAInterface() {
 
         {/* Alerts */}
         {error && (
-          <div className="mx-3 mt-3 p-2 bg-red-50 border border-red-200 rounded-lg text-red-800 text-xs">
+          <div className="mx-3 mt-3 p-2 bg-red-500/10 border border-red-200 rounded-lg text-red-700 text-xs">
             {error}
             <button onClick={() => setError("")} className="float-right">
               ×
@@ -732,7 +732,7 @@ export default function ASHAInterface() {
           </div>
         )}
         {success && (
-          <div className="mx-3 mt-3 p-2 bg-green-50 border border-green-200 rounded-lg text-green-800 text-xs">
+          <div className="mx-3 mt-3 p-2 bg-emerald-500/10 border border-emerald-200 rounded-lg text-emerald-600 text-xs">
             {success}
             <button onClick={() => setSuccess("")} className="float-right">
               ×
@@ -743,7 +743,7 @@ export default function ASHAInterface() {
         {/* Search */}
         <div className="p-3 border-b">
           <div className="relative">
-            <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
             <input
               type="text"
               placeholder="Search mothers..."
@@ -757,12 +757,12 @@ export default function ASHAInterface() {
         {/* Mothers List */}
         <div className="flex-1 overflow-y-auto p-3">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xs font-bold text-gray-600 uppercase">
+            <h2 className="text-xs font-bold text-slate-500 uppercase">
               Mothers ({filtered.length})
             </h2>
             <button
               onClick={loadMothers}
-              className="text-green-600 hover:text-green-700"
+              className="text-emerald-600 hover:text-emerald-600"
             >
               <RefreshCw
                 className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
@@ -772,7 +772,7 @@ export default function ASHAInterface() {
 
           {loading && mothers.length === 0 ? (
             <div className="text-center py-8">
-              <Loader className="w-6 h-6 animate-spin mx-auto text-green-600" />
+              <Loader className="w-6 h-6 animate-spin mx-auto text-emerald-600" />
             </div>
           ) : filtered.length > 0 ? (
             <div className="space-y-2">
@@ -792,15 +792,15 @@ export default function ASHAInterface() {
                   role="button"
                   tabIndex={0}
                   className={`p-3 rounded-lg border cursor-pointer transition-all ${selected?.id === m.id
-                    ? "border-green-500 bg-green-50"
-                    : "border-gray-200 hover:border-green-300"
+                    ? "border-emerald-500 bg-emerald-500/10"
+                    : "border-blue-200/40 hover:border-emerald-300"
                     }`}
                 >
                   <div className="flex items-center justify-between">
-                    <div className="text-sm font-semibold text-gray-900">
+                    <div className="text-sm font-semibold text-slate-800">
                       {m.name}
                       {['delivered', 'postnatal'].includes(m.delivery_status) && (
-                        <span className="ml-2 inline-block px-1.5 py-0.5 text-[10px] bg-purple-100 text-purple-800 rounded-full border border-purple-200">
+                        <span className="ml-2 inline-block px-1.5 py-0.5 text-[10px] bg-sky-100 text-sky-800 rounded-full border border-sky-200">
                           Delivered
                         </span>
                       )}
@@ -809,14 +809,14 @@ export default function ASHAInterface() {
                       {getRiskIcon(riskMap[m.id] || "LOW")}
                     </span>
                   </div>
-                  <div className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                  <div className="text-xs text-slate-400 mt-1 flex items-center gap-1">
                     <MapPin className="w-3 h-3" /> {m.location}
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-slate-400">
               <Heart className="w-10 h-10 mx-auto text-gray-300 mb-2" />
               <p className="text-sm">No mothers assigned</p>
             </div>
@@ -829,28 +829,28 @@ export default function ASHAInterface() {
         {/* Mother Profile View */}
         {mainView === "mother" && selected && (
           <div className="flex flex-col h-full">
-            <div className="bg-white border-b px-8 py-6 shadow-sm">
+            <div className="bg-white/60 backdrop-blur-xl border-b px-8 py-6 shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                  <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-3">
                     {selected.name}
                     {['delivered', 'postnatal'].includes(selected.delivery_status) && (
-                      <span className="px-3 py-1 text-sm bg-purple-100 text-purple-700 rounded-full border border-purple-200">
+                      <span className="px-3 py-1 text-sm bg-sky-100 text-sky-700 rounded-full border border-sky-200">
                         Delivered
                       </span>
                     )}
                   </h2>
-                  <p className="text-gray-600 mt-1 text-sm flex items-center gap-2">
+                  <p className="text-slate-500 mt-1 text-sm flex items-center gap-2">
                     <MapPin className="w-4 h-4" /> {selected.location} · Age{" "}
                     {selected.age}
                   </p>
                 </div>
                 <div
                   className={`px-4 py-2 rounded-lg font-semibold flex items-center gap-2 ${riskMap[selected.id] === "HIGH"
-                    ? "bg-red-100 text-red-700"
+                    ? "bg-red-500/100/15 text-red-600"
                     : riskMap[selected.id] === "MODERATE"
-                      ? "bg-yellow-100 text-yellow-700"
-                      : "bg-green-100 text-green-700"
+                      ? "bg-yellow-500/100/15 text-yellow-600"
+                      : "bg-emerald-500/15 text-emerald-600"
                     }`}
                 >
                   <span className="text-xl">
@@ -863,32 +863,32 @@ export default function ASHAInterface() {
 
             <div className="flex-1 overflow-hidden flex gap-6 p-6">
               {/* Profile Card */}
-              <div className="w-72 bg-white rounded-xl shadow border p-5 overflow-y-auto">
-                <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <Heart className="w-5 h-5 text-green-600" /> Profile
+              <div className="w-72 bg-white/60 backdrop-blur-xl rounded-xl shadow border p-5 overflow-y-auto">
+                <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                  <Heart className="w-5 h-5 text-emerald-600" /> Profile
                 </h3>
                 <div className="space-y-3 text-sm">
                   <div className="pb-2 border-b">
-                    <p className="text-xs text-gray-500">Phone</p>
+                    <p className="text-xs text-slate-400">Phone</p>
                     <p className="font-semibold">{selected.phone || "N/A"}</p>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <p className="text-xs text-gray-500">BMI</p>
+                      <p className="text-xs text-slate-400">BMI</p>
                       <p className="font-semibold">
                         {selected.bmi?.toFixed(1)}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500">Gravida</p>
+                      <p className="text-xs text-slate-400">Gravida</p>
                       <p className="font-semibold">{selected.gravida}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500">Parity</p>
+                      <p className="text-xs text-slate-400">Parity</p>
                       <p className="font-semibold">{selected.parity}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500">Language</p>
+                      <p className="text-xs text-slate-400">Language</p>
                       <p className="font-semibold capitalize">
                         {selected.preferred_language}
                       </p>
@@ -897,7 +897,7 @@ export default function ASHAInterface() {
                 </div>
 
                 {nextVisit && (
-                  <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-lg">
+                  <div className="mt-4 p-3 bg-blue-500/10 border border-blue-100 rounded-lg">
                     <p className="text-xs text-blue-600 font-semibold mb-1 flex items-center gap-1">
                       <Calendar className="w-3 h-3" /> Next Checkup
                     </p>
@@ -915,7 +915,7 @@ export default function ASHAInterface() {
                     });
                     setMainView("assess");
                   }}
-                  className="w-full mt-5 py-2 bg-green-600 text-white rounded-lg font-semibold text-sm hover:bg-green-700"
+                  className="w-full mt-5 py-2 bg-green-600 text-slate-800 rounded-lg font-semibold text-sm hover:bg-green-700"
                 >
                   <Activity className="w-4 h-4 inline mr-2" />
                   New Assessment
@@ -928,7 +928,7 @@ export default function ASHAInterface() {
                       setDeliveryMother(selected);
                       setShowDeliveryModal(true);
                     }}
-                    className="w-full mt-3 py-2 bg-purple-600 text-white rounded-lg font-semibold text-sm hover:bg-purple-700 flex items-center justify-center gap-2"
+                    className="w-full mt-3 py-2 bg-sky-600 text-slate-800 rounded-lg font-semibold text-sm hover:bg-sky-700 flex items-center justify-center gap-2"
                   >
                     🎉 Complete Delivery
                   </button>
@@ -936,9 +936,9 @@ export default function ASHAInterface() {
               </div>
 
               {/* Main Content with Tabs */}
-              <div className="flex-1 bg-white rounded-xl shadow border overflow-hidden flex flex-col">
+              <div className="flex-1 bg-white/60 backdrop-blur-xl rounded-xl shadow border overflow-hidden flex flex-col">
                 {/* Tab Header */}
-                <div className="bg-gradient-to-r from-green-600 to-green-700 text-white px-5 py-3 flex items-center gap-4">
+                <div className="bg-gradient-to-r from-green-600 to-green-700 text-slate-800 px-5 py-3 flex items-center gap-4">
                   <button
                     onClick={() => setMotherViewTab("history")}
                     className={`px-3 py-1 rounded-lg text-sm font-semibold ${motherViewTab === "history"
@@ -973,7 +973,7 @@ export default function ASHAInterface() {
                   <div className="flex-1 overflow-y-auto p-4">
                     {loadingMotherAssessments ? (
                       <div className="text-center py-8">
-                        <Loader className="w-6 h-6 animate-spin mx-auto text-green-600" />
+                        <Loader className="w-6 h-6 animate-spin mx-auto text-emerald-600" />
                       </div>
                     ) : motherAssessments.length > 0 ? (
                       <div className="space-y-3">
@@ -981,22 +981,22 @@ export default function ASHAInterface() {
                           <div
                             key={a.id || idx}
                             className={`p-4 rounded-lg border-2 ${a.risk_level === "HIGH"
-                              ? "bg-red-50 border-red-200"
+                              ? "bg-red-500/10 border-red-200"
                               : a.risk_level === "MODERATE"
-                                ? "bg-yellow-50 border-yellow-200"
-                                : "bg-green-50 border-green-200"
+                                ? "bg-yellow-500/10 border-yellow-200"
+                                : "bg-emerald-500/10 border-emerald-200"
                               }`}
                           >
                             <div className="flex justify-between items-start mb-2">
-                              <p className="text-xs text-gray-600">
+                              <p className="text-xs text-slate-500">
                                 📅 {new Date(a.created_at).toLocaleString()}
                               </p>
                               <span
                                 className={`px-2 py-1 rounded-full text-xs font-bold ${a.risk_level === "HIGH"
-                                  ? "bg-red-200 text-red-800"
+                                  ? "bg-red-200 text-red-700"
                                   : a.risk_level === "MODERATE"
-                                    ? "bg-yellow-200 text-yellow-800"
-                                    : "bg-green-200 text-green-800"
+                                    ? "bg-yellow-200 text-yellow-700"
+                                    : "bg-green-200 text-emerald-600"
                                   }`}
                               >
                                 {getRiskIcon(a.risk_level)} {a.risk_level} (
@@ -1007,7 +1007,7 @@ export default function ASHAInterface() {
                             <div className="grid grid-cols-4 gap-2 text-xs">
                               {a.systolic_bp && a.diastolic_bp && (
                                 <div className="bg-white/60 p-2 rounded text-center">
-                                  <p className="text-gray-500">BP</p>
+                                  <p className="text-slate-400">BP</p>
                                   <p className="font-bold">
                                     {a.systolic_bp}/{a.diastolic_bp}
                                   </p>
@@ -1015,19 +1015,19 @@ export default function ASHAInterface() {
                               )}
                               {a.heart_rate && (
                                 <div className="bg-white/60 p-2 rounded text-center">
-                                  <p className="text-gray-500">HR</p>
+                                  <p className="text-slate-400">HR</p>
                                   <p className="font-bold">{a.heart_rate}</p>
                                 </div>
                               )}
                               {a.blood_glucose && (
                                 <div className="bg-white/60 p-2 rounded text-center">
-                                  <p className="text-gray-500">Glucose</p>
+                                  <p className="text-slate-400">Glucose</p>
                                   <p className="font-bold">{a.blood_glucose}</p>
                                 </div>
                               )}
                               {a.hemoglobin && (
                                 <div className="bg-white/60 p-2 rounded text-center">
-                                  <p className="text-gray-500">Hb</p>
+                                  <p className="text-slate-400">Hb</p>
                                   <p className="font-bold">{a.hemoglobin}</p>
                                 </div>
                               )}
@@ -1036,7 +1036,7 @@ export default function ASHAInterface() {
                         ))}
                       </div>
                     ) : (
-                      <div className="text-center py-8 text-gray-500">
+                      <div className="text-center py-8 text-slate-400">
                         <FileText className="w-10 h-10 mx-auto text-gray-300 mb-2" />
                         <p className="text-sm">No assessments yet</p>
                         <p className="text-xs mt-1">
@@ -1071,15 +1071,15 @@ export default function ASHAInterface() {
         {mainView === "assess" && (
           <div className="flex-1 overflow-y-auto p-8">
             <div className="max-w-2xl mx-auto">
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                  <ClipboardCheck className="w-6 h-6 text-green-600" />
+              <div className="bg-white/60 backdrop-blur-xl rounded-xl shadow-xl shadow-blue-500/10 p-6">
+                <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                  <ClipboardCheck className="w-6 h-6 text-emerald-600" />
                   Risk Assessment
                 </h2>
 
                 <form onSubmit={handleAssessRisk} className="space-y-5">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-slate-600 mb-2">
                       Select Mother *
                     </label>
                     <select
@@ -1104,7 +1104,7 @@ export default function ASHAInterface() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      <label className="block text-sm font-semibold text-slate-600 mb-2">
                         Systolic BP
                       </label>
                       <input
@@ -1121,7 +1121,7 @@ export default function ASHAInterface() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      <label className="block text-sm font-semibold text-slate-600 mb-2">
                         Diastolic BP
                       </label>
                       <input
@@ -1138,7 +1138,7 @@ export default function ASHAInterface() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      <label className="block text-sm font-semibold text-slate-600 mb-2">
                         Heart Rate (bpm)
                       </label>
                       <input
@@ -1155,7 +1155,7 @@ export default function ASHAInterface() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      <label className="block text-sm font-semibold text-slate-600 mb-2">
                         Blood Glucose
                       </label>
                       <input
@@ -1174,7 +1174,7 @@ export default function ASHAInterface() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-slate-600 mb-2">
                       Hemoglobin (g/dL)
                     </label>
                     <input
@@ -1192,8 +1192,8 @@ export default function ASHAInterface() {
                     />
                   </div>
 
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <p className="text-sm font-semibold text-gray-700 mb-3">
+                  <div className="bg-blue-50/50 p-4 rounded-lg">
+                    <p className="text-sm font-semibold text-slate-600 mb-3">
                       Clinical Symptoms
                     </p>
                     <div className="grid grid-cols-2 gap-3">
@@ -1218,7 +1218,7 @@ export default function ASHAInterface() {
                                 [s.key]: e.target.checked ? 1 : 0,
                               })
                             }
-                            className="w-4 h-4 text-green-600 rounded"
+                            className="w-4 h-4 text-emerald-600 rounded"
                           />
                           {s.label}
                         </label>
@@ -1229,7 +1229,7 @@ export default function ASHAInterface() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-4 bg-green-600 text-white rounded-lg font-bold text-lg hover:bg-green-700 disabled:opacity-50"
+                    className="w-full py-4 bg-green-600 text-slate-800 rounded-lg font-bold text-lg hover:bg-green-700 disabled:opacity-50"
                   >
                     {loading ? "Assessing..." : "Submit Assessment"}
                   </button>
@@ -1238,10 +1238,10 @@ export default function ASHAInterface() {
                 {riskResult && (
                   <div
                     className={`mt-6 p-5 rounded-lg border-2 ${riskResult.risk_level === "HIGH"
-                      ? "bg-red-50 border-red-300"
+                      ? "bg-red-500/10 border-red-300"
                       : riskResult.risk_level === "MODERATE"
-                        ? "bg-yellow-50 border-yellow-300"
-                        : "bg-green-50 border-green-300"
+                        ? "bg-yellow-500/10 border-yellow-300"
+                        : "bg-emerald-500/10 border-emerald-300"
                       }`}
                   >
                     <div className="flex items-center gap-3 mb-3">
@@ -1270,7 +1270,7 @@ export default function ASHAInterface() {
                       </div>
                     )}
                     {riskResult.telegram_sent && (
-                      <p className="mt-3 text-sm bg-blue-100 text-blue-800 p-2 rounded">
+                      <p className="mt-3 text-sm bg-blue-500/100/15 text-blue-700 p-2 rounded">
                         📱 Report sent to mother via Telegram!
                       </p>
                     )}
@@ -1285,8 +1285,8 @@ export default function ASHAInterface() {
         {mainView === "stats" && (
           <div className="flex-1 overflow-y-auto p-8">
             <div className="max-w-4xl mx-auto">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <BarChart2 className="w-6 h-6 text-green-600" />
+              <h2 className="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                <BarChart2 className="w-6 h-6 text-emerald-600" />
                 My Performance Stats
               </h2>
 
@@ -1294,37 +1294,37 @@ export default function ASHAInterface() {
                 <div className="space-y-6">
                   {/* Stats Cards */}
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="bg-white p-5 rounded-xl shadow border-l-4 border-blue-500">
+                    <div className="bg-white/60 backdrop-blur-xl p-5 rounded-xl shadow border-l-4 border-blue-500">
                       <p className="text-3xl font-bold text-blue-600">
                         {analytics.total_mothers}
                       </p>
-                      <p className="text-sm text-gray-600">Assigned Mothers</p>
+                      <p className="text-sm text-slate-500">Assigned Mothers</p>
                     </div>
-                    <div className="bg-white p-5 rounded-xl shadow border-l-4 border-purple-500">
-                      <p className="text-3xl font-bold text-purple-600">
+                    <div className="bg-white/60 backdrop-blur-xl p-5 rounded-xl shadow border-l-4 border-sky-500">
+                      <p className="text-3xl font-bold text-sky-600">
                         {analytics.total_assessments}
                       </p>
-                      <p className="text-sm text-gray-600">Assessments Done</p>
+                      <p className="text-sm text-slate-500">Assessments Done</p>
                     </div>
-                    <div className="bg-white p-5 rounded-xl shadow border-l-4 border-red-500">
+                    <div className="bg-white/60 backdrop-blur-xl p-5 rounded-xl shadow border-l-4 border-red-500">
                       <p className="text-3xl font-bold text-red-600">
                         {analytics.high_risk_count}
                       </p>
-                      <p className="text-sm text-gray-600">High Risk Found</p>
+                      <p className="text-sm text-slate-500">High Risk Found</p>
                     </div>
-                    <div className="bg-white p-5 rounded-xl shadow border-l-4 border-green-500">
-                      <p className="text-3xl font-bold text-green-600">
+                    <div className="bg-white/60 backdrop-blur-xl p-5 rounded-xl shadow border-l-4 border-emerald-500">
+                      <p className="text-3xl font-bold text-emerald-600">
                         {analytics.low_risk_count}
                       </p>
-                      <p className="text-sm text-gray-600">Low Risk</p>
+                      <p className="text-sm text-slate-500">Low Risk</p>
                     </div>
                   </div>
 
                   <div className="grid lg:grid-cols-2 gap-6">
                     {/* Risk Distribution Chart */}
                     {riskDistData.some((d) => d.value > 0) && (
-                      <div className="bg-white p-5 rounded-xl shadow">
-                        <h3 className="font-bold text-gray-900 mb-4">
+                      <div className="bg-white/60 backdrop-blur-xl p-5 rounded-xl shadow">
+                        <h3 className="font-bold text-slate-800 mb-4">
                           Risk Distribution
                         </h3>
                         <ResponsiveContainer width="100%" height={200}>
@@ -1348,8 +1348,8 @@ export default function ASHAInterface() {
                     )}
 
                     {/* Recent Assessments */}
-                    <div className="bg-white p-5 rounded-xl shadow">
-                      <h3 className="font-bold text-gray-900 mb-4">
+                    <div className="bg-white/60 backdrop-blur-xl p-5 rounded-xl shadow">
+                      <h3 className="font-bold text-slate-800 mb-4">
                         Recent Assessments
                       </h3>
                       {analytics.recent_assessments?.length > 0 ? (
@@ -1369,23 +1369,23 @@ export default function ASHAInterface() {
                               }}
                               role="button"
                               tabIndex={0}
-                              className="p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 flex justify-between items-center"
+                              className="p-3 bg-blue-50/50 rounded-lg cursor-pointer hover:bg-white/600 flex justify-between items-center"
                             >
                               <div>
                                 <p className="font-semibold text-sm">
                                   {a.mother_name}
                                 </p>
-                                <p className="text-xs text-gray-500">
+                                <p className="text-xs text-slate-400">
                                   <Calendar className="w-3 h-3 inline mr-1" />
                                   {new Date(a.created_at).toLocaleDateString()}
                                 </p>
                               </div>
                               <span
                                 className={`px-3 py-1 rounded-full text-xs font-bold ${a.risk_level === "HIGH"
-                                  ? "bg-red-100 text-red-700"
+                                  ? "bg-red-500/100/15 text-red-600"
                                   : a.risk_level === "MODERATE"
-                                    ? "bg-yellow-100 text-yellow-700"
-                                    : "bg-green-100 text-green-700"
+                                    ? "bg-yellow-500/100/15 text-yellow-600"
+                                    : "bg-emerald-500/15 text-emerald-600"
                                   }`}
                               >
                                 {getRiskIcon(a.risk_level)} {a.risk_level}
@@ -1394,7 +1394,7 @@ export default function ASHAInterface() {
                           ))}
                         </div>
                       ) : (
-                        <p className="text-gray-500 text-sm">
+                        <p className="text-slate-400 text-sm">
                           No assessments yet
                         </p>
                       )}
@@ -1403,8 +1403,8 @@ export default function ASHAInterface() {
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <Loader className="w-8 h-8 animate-spin mx-auto text-green-600 mb-4" />
-                  <p className="text-gray-500">Loading stats...</p>
+                  <Loader className="w-8 h-8 animate-spin mx-auto text-emerald-600 mb-4" />
+                  <p className="text-slate-400">Loading stats...</p>
                 </div>
               )}
             </div>
@@ -1417,12 +1417,12 @@ export default function ASHAInterface() {
             <div className="max-w-2xl mx-auto">
               <button
                 onClick={() => setMainView("stats")}
-                className="flex items-center gap-2 text-green-600 hover:text-green-700 mb-6"
+                className="flex items-center gap-2 text-emerald-600 hover:text-emerald-600 mb-6"
               >
                 <ChevronLeft className="w-5 h-5" /> Back to Stats
               </button>
 
-              <div className="bg-white rounded-xl shadow-lg p-6">
+              <div className="bg-white/60 backdrop-blur-xl rounded-xl shadow-xl shadow-blue-500/10 p-6">
                 <div className="flex items-center gap-4 mb-6 pb-6 border-b">
                   <span className="text-4xl">
                     {getRiskIcon(selectedAssessment.risk_level)}
@@ -1431,7 +1431,7 @@ export default function ASHAInterface() {
                     <h2 className="text-xl font-bold">
                       {selectedAssessment.mother_name}
                     </h2>
-                    <p className="text-gray-600">
+                    <p className="text-slate-500">
                       <Calendar className="w-4 h-4 inline mr-1" />
                       {new Date(selectedAssessment.created_at).toLocaleString()}
                     </p>
@@ -1440,15 +1440,15 @@ export default function ASHAInterface() {
 
                 <div
                   className={`p-4 rounded-lg mb-6 ${selectedAssessment.risk_level === "HIGH"
-                    ? "bg-red-50"
+                    ? "bg-red-500/10"
                     : selectedAssessment.risk_level === "MODERATE"
-                      ? "bg-yellow-50"
-                      : "bg-green-50"
+                      ? "bg-yellow-500/10"
+                      : "bg-emerald-500/10"
                     }`}
                 >
                   <div className="flex justify-between items-center">
                     <div>
-                      <p className="text-sm font-semibold text-gray-600">
+                      <p className="text-sm font-semibold text-slate-500">
                         Risk Level
                       </p>
                       <p className="text-2xl font-bold">
@@ -1456,7 +1456,7 @@ export default function ASHAInterface() {
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-semibold text-gray-600">
+                      <p className="text-sm font-semibold text-slate-500">
                         Score
                       </p>
                       <p className="text-2xl font-bold">
@@ -1466,7 +1466,7 @@ export default function ASHAInterface() {
                   </div>
                 </div>
 
-                <p className="text-sm text-gray-500 text-center">
+                <p className="text-sm text-slate-400 text-center">
                   Assessment ID: {selectedAssessment.id?.slice(0, 8)}...
                 </p>
               </div>
@@ -1493,10 +1493,10 @@ export default function ASHAInterface() {
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <Users className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-              <p className="text-xl font-semibold text-gray-900">
+              <p className="text-xl font-semibold text-slate-800">
                 Select a Mother
               </p>
-              <p className="text-gray-600 mt-2">
+              <p className="text-slate-500 mt-2">
                 Choose from the list or start a new assessment
               </p>
             </div>

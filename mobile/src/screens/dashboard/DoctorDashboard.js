@@ -285,9 +285,9 @@ export default function DoctorDashboardScreen() {
                             </View>
                             <View style={styles.motherDetailItem}>
                                 <Text style={[styles.detailLabel, { color: theme.textTertiary }]}>STATUS</Text>
-                                <View style={[styles.statusBadge, { backgroundColor: selectedMother.delivery_status === 'delivered' ? '#10B98120' : selectedMother.risk_level === 'HIGH' ? '#EF444420' : '#3B82F620' }]}>
-                                    <Text style={{ fontSize: 10, fontWeight: '700', color: selectedMother.delivery_status === 'delivered' ? '#10B981' : selectedMother.risk_level === 'HIGH' ? '#EF4444' : '#3B82F6' }}>
-                                        {selectedMother.delivery_status === 'delivered' ? 'Delivered' : selectedMother.risk_level || 'Active'}
+                                <View style={[styles.statusBadge, { backgroundColor: selectedMother.status === 'postnatal' ? '#10B98120' : selectedMother.risk_level === 'HIGH' ? '#EF444420' : '#3B82F620' }]}>
+                                    <Text style={{ fontSize: 10, fontWeight: '700', color: selectedMother.status === 'postnatal' ? '#10B981' : selectedMother.risk_level === 'HIGH' ? '#EF4444' : '#3B82F6' }}>
+                                        {selectedMother.status === 'postnatal' ? 'Delivered' : selectedMother.risk_level || 'Active'}
                                     </Text>
                                 </View>
                             </View>

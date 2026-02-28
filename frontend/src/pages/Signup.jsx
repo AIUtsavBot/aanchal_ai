@@ -1,4 +1,4 @@
-﻿// Aanchal AI - Signup Page
+// Aanchal AI - Signup Page
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -88,8 +88,8 @@ const Signup = () => {
       formName: formName,
       docName: docName,
       message: isMatch
-        ? `âœ… Name matches ID document`
-        : `âš ï¸ Name mismatch: Form says "${formName}" but ID shows "${docName}". Please use the name exactly as on your ID.`
+        ? `✅ Name matches ID document`
+        : `⚠️ Name mismatch: Form says "${formName}" but ID shows "${docName}". Please use the name exactly as on your ID.`
     });
   };
 
@@ -129,7 +129,7 @@ const Signup = () => {
         setIdValidation({
           valid: true,
           info: res.data.id_info,
-          message: `âœ… ID verified: ${docName}`
+          message: `✅ ID verified: ${docName}`
         });
         // Store the document URL if provided
         if (res.data.id_doc_url) {
@@ -152,7 +152,7 @@ const Signup = () => {
         setIdValidation({
           valid: true, // Allow submission!
           info: null,
-          message: "âš ï¸ Automatic verification unavailable (Server Busy). Admin will verify manually."
+          message: "⚠️ Automatic verification unavailable (Server Busy). Admin will verify manually."
         });
         setError(""); // Clear error to allow submit
       } else {
@@ -189,7 +189,7 @@ const Signup = () => {
           setCertValidation({
             valid: true,
             info: res.data.parsed_data,
-            message: `âœ… Certificate parsed: ${docName}`
+            message: `✅ Certificate parsed: ${docName}`
           });
           // Check name matching
           checkNameMatch(formData.fullName, docName);
@@ -207,7 +207,7 @@ const Signup = () => {
       setCertValidation({
         valid: true, // Allow upload even if parsing fails
         info: null,
-        message: "âš ï¸ Could not auto-read certificate details (Manual review required)"
+        message: "⚠️ Could not auto-read certificate details (Manual review required)"
       });
     } finally {
       setValidatingCert(false);
@@ -339,16 +339,16 @@ const Signup = () => {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-blue-50 py-12 px-4">
-        <div className="max-w-md w-full bg-white p-8 rounded-xl shadow-lg text-center">
-          <div className="text-green-500 text-6xl mb-4">✓</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+      <div className="min-h-screen flex items-center justify-center py-12 px-4">
+        <div className="max-w-md w-full glass-card-strong p-8 rounded-2xl text-center">
+          <div className="text-emerald-600 text-6xl mb-4">?</div>
+          <h2 className="text-2xl font-bold text-slate-800 mb-2">
             Registration Successful!
           </h2>
-          <p className="text-gray-600 mb-4">
+          <p className="text-slate-500 mb-4">
             Please check your email to verify your account.
           </p>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-slate-400">
             Redirecting to login in {countdown} seconds...
           </p>
         </div>
@@ -357,31 +357,31 @@ const Signup = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-blue-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl w-full space-y-8">
         {/* Header */}
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-indigo-600 mb-2">
-            🤰 Aanchal AI
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-sky-400 to-pink-400 bg-clip-text text-transparent mb-2">
+            ?? Aanchal AI
           </h1>
-          <h2 className="text-2xl font-bold text-gray-900">
+          <h2 className="text-2xl font-bold text-slate-800">
             {isProfileCompletion ? "Complete Your Profile" : "Create Account"}
           </h2>
-          <p className="mt-2 text-sm text-gray-600">
+          <p className="mt-2 text-sm text-slate-400">
             {isProfileCompletion ? "Please provide additional details to verify your role" : "Join the Aanchal AI healthcare system"}
           </p>
         </div>
 
         {/* Error Message */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          <div className="bg-red-500/10 border border-red-500/25 text-red-700 px-4 py-3 rounded-xl backdrop-blur-sm">
             {error}
           </div>
         )}
 
         {/* Signup Form */}
         <form
-          className="mt-8 space-y-6 bg-white p-8 rounded-xl shadow-lg"
+          className="mt-8 space-y-6 glass-card-strong p-8 rounded-2xl"
           onSubmit={handleSubmit}
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -389,7 +389,7 @@ const Signup = () => {
             <div className="md:col-span-2">
               <label
                 htmlFor="fullName"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-slate-600 mb-1"
               >
                 Full Name *
               </label>
@@ -400,7 +400,7 @@ const Signup = () => {
                 required
                 value={formData.fullName}
                 onChange={handleChange}
-                className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="glass-input rounded-xl"
                 placeholder="Dr. John Doe"
               />
             </div>
@@ -409,7 +409,7 @@ const Signup = () => {
             <div className="md:col-span-2">
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-slate-600 mb-1"
               >
                 Email Address *
               </label>
@@ -420,7 +420,7 @@ const Signup = () => {
                 required
                 value={formData.email}
                 onChange={handleChange}
-                className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="glass-input rounded-xl"
                 placeholder="your@email.com"
               />
             </div>
@@ -439,12 +439,12 @@ const Signup = () => {
                 required
                 value={formData.role}
                 onChange={handleChange}
-                className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="glass-input rounded-xl"
               >
                 <option value="ASHA_WORKER">ASHA Worker</option>
                 <option value="DOCTOR">Doctor</option>
               </select>
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-slate-400">
                 Select your role in the healthcare system
               </p>
             </div>
@@ -452,7 +452,7 @@ const Signup = () => {
             {/* ASHA Worker ID Document Upload */}
             {formData.role === "ASHA_WORKER" && (
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-600 mb-1">
                   ID Document * (PAN Card / Aadhaar / Driving License)
                 </label>
                 <label className={`file-upload-zone ${idFile ? 'has-file' : ''}`}>
@@ -461,7 +461,7 @@ const Signup = () => {
                     accept="application/pdf,image/*"
                     onChange={handleIdFileChange}
                   />
-                  <span className="upload-icon">{idFile ? '✅' : '📄'}</span>
+                  <span className="upload-icon">{idFile ? '?' : '??'}</span>
                   <span className="upload-text font-medium">
                     {idFile ? idFile.name : 'Click to upload or drag and drop'}
                   </span>
@@ -469,11 +469,11 @@ const Signup = () => {
                 </label>
                 {validatingId && (
                   <p className="mt-2 text-sm text-blue-600 flex items-center gap-2">
-                    <span className="animate-spin">â³</span> Validating ID document...
+                    <span className="animate-spin">⏳</span> Validating ID document...
                   </p>
                 )}
                 {idValidation && (
-                  <p className={`mt-2 text-sm ${idValidation.valid ? 'text-green-600' : 'text-red-600'}`}>
+                  <p className={`mt-2 text-sm ${idValidation.valid ? 'text-emerald-600' : 'text-red-600'}`}>
                     {idValidation.message}
                   </p>
                 )}
@@ -486,7 +486,7 @@ const Signup = () => {
                     {nameMatch.message}
                   </div>
                 )}
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-xs text-slate-400">
                   Upload your government ID for verification (any language)
                 </p>
               </div>
@@ -495,7 +495,7 @@ const Signup = () => {
             {/* Doctor Degree Certificate */}
             {formData.role === "DOCTOR" && (
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-600 mb-1">
                   Degree Certification *
                 </label>
                 <label className={`file-upload-zone ${degreeFile ? 'has-file' : ''}`}>
@@ -504,7 +504,7 @@ const Signup = () => {
                     accept="application/pdf,image/*"
                     onChange={handleDegreeFileChange}
                   />
-                  <span className="upload-icon">{degreeFile ? '✅' : '🎓'}</span>
+                  <span className="upload-icon">{degreeFile ? '?' : '??'}</span>
                   <span className="upload-text font-medium">
                     {degreeFile ? degreeFile.name : 'Click to upload or drag and drop'}
                   </span>
@@ -512,11 +512,11 @@ const Signup = () => {
                 </label>
                 {validatingCert && (
                   <p className="mt-2 text-sm text-blue-600 flex items-center gap-2">
-                    <span className="animate-spin">â³</span> Analyzing certificate...
+                    <span className="animate-spin">⏳</span> Analyzing certificate...
                   </p>
                 )}
                 {certValidation && (
-                  <p className={`mt-2 text-sm ${certValidation.valid ? 'text-green-600' : 'text-gray-600'}`}>
+                  <p className={`mt-2 text-sm ${certValidation.valid ? 'text-emerald-600' : 'text-slate-400'}`}>
                     {certValidation.message}
                   </p>
                 )}
@@ -529,7 +529,7 @@ const Signup = () => {
                     {nameMatch.message}
                   </div>
                 )}
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-xs text-slate-400">
                   Upload PDF or image of your medical degree
                 </p>
               </div>
@@ -539,7 +539,7 @@ const Signup = () => {
             <div>
               <label
                 htmlFor="phone"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-slate-600 mb-1"
               >
                 Phone Number
               </label>
@@ -549,7 +549,7 @@ const Signup = () => {
                 type="tel"
                 value={formData.phone}
                 onChange={handleChange}
-                className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="glass-input rounded-xl"
                 placeholder="+91 9876543210"
               />
             </div>
@@ -558,7 +558,7 @@ const Signup = () => {
             <div>
               <label
                 htmlFor="assignedArea"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-slate-600 mb-1"
               >
                 Assigned Area
               </label>
@@ -568,7 +568,7 @@ const Signup = () => {
                 type="text"
                 value={formData.assignedArea}
                 onChange={handleChange}
-                className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="glass-input rounded-xl"
                 placeholder="e.g., Pune, Mumbai"
               />
             </div>
@@ -580,7 +580,7 @@ const Signup = () => {
                 <div>
                   <label
                     htmlFor="password"
-                    className="block text-sm font-medium text-gray-700 mb-1"
+                    className="block text-sm font-medium text-slate-600 mb-1"
                   >
                     Password *
                   </label>
@@ -591,17 +591,17 @@ const Signup = () => {
                     required
                     value={formData.password}
                     onChange={handleChange}
-                    className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    placeholder="••••••••"
+                    className="glass-input rounded-xl"
+                    placeholder="��������"
                   />
-                  <p className="mt-1 text-xs text-gray-500">Minimum 8 characters</p>
+                  <p className="mt-1 text-xs text-slate-400">Minimum 8 characters</p>
                 </div>
 
                 {/* Confirm Password */}
                 <div>
                   <label
                     htmlFor="confirmPassword"
-                    className="block text-sm font-medium text-gray-700 mb-1"
+                    className="block text-sm font-medium text-slate-600 mb-1"
                   >
                     Confirm Password *
                   </label>
@@ -613,7 +613,7 @@ const Signup = () => {
                     value={formData.confirmPassword}
                     onChange={handleChange}
                     className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    placeholder="••••••••"
+                    placeholder="��������"
                   />
                 </div>
               </>
@@ -624,7 +624,7 @@ const Signup = () => {
           <button
             type="submit"
             disabled={loading}
-            className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="glass-btn-primary w-full py-3 rounded-xl text-sm"
           >
             {loading ? "Submitting request..." : "Submit Registration Request"}
           </button>
@@ -635,10 +635,10 @@ const Signup = () => {
               {/* Divider */}
               <div className="relative my-6">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300"></div>
+                  <div className="w-full border-t border-blue-200/40"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">
+                  <span className="px-3 bg-[rgba(255,255,255,0.1)] backdrop-blur-sm rounded-full text-slate-400 text-xs">
                     Or continue with
                   </span>
                 </div>
@@ -649,7 +649,7 @@ const Signup = () => {
                 type="button"
                 onClick={handleGoogleSignIn}
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white/50 border border-blue-200/40 rounded-xl text-sm font-medium text-white/80 hover:bg-white/80 hover:border-white/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all backdrop-blur-sm"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path
@@ -674,11 +674,11 @@ const Signup = () => {
 
               {/* Login Link */}
               <div className="text-center mt-4">
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-slate-400">
                   Already have an account?{" "}
                   <Link
                     to="/auth/login"
-                    className="font-medium text-indigo-600 hover:text-indigo-500"
+                    className="font-medium text-blue-600 hover:text-blue-600 transition-colors"
                   >
                     Log in
                   </Link>

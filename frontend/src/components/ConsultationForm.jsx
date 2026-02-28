@@ -553,7 +553,7 @@ export default function ConsultationForm({ motherId, doctorId, doctorName, onSav
                         {/* Hemoglobin */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
-                                <Thermometer className="w-4 h-4 text-purple-500" />
+                                <Thermometer className="w-4 h-4 text-sky-500" />
                                 Hemoglobin (g/dL)
                             </label>
                             <input
@@ -666,13 +666,13 @@ export default function ConsultationForm({ motherId, doctorId, doctorName, onSav
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                            <Pill className="w-5 h-5 text-purple-500" />
+                            <Pill className="w-5 h-5 text-sky-500" />
                             Medication Plan
                         </h3>
                         <button
                             type="button"
                             onClick={addMedication}
-                            className="bg-purple-100 hover:bg-purple-200 text-purple-700 px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-1 transition-colors"
+                            className="bg-sky-100 hover:bg-sky-200 text-sky-700 px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-1 transition-colors"
                         >
                             <Plus className="w-4 h-4" />
                             Add Medication
@@ -701,7 +701,7 @@ export default function ConsultationForm({ motherId, doctorId, doctorName, onSav
                                             value={med.medication}
                                             onChange={(e) => updateMedication(index, 'medication', e.target.value)}
                                             placeholder="Medication name (e.g., Folic Acid, Iron Supplement)"
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent text-sm"
                                         />
                                     </div>
                                     <div>
@@ -710,7 +710,7 @@ export default function ConsultationForm({ motherId, doctorId, doctorName, onSav
                                             value={med.dosage}
                                             onChange={(e) => updateMedication(index, 'dosage', e.target.value)}
                                             placeholder="Dosage (e.g., 400mcg)"
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent text-sm"
                                         />
                                     </div>
                                     <div>
@@ -719,7 +719,7 @@ export default function ConsultationForm({ motherId, doctorId, doctorName, onSav
                                             value={med.schedule}
                                             onChange={(e) => updateMedication(index, 'schedule', e.target.value)}
                                             placeholder="Schedule (e.g., Once daily)"
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent text-sm"
                                         />
                                     </div>
                                     <div>
@@ -728,7 +728,7 @@ export default function ConsultationForm({ motherId, doctorId, doctorName, onSav
                                             type="date"
                                             value={med.startDate}
                                             onChange={(e) => updateMedication(index, 'startDate', e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent text-sm"
                                         />
                                     </div>
                                     <div>
@@ -737,7 +737,7 @@ export default function ConsultationForm({ motherId, doctorId, doctorName, onSav
                                             type="date"
                                             value={med.endDate}
                                             onChange={(e) => updateMedication(index, 'endDate', e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent text-sm"
                                         />
                                     </div>
                                 </div>
@@ -844,7 +844,7 @@ export default function ConsultationForm({ motherId, doctorId, doctorName, onSav
                 {previousConsultations.length > 0 && (
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                         <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                            <Pill className="w-5 h-5 text-purple-500" />
+                            <Pill className="w-5 h-5 text-sky-500" />
                             Previous Prescriptions
                         </h3>
                         <div className="space-y-2">
@@ -971,7 +971,7 @@ export default function ConsultationForm({ motherId, doctorId, doctorName, onSav
                 <button
                     type="submit"
                     disabled={saving}
-                    className="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 disabled:from-gray-400 disabled:to-gray-500 text-white py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 transition-all transform hover:scale-[1.02] disabled:scale-100 shadow-lg"
+                    className="w-full bg-gradient-to-r from-sky-600 to-sky-700 hover:from-sky-700 hover:to-sky-800 disabled:from-gray-400 disabled:to-gray-500 text-white py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 transition-all transform hover:scale-[1.02] disabled:scale-100 shadow-lg"
                 >
                     {saving ? (
                         <>

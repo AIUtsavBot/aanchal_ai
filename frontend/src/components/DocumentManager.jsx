@@ -265,7 +265,7 @@ export default function DocumentManager({
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-4">
+      <div className="bg-gradient-to-r from-indigo-600 to-sky-600 text-white px-6 py-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold flex items-center gap-2">
             <FileText className="w-5 h-5" />

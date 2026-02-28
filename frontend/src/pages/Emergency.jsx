@@ -36,48 +36,48 @@ export default function Emergency() {
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-8">
-      <div className="bg-red-100 border border-red-400 p-6 rounded-lg mb-8">
+      <div className="bg-red-500/10 border border-red-500/25 p-6 rounded-xl backdrop-blur-sm mb-8">
         <div className="flex items-center gap-4">
           <AlertCircle className="w-8 h-8 text-red-600" />
           <div>
-            <h1 className="text-2xl font-bold text-red-900">{t('emergency_response')}</h1>
-            <p className="text-red-700">{t('emergency_support_line')}</p>
+            <h1 className="text-2xl font-bold text-red-700">{t('emergency_response')}</h1>
+            <p className="text-red-600/80">{t('emergency_support_line')}</p>
           </div>
         </div>
       </div>
 
       {submitted ? (
-        <div className="bg-green-100 border border-green-400 p-8 rounded-lg text-center">
-          <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-green-900 mb-2">{t('emergency_alert_sent')}</h2>
-          <p className="text-green-700 mb-4">
+        <div className="bg-emerald-500/10 border border-emerald-500/25 p-8 rounded-xl text-center backdrop-blur-sm">
+          <CheckCircle className="w-16 h-16 text-emerald-600 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-emerald-600 mb-2">{t('emergency_alert_sent')}</h2>
+          <p className="text-emerald-600/80 mb-4">
             {t('ambulance_on_way')}
           </p>
-          <p className="text-green-700">{t('family_contacts_alerted')}</p>
+          <p className="text-emerald-600/80">{t('family_contacts_alerted')}</p>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-lg space-y-6">
+        <form onSubmit={handleSubmit} className="glass-card-strong p-8 rounded-2xl space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">{t('mother_name')} *</label>
+            <label className="block text-sm font-medium text-slate-600 mb-2">{t('mother_name')} *</label>
             <input
               type="text"
               value={motherName}
               onChange={(e) => setMotherName(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              className="glass-input w-full rounded-xl"
               placeholder={t('enter_mother_name')}
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">{t('location')} *</label>
+            <label className="block text-sm font-medium text-slate-600 mb-2">{t('location')} *</label>
             <div className="flex items-center gap-2">
-              <MapPin className="w-5 h-5 text-gray-500" />
+              <MapPin className="w-5 h-5 text-slate-400" />
               <input
                 type="text"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                className="glass-input flex-1 rounded-xl"
                 placeholder={t('current_location')}
                 required
               />
@@ -85,17 +85,17 @@ export default function Emergency() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-4">{t('select_symptoms')} *</label>
+            <label className="block text-sm font-medium text-slate-600 mb-4">{t('select_symptoms')} *</label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {SYMPTOMS.map(symptom => (
-                <label key={symptom} className="flex items-center gap-2 cursor-pointer">
+                <label key={symptom} className="flex items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-white/600 transition-colors">
                   <input
                     type="checkbox"
                     checked={selectedSymptoms.includes(symptom)}
                     onChange={() => handleSymptomToggle(symptom)}
-                    className="w-4 h-4"
+                    className="w-4 h-4 accent-red-500"
                   />
-                  <span className="text-gray-700">{t(symptom)}</span>
+                  <span className="text-slate-600">{t(symptom)}</span>
                 </label>
               ))}
             </div>
@@ -103,14 +103,14 @@ export default function Emergency() {
 
           <button
             type="submit"
-            className="w-full bg-red-600 text-white font-bold py-3 rounded-lg hover:bg-red-700 transition"
+            className="w-full bg-gradient-to-r from-red-600 to-red-500 text-slate-800 font-bold py-3 rounded-xl hover:from-red-500 hover:to-red-400 transition-all shadow-lg shadow-red-500/25"
           >
             🚨 {t('trigger_emergency_alert')}
           </button>
 
-          <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
-            <p className="text-yellow-800 text-sm">
-              <strong>{t('emergency_contacts')}:</strong><br />
+          <div className="bg-yellow-500/10 border border-yellow-500/20 p-4 rounded-xl backdrop-blur-sm">
+            <p className="text-yellow-700/80 text-sm">
+              <strong className="text-yellow-700">{t('emergency_contacts')}:</strong><br />
               {t('ambulance')}: 108 | {t('emergency')}: 112
             </p>
           </div>

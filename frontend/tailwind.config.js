@@ -6,12 +6,15 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: '#4f46e5',
+        primary: '#7c3aed',
         secondary: '#06b6d4',
+        accent: '#ec4899',
+        'glass-bg': 'rgba(255, 255, 255, 0.55)',
+        'glass-border': 'rgba(180, 170, 220, 0.25)',
       },
       fontFamily: {
-        sans: ['system-ui', 'sans-serif'],
-      }
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+      },
     },
   },
   plugins: [],

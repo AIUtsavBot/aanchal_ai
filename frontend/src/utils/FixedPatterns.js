@@ -8,7 +8,7 @@
 // =============================================================================
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { supabase } from '../../services/auth.js';
+import { supabase } from '../services/auth.js';
 
 // =============================================================================
 // UTILITY: Request Timeout Wrapper
@@ -209,7 +209,7 @@ export const createSubmitAssessment = (setShowForm, loadAssessments, onUpdate) =
 };
 
 // =============================================================================
-// ERROR BOUNDARY COMPONENT
+// ERROR BOUNDARY COMPONENT (non-JSX version for .js compatibility)
 // =============================================================================
 import React from 'react';
 
@@ -229,34 +229,34 @@ export class ErrorBoundary extends React.Component {
 
     render() {
         if (this.state.hasError) {
-            return (
-                <div style={{
+            return React.createElement('div', {
+                style: {
                     padding: '2rem',
-                    background: '#fee2e2',
-                    border: '2px solid #ef4444',
-                    borderRadius: '8px',
-                    margin: '2rem'
-                }}>
-                    <h2 style={{ color: '#991b1b' }}>⚠️ Something went wrong</h2>
-                    <p>{this.state.error?.message || 'Unknown error'}</p>
-                    <button
-                        onClick={() => {
-                            this.setState({ hasError: false, error: null });
-                            window.location.reload();
-                        }}
-                        style={{
-                            padding: '8px 16px',
-                            background: '#ef4444',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            marginTop: '1rem'
-                        }}
-                    >
-                        Reload Page
-                    </button>
-                </div>
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid rgba(239, 68, 68, 0.25)',
+                    borderRadius: '12px',
+                    margin: '2rem',
+                    color: '#fca5a5'
+                }
+            },
+                React.createElement('h2', { style: { color: '#fca5a5' } }, '⚠️ Something went wrong'),
+                React.createElement('p', null, this.state.error?.message || 'Unknown error'),
+                React.createElement('button', {
+                    onClick: () => {
+                        this.setState({ hasError: false, error: null });
+                        window.location.reload();
+                    },
+                    style: {
+                        padding: '8px 16px',
+                        background: 'linear-gradient(135deg, #2563eb, #ec4899)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        marginTop: '1rem',
+                        fontWeight: '600'
+                    }
+                }, 'Reload Page')
             );
         }
 
@@ -264,53 +264,5 @@ export class ErrorBoundary extends React.Component {
     }
 }
 
-// =============================================================================
-// USAGE EXAMPLE
-// =============================================================================
-/*
-// In your component:
-import { useDataLoading, createSubmitAssessment, showToast, ErrorBoundary } from './FixedPatterns';
+// See components/ErrorBoundary.jsx for usage examples.
 
-export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdate }) => {
-    const [selectedMother, setSelectedMother] = useState(null);
-    const [showForm, setShowForm] = useState(null);
-    const [assessments, setAssessments] = useState([]);
-
-    // Use the hook for automatic loading with cleanup
-    const { 
-        data: entityData, 
-        loading, 
-        error, 
-        reload 
-    } = useDataLoading(
-        createLoadDataFunction(ashaWorkerId, doctorId),
-        [ashaWorkerId, doctorId]
-    );
-
-    const { mothers = [], children = [] } = entityData || {};
-
-    // Create submit function
-    const submitAssessment = createSubmitAssessment(setShowForm, loadAssessments, onUpdate);
-
-    // Handle form submission
-    const handleSubmit = async () => {
-        const assessmentData = {
-            mother_id: selectedMother.id,
-            assessment_type: 'mother_postnatal',
-            assessor_id: ashaWorkerId || doctorId,
-            assessor_role: userRole,
-            ...motherAssessment
-        };
-
-        await submitAssessment(assessmentData, selectedMother, 'mother');
-    };
-
-    return (
-        <ErrorBoundary>
-            {loading && <div>Loading...</div>}
-            {error && <div>Error: {error}</div>}
-            {/ * Your component JSX * /}
-        </ErrorBoundary>
-    );
-};
-*/
