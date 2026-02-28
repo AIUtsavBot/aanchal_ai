@@ -36,6 +36,7 @@
 /* ===== Sub-Tabs (equal-width, glass) ===== */
 .sub-tabs {
     display: flex;
+    justify-content: center;
     gap: 4px;
     background: rgba(255, 255, 255, 0.5);
     backdrop-filter: blur(16px);
@@ -44,10 +45,10 @@
     border-radius: 12px;
     border: 1px solid rgba(147, 197, 253, 0.2);
     margin-bottom: 1.5rem;
+    overflow-x: auto;
 }
 
 .sub-tab {
-    flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
