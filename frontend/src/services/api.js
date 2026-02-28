@@ -588,7 +588,7 @@ export const postnatalAPI = {
    * @param {string} childId 
    */
   getVaccinations: async (childId, limit = 50) => {
-    const response = await api.get(`/api/postnatal/children/${childId}/vaccinations?limit=${limit}`);
+    const response = await api.get(`/api/santanraksha/vaccination/${childId}?limit=${limit}`);
     return response.data;
   },
 
@@ -606,7 +606,7 @@ export const postnatalAPI = {
    * @param {string} childId 
    */
   getGrowthRecords: async (childId, limit = 20) => {
-    const response = await api.get(`/api/postnatal/children/${childId}/growth?limit=${limit}`);
+    const response = await api.get(`/api/santanraksha/growth/${childId}?limit=${limit}`);
     return response.data;
   },
 

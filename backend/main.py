@@ -579,6 +579,7 @@ except Exception as e:
 # Mount SantanRaksha child health routes (vaccinations, growth, milestones)
 try:
     from routes.santanraksha import router as santanraksha_router
+    # Note: santanraksha.py defines prefix="/api/santanraksha"
     app.include_router(santanraksha_router)
     logger.info("✅ SantanRaksha child health routes loaded (vaccinations, growth, milestones)")
 except Exception as e:
