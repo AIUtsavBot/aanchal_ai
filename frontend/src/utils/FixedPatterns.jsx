@@ -8,8 +8,7 @@
 // =============================================================================
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { supabase } from '../services/auth.js';
-
+import { supabase } from '../services/auth';
 // =============================================================================
 // UTILITY: Request Timeout Wrapper
 // =============================================================================

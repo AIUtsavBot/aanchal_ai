@@ -13,8 +13,9 @@ import { StatCard, PatientCard, EmptyState, LoadingSpinner, SectionHeader } from
 export default function AdminDashboardScreen({ navigation }) {
     const { t } = useTranslation();
     const { theme } = useTheme();
-    const [tab, setTab] = useState('overview'); // overview | mothers | children | users
+    const [tab, setTab] = useState('overview'); // overview | analytics | mothers | children | users
     const [stats, setStats] = useState(null);
+    const [metrics, setMetrics] = useState(null);
     const [mothers, setMothers] = useState([]);
     const [children, setChildren] = useState([]);
     const [refreshing, setRefreshing] = useState(false);
@@ -43,11 +44,19 @@ export default function AdminDashboardScreen({ navigation }) {
         try { setChildren(await adminAPI.getAllChildren()); } catch { }
     };
 
+    const loadMetrics = async () => {
+        try {
+            const res = await adminAPI.getMetrics();
+            if (res?.metrics) setMetrics(res.metrics);
+        } catch { }
+    };
+
     useEffect(() => { loadData(); }, []);
 
     useEffect(() => {
         if (tab === 'mothers' && !mothers.length) loadMothers();
         if (tab === 'children' && !children.length) loadChildren();
+        if (tab === 'analytics' && !metrics) loadMetrics();
     }, [tab]);
 
     const onRefresh = async () => {
@@ -55,6 +64,7 @@ export default function AdminDashboardScreen({ navigation }) {
         await loadData();
         if (tab === 'mothers') await loadMothers();
         if (tab === 'children') await loadChildren();
+        if (tab === 'analytics') await loadMetrics();
         setRefreshing(false);
     };
 
@@ -62,6 +72,7 @@ export default function AdminDashboardScreen({ navigation }) {
 
     const tabs = [
         { key: 'overview', label: 'Overview', icon: 'grid-outline' },
+        { key: 'analytics', label: 'Analytics', icon: 'analytics-outline' },
         { key: 'mothers', label: t('mothers'), icon: 'heart-outline' },
         { key: 'children', label: t('children'), icon: 'happy-outline' },
         { key: 'users', label: 'Users', icon: 'people-outline' },
@@ -149,6 +160,45 @@ export default function AdminDashboardScreen({ navigation }) {
                         </View>
                     </View>
                 )}
+
+                {tab === 'analytics' && (
+                    <View>
+                        <SectionHeader title="📈 AI Token Usage" />
+                        <View style={styles.statsRow}>
+                            <StatCard icon="flash" label="Total Tokens" value={metrics?.token_usage_estimated?.toLocaleString() || '—'} color={theme.primary} />
+                            <StatCard icon="card" label="Est. Cost (USD)" value={metrics?.cost_usd_estimated != null ? `$${metrics.cost_usd_estimated}` : '—'} color={theme.accent} />
+                        </View>
+                        <View style={styles.statsRow}>
+                            <StatCard icon="cube" label="AI Calls" value={metrics?.ai_calls_total?.toLocaleString() || '—'} color={theme.info} />
+                        </View>
+
+                        <SectionHeader title="🗣️ Risk Topics Word Cloud" />
+                        <View style={[styles.wordCloud, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+                            {Array.isArray(metrics?.word_cloud) && metrics.word_cloud.length > 0 ? (
+                                metrics.word_cloud.map((w, idx) => {
+                                    const maxVal = Math.max(...metrics.word_cloud.map(x => x.value));
+                                    const size = Math.max(12, Math.min(28, (w.value / maxVal) * 28));
+                                    return (
+                                        <Text
+                                            key={`${w.text}-${idx}`}
+                                            style={{
+                                                fontSize: size,
+                                                fontWeight: size > 18 ? '700' : '400',
+                                                color: theme.primary,
+                                                opacity: 0.5 + (w.value / maxVal) * 0.5,
+                                                margin: 4,
+                                            }}
+                                        >
+                                            {w.text}
+                                        </Text>
+                                    );
+                                })
+                            ) : (
+                                <Text style={[typography.body, { color: theme.textTertiary }]}>No word data available</Text>
+                            )}
+                        </View>
+                    </View>
+                )}
             </ScrollView>
         </View>
     );
@@ -174,5 +224,10 @@ const styles = StyleSheet.create({
     userRow: {
         flexDirection: 'row', alignItems: 'center', padding: spacing.base,
         borderRadius: borderRadius.lg, borderWidth: 1, marginBottom: spacing.md,
+    },
+    wordCloud: {
+        flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center',
+        padding: spacing.base, borderRadius: borderRadius.lg, borderWidth: 1, marginBottom: spacing.md,
+        minHeight: 150,
     },
 });

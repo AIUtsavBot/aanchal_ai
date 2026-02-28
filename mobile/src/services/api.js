@@ -202,6 +202,22 @@ export async function queryAgent({ motherId, query, useContext = true, language 
 
 // ==================== ADMIN API ====================
 export const adminAPI = {
+    async getStats() {
+        const res = await api.get('/api/admin/stats');
+        return res.data;
+    },
+    async getMetrics() {
+        const res = await api.get('/api/admin/metrics');
+        return res.data;
+    },
+    async getFullData() {
+        const res = await api.get('/api/admin/full');
+        return res.data;
+    },
+    async getSantanRakshaStats() {
+        const res = await api.get('/api/admin/santanraksha-stats');
+        return res.data;
+    },
     async getDoctors() {
         const res = await api.get('/admin/doctors');
         return res.data;
