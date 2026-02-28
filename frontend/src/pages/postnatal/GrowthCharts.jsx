@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { postnatalAPI } from '../../services/api';
 import { TrendingUp, Weight, Ruler, Activity, AlertTriangle, CheckCircle, Plus, Loader } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { showToast } from '../../utils/FixedPatterns';
 import './PostnatalPages.css';
 
 // WHO Z-score thresholds
@@ -120,7 +121,7 @@ export const GrowthCharts = ({ ashaWorkerId }) => {
             }
         } catch (err) {
             console.error('Error saving record:', err);
-            alert('Failed to save record: ' + err.message);
+            showToast('Failed to save record: ' + err.message, 'error');
         } finally {
             setSaving(false);
         }

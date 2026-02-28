@@ -80,8 +80,8 @@ async def get_current_user(authorization: Optional[str] = Header(None)):
     Unauthenticated requests get read-only MOTHER role (least privilege).
     """
     if not authorization:
-        logger.debug("No authorization header — assigning read-only MOTHER role")
-        return {"user_id": "anonymous", "role": "MOTHER"}
+        logger.debug("No authorization header provided")
+        raise HTTPException(status_code=401, detail="Unauthorized")
     
     try:
         # Try custom format: user_id:xxx,role:yyy
@@ -112,11 +112,11 @@ async def get_current_user(authorization: Optional[str] = Header(None)):
             except Exception as auth_err:
                 logger.warning(f"Supabase token validation failed: {auth_err}")
         
-        # Token present but couldn't validate — read-only access
-        return {"user_id": "unknown", "role": "MOTHER"}
+        logger.debug("Token present but couldn't validate")
+        raise HTTPException(status_code=401, detail="Invalid token")
     except Exception as e:
         logger.error(f"Error parsing authorization: {e}")
-        return {"user_id": "unknown", "role": "MOTHER"}
+        raise HTTPException(status_code=401, detail="Unauthorized")
 
 
 # ==================== PYDANTIC MODELS ====================

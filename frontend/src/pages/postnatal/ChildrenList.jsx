@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { postnatalAPI } from '../../services/api';
 import { Search, Plus, User, Calendar, Weight, Ruler, Activity, ChevronRight, Baby, UserPlus, X } from 'lucide-react';
+import { showToast } from '../../utils/FixedPatterns';
 import './PostnatalPages.css';
 
 export const ChildrenList = ({ ashaWorkerId }) => {
@@ -48,14 +49,14 @@ export const ChildrenList = ({ ashaWorkerId }) => {
 
     const handleRegisterChild = async () => {
         if (!newChild.name || !newChild.mother_id || !newChild.birth_date) {
-            alert('Please fill in all required fields');
+            showToast('Please fill in all required fields', 'error');
             return;
         }
 
         try {
             const response = await postnatalAPI.registerChild(newChild);
             if (response) {
-                alert('Child registered successfully!');
+                showToast('Child registered successfully!', 'success');
                 setShowAddForm(false);
                 setNewChild({
                     name: '',
@@ -68,7 +69,7 @@ export const ChildrenList = ({ ashaWorkerId }) => {
             }
         } catch (err) {
             console.error('Error registering child:', err);
-            alert('Failed to register child. Please try again.');
+            showToast('Failed to register child. Please try again.', 'error');
         }
     };
 

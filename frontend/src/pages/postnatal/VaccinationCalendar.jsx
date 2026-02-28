@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { postnatalAPI } from '../../services/api'; // Use centralized API
 import { Calendar, Check, AlertCircle, Clock, Syringe, ChevronRight, Info, Loader } from 'lucide-react';
+import { showToast } from '../../utils/FixedPatterns';
 import './PostnatalPages.css';
 
 // IAP 2023 Vaccination Schedule
@@ -100,7 +101,7 @@ export const VaccinationCalendar = ({ ashaWorkerId }) => {
 
         } catch (err) {
             console.error('Error marking vaccine done:', err);
-            alert('Failed to update vaccination status');
+            showToast('Failed to update vaccination status', 'error');
         } finally {
             setSavingVaccine(null);
         }

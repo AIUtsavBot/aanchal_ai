@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { AlertCircle, Phone, MapPin, CheckCircle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { SYMPTOMS } from '../utils/constants'
+import { showToast } from '../utils/FixedPatterns';
 
 export default function Emergency() {
   const { t } = useTranslation()
@@ -21,7 +22,7 @@ export default function Emergency() {
   const handleSubmit = (e) => {
     e.preventDefault()
     if (selectedSymptoms.length === 0 || !motherName || !location) {
-      alert('Please fill all required fields')
+      showToast('Please fill all required fields', 'error')
       return
     }
     setSubmitted(true)

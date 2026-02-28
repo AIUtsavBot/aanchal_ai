@@ -24,3 +24,13 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     </QueryClientProvider>
   </React.StrictMode>,
 )
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').then((registration) => {
+      console.log('✅ PWA ServiceWorker registration successful:', registration.scope);
+    }, (err) => {
+      console.log('❌ PWA ServiceWorker registration failed: ', err);
+    });
+  });
+}

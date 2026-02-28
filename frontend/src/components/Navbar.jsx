@@ -28,7 +28,7 @@ export default function Navbar() {
       location.pathname === '/asha' || location.pathname === '/doctor/dashboard')
 
   return (
-    <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-xl">
+    <nav aria-label="Main Navigation" className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-xl">
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-3">
@@ -47,6 +47,8 @@ export default function Navbar() {
               <div className="flex bg-white/20 rounded-lg p-1 mr-4">
                 <button
                   onClick={() => setCurrentView('pregnancy')}
+                  aria-pressed={currentView === 'pregnancy'}
+                  aria-label="Switch to Pregnancy View"
                   className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${currentView === 'pregnancy'
                     ? 'bg-white text-blue-600 shadow-sm'
                     : 'text-white/80 hover:text-white'
@@ -56,6 +58,8 @@ export default function Navbar() {
                 </button>
                 <button
                   onClick={() => setCurrentView('postnatal')}
+                  aria-pressed={currentView === 'postnatal'}
+                  aria-label="Switch to Postnatal View"
                   className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${currentView === 'postnatal'
                     ? 'bg-white text-green-600 shadow-sm'
                     : 'text-white/80 hover:text-white'
@@ -92,6 +96,7 @@ export default function Navbar() {
                 <span className="text-white/90 text-sm">{user?.full_name || user?.email}</span>
                 <button
                   onClick={handleSignOut}
+                  aria-label="Sign Out"
                   className="px-3 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm"
                 >
                   Sign Out
@@ -106,6 +111,6 @@ export default function Navbar() {
           </div>
         </div>
       </div>
-    </div>
+    </nav>
   )
 }

@@ -452,6 +452,27 @@ async def lifespan(app: FastAPI):
         logger.info("✅ Health check dependencies injected")
     except ImportError:
         logger.warning("⚠️  Health check routes not loaded")
+        
+    # Start APScheduler Background Cron Jobs for Daily/Weekly AI Automation
+    scheduler = None
+    try:
+        from apscheduler.schedulers.asyncio import AsyncIOScheduler
+        from scheduler import run_weekly_assessments, check_milestone_reminders, check_vaccination_reminders, send_daily_reminders
+        
+        scheduler = AsyncIOScheduler()
+        # Monday at 09:00 AM
+        scheduler.add_job(run_weekly_assessments, 'cron', day_of_week='mon', hour=9)
+        # Daily at 10:00 AM
+        scheduler.add_job(check_milestone_reminders, 'cron', hour=10)
+        # Daily at 09:30 AM
+        scheduler.add_job(check_vaccination_reminders, 'cron', hour=9, minute=30)
+        # Daily at 08:00 AM
+        scheduler.add_job(send_daily_reminders, 'cron', hour=8)
+        
+        scheduler.start()
+        logger.info("✅ APScheduler active: Trimester AI Check-ins & Reminders loaded")
+    except Exception as e:
+        logger.warning(f"⚠️  APScheduler AI automation failed to load: {e}")
     
     yield
     
@@ -461,20 +482,37 @@ async def lifespan(app: FastAPI):
     
     await stop_telegram_bot()
     
+    if scheduler:
+        scheduler.shutdown(wait=False)
+        logger.info("🛑 APScheduler Cron Tasks stopped")
+    
     logger.info("✅ Shutdown complete")
     logger.info("=" * 60)
 
 
 # ==================== CREATE FASTAPI APP ====================
 # Mount enhanced API router
-# Mount enhanced API router
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+
+# Initialize SlowAPI limiter (100 requests per minute globally)
+limiter = Limiter(key_func=get_remote_address, default_limits=["100/minute"])
+
 try:
     from routes.enhanced_routes import router as enhanced_router
     app = FastAPI(title="MatruRaksha AI Backend", lifespan=lifespan)
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+    app.add_middleware(SlowAPIMiddleware)
     app.include_router(enhanced_router)
 except ImportError:
     logger.warning("⚠️  Enhanced API router not available")
     app = FastAPI(title="MatruRaksha AI Backend", lifespan=lifespan)
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+    app.add_middleware(SlowAPIMiddleware)
 
 # Mount Vapi AI Calling routes
 try:
@@ -1209,34 +1247,10 @@ def get_mother(mother_id: str):
 
 # ==================== DOCUMENT ANALYSIS ENDPOINTS ====================
 
-@app.post("/analyze-report")
-async def analyze_report(request: DocumentAnalysisRequest, background_tasks: BackgroundTasks):
-    """Analyze uploaded medical report using Gemini AI"""
+async def process_report_analysis_bg(request: DocumentAnalysisRequest, mother_data: dict):
+    """Background task to process report analysis without blocking the main event loop."""
     try:
-        logger.info(f"🔍 Analyzing report {request.report_id} for mother {request.mother_id}")
-        
-        if not supabase:
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Supabase not connected"
-            )
-        
-        # Get mother data
-        mother_result = supabase.table("mothers").select("*").eq("id", request.mother_id).execute()
-        
-        if not mother_result.data:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Mother not found"
-            )
-        
-        mother_data = mother_result.data[0]
-        
-        # Update report status to processing
-        supabase.table("medical_reports").update({
-            "analysis_status": "processing"
-        }).eq("id", request.report_id).execute()
-        
+        from services.document_analyzer import analyze_document_with_gemini
         # Perform Gemini AI analysis
         analysis_result = analyze_document_with_gemini(
             request.file_url,
@@ -1257,7 +1271,8 @@ async def analyze_report(request: DocumentAnalysisRequest, background_tasks: Bac
             update_data["extracted_metrics"] = extracted_data
         
         # Update medical_reports table
-        report_update = supabase.table("medical_reports").update(update_data).eq("id", request.report_id).execute()
+        if supabase:
+            supabase.table("medical_reports").update(update_data).eq("id", request.report_id).execute()
         
         logger.info(f"✅ Report analysis completed: {analysis_result.get('status')}")
         
@@ -1294,30 +1309,59 @@ async def analyze_report(request: DocumentAnalysisRequest, background_tasks: Bac
                 logger.info("✅ Alert sent to Telegram")
             except Exception as telegram_error:
                 logger.error(f"⚠️  Telegram notification failed: {telegram_error}")
-        
-        return {
-            "success": True,
-            "message": "Report analyzed successfully",
-            "status": analysis_result.get("status"),
-            "risk_level": analysis_result.get("risk_level"),
-            "concerns": analysis_result.get("concerns", []),
-            "recommendations": analysis_result.get("recommendations", []),
-            "analysis": analysis_result
-        }
-    
+                
     except Exception as e:
-        logger.error(f"❌ Report analysis error: {e}", exc_info=True)
-        
+        logger.error(f"❌ Background report analysis error: {e}", exc_info=True)
         # Update status to error
         if supabase:
             supabase.table("medical_reports").update({
                 "analysis_status": "error",
                 "error_message": str(e)
             }).eq("id", request.report_id).execute()
+
+
+@app.post("/analyze-report")
+async def analyze_report(request: DocumentAnalysisRequest, background_tasks: BackgroundTasks):
+    """Analyze uploaded medical report using Gemini AI (Runs in Background Queue)"""
+    try:
+        logger.info(f"🔍 Enqueuing report {request.report_id} analysis for mother {request.mother_id}")
         
+        if not supabase:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Supabase not connected"
+            )
+        
+        # Get mother data
+        mother_result = supabase.table("mothers").select("*").eq("id", request.mother_id).execute()
+        
+        if not mother_result.data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Mother not found"
+            )
+        
+        mother_data = mother_result.data[0]
+        
+        # Update report status to processing
+        supabase.table("medical_reports").update({
+            "analysis_status": "processing"
+        }).eq("id", request.report_id).execute()
+        
+        # Pass to background task queue to unblock the request thread
+        background_tasks.add_task(process_report_analysis_bg, request, mother_data)
+        
+        return {
+            "success": True,
+            "message": "Report analysis placed in background queue",
+            "status": "processing"
+        }
+    
+    except Exception as e:
+        logger.error(f"❌ Report enqueue error: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Analysis failed. Please try again later."
+            detail="Failed to enqueue analysis."
         )
 
 

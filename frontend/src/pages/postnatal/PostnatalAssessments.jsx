@@ -6,6 +6,7 @@ import {
     Plus, FileText, Calendar, Stethoscope, RefreshCw, ChevronDown,
     ChevronUp, Edit2, Save, X, UserPlus
 } from 'lucide-react';
+import { showToast } from '../../utils/FixedPatterns';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 const MAX_VISIBLE_ITEMS = 5;
@@ -306,7 +307,7 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
 
     const handleRegisterChild = async () => {
         if (!newChild.name || !newChild.mother_id || !newChild.birth_date || !newChild.gender) {
-            alert('Please fill all required fields');
+            showToast('Please fill all required fields', 'error');
             return;
         }
 

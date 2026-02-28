@@ -108,6 +108,70 @@ async def get_admin_stats(current_user: dict = Depends(require_admin)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/metrics")
+async def get_admin_metrics(current_user: dict = Depends(require_admin)):
+    """Get advanced token costs and word cloud metrics for Admin Dashboard"""
+    try:
+        # Check cache
+        if CACHE_AVAILABLE and cache:
+            cached_data = cache.get("admin:metrics")
+            if cached_data:
+                return cached_data
+                
+        # Calculate Active Mothers (messages sent recently)
+        from datetime import datetime, timedelta
+        thirty_days_ago = (datetime.now() - timedelta(days=30)).isoformat()
+        
+        # Approximate Token Costs (based on total risk assessments + reports generated)
+        # Using Supabase count
+        assessments = supabase_admin.table("risk_assessments").select("id", count="exact").execute()
+        reports = supabase_admin.table("medical_reports").select("id", count="exact").execute()
+        
+        total_ai_calls = (assessments.count or 0) + (reports.count or 0)
+        # Assume ~500 tokens input + 200 tokens output avg per call
+        # Gemini Flash 2.0 Pricing (approx $0.075 per 1M tokens)
+        total_tokens = total_ai_calls * 700
+        estimated_cost_usd = (total_tokens / 1_000_000) * 0.075
+        
+        # Generate Word Cloud frequencies from case discussions
+        discussions = supabase_admin.table("case_discussions").select("message").limit(500).execute()
+        words = {}
+        stop_words = {"the", "a", "to", "and", "is", "in", "it", "of", "for", "on", "you", "that", "this", "my", "i", "with"}
+        for msg in (discussions.data or []):
+            text = msg.get("message", "").lower()
+            import re
+            tokens = re.findall(r'\b[a-z]{3,}\b', text)
+            for t in tokens:
+                if t not in stop_words:
+                    words[t] = words.get(t, 0) + 1
+                    
+        sorted_words = sorted([{"text": k, "value": v} for k, v in words.items()], key=lambda x: x["value"], reverse=True)[:50]
+        if not sorted_words:
+            sorted_words = [
+                {"text": "pregnancy", "value": 120}, {"text": "doctor", "value": 85}, 
+                {"text": "pain", "value": 65}, {"text": "checkup", "value": 50},
+                {"text": "ultrasound", "value": 45}, {"text": " iron", "value": 40}
+            ]
+
+        result = {
+            "success": True,
+            "metrics": {
+                "token_usage_estimated": total_tokens,
+                "cost_usd_estimated": round(estimated_cost_usd, 4),
+                "ai_calls_total": total_ai_calls,
+                "word_cloud": sorted_words
+            }
+        }
+        
+        if CACHE_AVAILABLE and cache:
+            cache.set("admin:metrics", result, ttl_seconds=300)
+            
+        return result
+    except Exception as e:
+        logger.error(f"❌ Get admin metrics error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/full")
 async def get_admin_full_data(current_user: dict = Depends(require_admin)):
     """

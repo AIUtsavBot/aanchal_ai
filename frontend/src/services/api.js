@@ -472,6 +472,12 @@ export const adminAPI = {
     return res
   },
 
+  // Get admin advanced metrics (Tokens, Costs, Word Cloud)
+  getMetrics: async () => {
+    const res = await api.get('/api/admin/metrics')
+    return res
+  },
+
   // ==================== SantanRaksha (Children) ====================
 
   // Get all children with mother info

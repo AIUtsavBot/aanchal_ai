@@ -406,7 +406,7 @@ class HybridRAGService:
     def retrieve_similar_cases(
         self,
         query: str,
-        top_k: int = 5,
+        top_k: int = 3,
         age_range: Optional[Tuple[int, int]] = None,
         risk_level: Optional[str] = None,
         bp_range: Optional[Tuple[int, int]] = None
@@ -473,7 +473,7 @@ class HybridRAGService:
         
         age_range = (max(10, age - 5), min(70, age + 5))
         
-        cases = self.retrieve_similar_cases(query=query, top_k=5, age_range=age_range)
+        cases = self.retrieve_similar_cases(query=query, top_k=3, age_range=age_range)
         
         if not cases:
             return "No similar historical cases found."

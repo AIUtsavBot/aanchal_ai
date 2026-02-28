@@ -10,6 +10,7 @@ export default function AdminDashboard() {
   const [ashaWorkers, setAshaWorkers] = useState([])
   const [mothers, setMothers] = useState([])
   const [children, setChildren] = useState([]) // Children from SantanRaksha
+  const [metrics, setMetrics] = useState(null) // Token and Cost metrics
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -44,12 +45,14 @@ export default function AdminDashboard() {
 
           // Also fetch SantanRaksha data (children + stats) - NOT included in /admin/full
           try {
-            const [childrenRes, santanStatsRes] = await Promise.all([
+            const [childrenRes, santanStatsRes, metricsRes] = await Promise.all([
               adminAPI.getChildren().catch(() => ({ data: { children: [] } })),
-              adminAPI.getSantanRakshaStats().catch(() => ({ data: { stats: {} } }))
+              adminAPI.getSantanRakshaStats().catch(() => ({ data: { stats: {} } })),
+              adminAPI.getMetrics().catch(() => ({ data: { metrics: {} } }))
             ])
             setChildren(childrenRes.data?.children || [])
             setSantanStats(santanStatsRes.data?.stats || {})
+            setMetrics(metricsRes.data?.metrics || null)
           } catch (childErr) {
             console.warn('Children data not loaded:', childErr.message)
           }
@@ -77,12 +80,14 @@ export default function AdminDashboard() {
 
       // Fetch SantanRaksha data (children + stats)
       try {
-        const [childrenRes, santanStatsRes] = await Promise.all([
+        const [childrenRes, santanStatsRes, metricsRes] = await Promise.all([
           adminAPI.getChildren().catch(() => ({ data: { children: [] } })),
-          adminAPI.getSantanRakshaStats().catch(() => ({ data: { stats: {} } }))
+          adminAPI.getSantanRakshaStats().catch(() => ({ data: { stats: {} } })),
+          adminAPI.getMetrics().catch(() => ({ data: { metrics: {} } }))
         ])
         setChildren(childrenRes.data?.children || [])
         setSantanStats(santanStatsRes.data?.stats || {})
+        setMetrics(metricsRes.data?.metrics || null)
       } catch (childErr) {
         console.warn('Children data not loaded:', childErr.message)
       }
@@ -403,7 +408,7 @@ export default function AdminDashboard() {
         {/* Tab Navigation */}
         <div className="bg-white rounded-xl shadow-sm mb-6">
           <div className="flex border-b overflow-x-auto">
-            {['overview', 'doctors', 'asha', 'mothers', 'children'].map(tab => (
+            {['overview', 'analytics', 'doctors', 'asha', 'mothers', 'children'].map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -412,7 +417,7 @@ export default function AdminDashboard() {
                   : 'text-gray-500 hover:text-gray-700'
                   }`}
               >
-                {tab === 'asha' ? 'ASHA Workers' : tab === 'children' ? '👶 Children' : tab.charAt(0).toUpperCase() + tab.slice(1)}
+                {tab === 'asha' ? 'ASHA Workers' : tab === 'children' ? '👶 Children' : tab === 'analytics' ? '📈 Analytics' : tab.charAt(0).toUpperCase() + tab.slice(1)}
               </button>
             ))}
           </div>
@@ -569,6 +574,55 @@ export default function AdminDashboard() {
                       <h5 className="font-semibold text-blue-800">Refresh Data</h5>
                       <p className="text-sm text-blue-600">Sync latest information</p>
                     </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Analytics Tab */}
+            {activeTab === 'analytics' && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="font-semibold text-lg mb-4">📈 AI Token & Cost Analytics</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="bg-indigo-50 p-4 rounded-lg text-center border border-indigo-200">
+                      <p className="text-3xl font-bold text-indigo-600">
+                        {metrics?.token_usage_estimated?.toLocaleString() || 0}
+                      </p>
+                      <p className="text-sm text-indigo-700">Estimated Tokens</p>
+                    </div>
+                    <div className="bg-yellow-50 p-4 rounded-lg text-center border border-yellow-200">
+                      <p className="text-3xl font-bold text-yellow-600">
+                        ${metrics?.cost_usd_estimated?.toFixed(4) || "0.0000"}
+                      </p>
+                      <p className="text-sm text-yellow-700">Estimated USD Cost</p>
+                    </div>
+                    <div className="bg-green-50 p-4 rounded-lg text-center border border-green-200">
+                      <p className="text-3xl font-bold text-green-600">
+                        {metrics?.ai_calls_total?.toLocaleString() || 0}
+                      </p>
+                      <p className="text-sm text-green-700">Total AI Inferences</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Word Cloud */}
+                <div className="bg-white border rounded-lg p-4 mt-6">
+                  <h4 className="font-semibold text-gray-800 mb-3">🗣️ Common Risk Topics (Word Cloud)</h4>
+                  <div className="flex flex-wrap gap-2 p-4 bg-gray-50 rounded-lg min-h-[200px] items-center justify-center">
+                    {!metrics?.word_cloud ? (
+                      <p className="text-gray-400">Loading words...</p>
+                    ) : (
+                      metrics.word_cloud.map((w, idx) => (
+                        <span
+                          key={idx}
+                          className="px-3 py-1 bg-white border border-gray-200 shadow-sm rounded-full text-indigo-600 font-medium whitespace-nowrap"
+                          style={{ fontSize: `${Math.max(0.8, Math.min(2, w.value / 10))}rem`, opacity: Math.max(0.5, Math.min(1, w.value / 20)) }}
+                        >
+                          {w.text} <span className="text-xs text-gray-400 ml-1">({w.value})</span>
+                        </span>
+                      ))
+                    )}
                   </div>
                 </div>
               </div>
@@ -857,8 +911,8 @@ export default function AdminDashboard() {
                               <td className="px-4 py-3 text-gray-600">{mother.location || '-'}</td>
                               <td className="px-4 py-3">
                                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${mother.delivery_status === 'pregnant' ? 'bg-pink-100 text-pink-700' :
-                                    mother.delivery_status === 'delivered' ? 'bg-green-100 text-green-700' :
-                                      'bg-gray-100 text-gray-600'
+                                  mother.delivery_status === 'delivered' ? 'bg-green-100 text-green-700' :
+                                    'bg-gray-100 text-gray-600'
                                   }`}>
                                   {mother.delivery_status === 'pregnant' ? '🤰 Pregnant' :
                                     mother.delivery_status === 'delivered' ? '✅ Delivered' :

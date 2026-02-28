@@ -1127,6 +1127,11 @@ async def cancel_registration(update: Update, context: ContextTypes.DEFAULT_TYPE
     return ConversationHandler.END
 
 # === Minimal text handler to satisfy imports ===
+# --- Global Query Cache to save tokens for identical/frequent questions ---
+import time
+_query_cache = {}  # { "text": (reply, timestamp) }
+CACHE_TTL = 3600 * 24  # 24 hours
+
 async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = (update.message.text or "").strip()
     if text.startswith("/"):
@@ -1354,6 +1359,28 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
         return
     
     # Normal AI agent flow with INTELLIGENT MEMORY
+    
+    # -------------------------------------------------------------
+    # FAST-PATH: Gemini Query Caching!
+    # If the exact same question was asked recently by anyone, 
+    # and no special conversation context is needed, return instantly!
+    # -------------------------------------------------------------
+    cache_key = text.lower().strip()
+    if not skip_ai_response and not is_emergency:
+        cached_data = _query_cache.get(cache_key)
+        if cached_data:
+            reply, ts = cached_data
+            if time.time() - ts < CACHE_TTL:
+                logger.info(f"⚡ FAST-PATH CACHE HIT! Returning instant answer for: {cache_key[:30]}...")
+                try:
+                    await update.message.reply_text(reply)
+                    await save_chat_history(mother_id, "agent_response", reply, telegram_chat_id=chat_id)
+                except Exception:
+                    pass
+                return
+            else:
+                del _query_cache[cache_key]
+    
     try:
         reports = await get_recent_reports_for_mother(mother.get('id')) if (mother and callable(get_recent_reports_for_mother)) else []
     except Exception:
@@ -1381,6 +1408,16 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
         reply = await route_message(text, mother_context, reports)
         logger.info(f"✅ Agent reply generated successfully for: {text[:50]}")
         
+        # Save to fast-path cache if it's a generic educational question
+        # (Generic responses usually don't have extremely lengthy context)
+        if not conversation_context or not conversation_context.has_history:
+            _query_cache[cache_key] = (reply, time.time())
+            
+            # Prevent memory bloating
+            if len(_query_cache) > 2000:
+                oldest = min(_query_cache.keys(), key=lambda k: _query_cache[k][1])
+                del _query_cache[oldest]
+                
         # Store conversation for future memory (async, non-blocking)
         try:
             if CONVERSATION_MEMORY_AVAILABLE and extracted_info:

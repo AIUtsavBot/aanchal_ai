@@ -32,8 +32,8 @@ class DocumentAnalyzer:
             self.client = None
         else:
             self.client = gemini_client
-            self.model_name = 'gemini-2.5-flash'
-            logger.info("✅ Gemini model initialized")
+            self.model_name = 'gemini-2.0-flash'
+            logger.info("✅ Gemini Vision model initialized")
     
     async def analyze_document(self, file_bytes: bytes, filename: str, mother_id: str) -> Dict:
         """
