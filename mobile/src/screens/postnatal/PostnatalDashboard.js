@@ -12,7 +12,7 @@ const sections = [
     { key: 'GrowthCharts', icon: 'trending-up-outline', color: '#10B981', title: 'Growth Charts', desc: 'WHO z-score tracking' },
     { key: 'VaccinationCalendar', icon: 'calendar-outline', color: '#3B82F6', title: 'Vaccination Calendar', desc: 'IAP 2023 schedule' },
     { key: 'MilestonesTracker', icon: 'flag-outline', color: '#F97316', title: 'Milestones Tracker', desc: 'Developmental milestones' },
-    { key: 'PostnatalAssessments', icon: 'clipboard-outline', color: '#8B5CF6', title: 'New Assessment', desc: 'Create mother & child health checks' },
+    { key: 'PostnatalAssessments', icon: 'clipboard-outline', color: '#0d9488', title: 'New Assessment', desc: 'Create mother & child health checks' },
 ];
 
 export default function PostnatalDashboardScreen({ navigation }) {

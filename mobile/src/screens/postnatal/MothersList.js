@@ -147,11 +147,11 @@ export default function MothersListScreen({ navigation }) {
                         {expandedMother === m.id && (
                             <View style={[styles.optionsRow, { borderTopColor: theme.border }]}>
                                 <TouchableOpacity
-                                    style={[styles.optionBtn, { backgroundColor: '#8B5CF615' }]}
+                                    style={[styles.optionBtn, { backgroundColor: '#0d948815' }]}
                                     onPress={() => navigation.navigate('AssessmentHistory', { motherId: m.id })}
                                 >
-                                    <Ionicons name="clipboard-outline" size={18} color="#8B5CF6" />
-                                    <Text style={[styles.optionText, { color: '#8B5CF6' }]}>Assessments</Text>
+                                    <Ionicons name="clipboard-outline" size={18} color="#0d9488" />
+                                    <Text style={[styles.optionText, { color: '#0d9488' }]}>Assessments</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     style={[styles.optionBtn, { backgroundColor: '#3B82F615' }]}

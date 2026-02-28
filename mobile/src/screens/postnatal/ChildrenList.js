@@ -147,9 +147,9 @@ export default function ChildrenListScreen({ navigation }) {
                                         <Ionicons name="flag-outline" size={18} color="#F97316" />
                                         <Text style={[styles.optionText, { color: '#F97316' }]}>Milestones</Text>
                                     </TouchableOpacity>
-                                    <TouchableOpacity style={[styles.optionBtn, { backgroundColor: '#8B5CF615' }]} onPress={() => navigation.navigate('AssessmentHistory', { childId: c.id, motherId: c.mother_id })}>
-                                        <Ionicons name="clipboard-outline" size={18} color="#8B5CF6" />
-                                        <Text style={[styles.optionText, { color: '#8B5CF6' }]}>Assessments</Text>
+                                    <TouchableOpacity style={[styles.optionBtn, { backgroundColor: '#0d948815' }]} onPress={() => navigation.navigate('AssessmentHistory', { childId: c.id, motherId: c.mother_id })}>
+                                        <Ionicons name="clipboard-outline" size={18} color="#0d9488" />
+                                        <Text style={[styles.optionText, { color: '#0d9488' }]}>Assessments</Text>
                                     </TouchableOpacity>
                                 </View>
                             )}

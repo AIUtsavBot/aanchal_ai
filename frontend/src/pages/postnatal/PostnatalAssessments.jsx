@@ -393,7 +393,7 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
         }
 
         // Type-based styling
-        const typeColor = type === 'mother' ? 'purple' : 'blue';
+        const typeColor = type === 'mother' ? 'teal' : 'blue';
         const typeBg = type === 'mother' ? 'bg-teal-50' : 'bg-blue-50';
         const typeBorder = type === 'mother' ? 'border-teal-100' : 'border-blue-100';
 

@@ -24,7 +24,7 @@ export default function NotificationsScreen() {
         switch (type) {
             case 'alert': return { icon: 'warning', color: '#EF4444' };
             case 'calendar': return { icon: 'calendar', color: '#3B82F6' };
-            default: return { icon: 'information-circle', color: '#8B5CF6' };
+            default: return { icon: 'information-circle', color: '#0d9488' };
         }
     };
 

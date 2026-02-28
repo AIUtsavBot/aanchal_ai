@@ -89,7 +89,7 @@ export default function HomeScreen({ navigation }) {
                         {[
                             { icon: 'warning-outline', color: '#DC2626', text: 'Fragmented medical records' },
                             { icon: 'document-text-outline', color: '#D97706', text: 'Reports are unanalyzed PDFs' },
-                            { icon: 'shield-checkmark-outline', color: '#4F46E5', text: 'No proactive alerts' },
+                            { icon: 'shield-checkmark-outline', color: '#0d9488', text: 'No proactive alerts' },
                             { icon: 'people-outline', color: '#059669', text: 'High workload for ASHAs' },
                         ].map((item, i) => (
                             <View key={i} style={styles.problemItem}>
@@ -143,7 +143,7 @@ export default function HomeScreen({ navigation }) {
                     {[
                         { icon: 'chatbubble-outline', color: '#DB2777', title: 'Mothers', desc: 'Health reminders & summaries' },
                         { icon: 'people-outline', color: '#059669', title: 'ASHAs', desc: 'Automated tasks & simplified workflows' },
-                        { icon: 'business-outline', color: '#4F46E5', title: 'Clinics / Govt', desc: 'Population-level monitoring' },
+                        { icon: 'business-outline', color: '#0d9488', title: 'Clinics / Govt', desc: 'Population-level monitoring' },
                     ].map((a, i) => (
                         <View key={i} style={[styles.audienceCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
                             <View style={styles.audienceHeader}>
@@ -178,10 +178,10 @@ export default function HomeScreen({ navigation }) {
                 <SectionTitle title="Why Aanchal AI Wins" />
                 <View style={[styles.contentCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
                     {[
-                        { icon: 'git-network-outline', color: '#4F46E5', text: 'Multi-agent orchestration' },
+                        { icon: 'git-network-outline', color: '#0d9488', text: 'Multi-agent orchestration' },
                         { icon: 'sparkles-outline', color: '#DB2777', text: 'Report intelligence powered by Gemini' },
                         { icon: 'chatbubble-outline', color: '#059669', text: 'Chat-first UX lowers literacy barriers' },
-                        { icon: 'shield-checkmark-outline', color: '#4F46E5', text: 'Designed for Bharat-scale healthcare' },
+                        { icon: 'shield-checkmark-outline', color: '#0d9488', text: 'Designed for Bharat-scale healthcare' },
                     ].map((item, i) => (
                         <View key={i} style={styles.advantageItem}>
                             <Ionicons name={item.icon} size={16} color={item.color} />

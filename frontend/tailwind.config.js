@@ -6,11 +6,11 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: '#7c3aed',
+        primary: '#0d9488',
         secondary: '#06b6d4',
         accent: '#ec4899',
         'glass-bg': 'rgba(255, 255, 255, 0.55)',
-        'glass-border': 'rgba(180, 170, 220, 0.25)',
+        'glass-border': 'rgba(13, 148, 136, 0.15)',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],

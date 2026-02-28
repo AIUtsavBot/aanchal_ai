@@ -18,7 +18,7 @@ const symptoms = [
 const emergencyContacts = [
     { name: 'Ambulance', number: '102', icon: 'car-outline', color: '#EF4444' },
     { name: 'Emergency', number: '112', icon: 'call-outline', color: '#F97316' },
-    { name: 'Women Helpline', number: '181', icon: 'people-outline', color: '#8B5CF6' },
+    { name: 'Women Helpline', number: '181', icon: 'people-outline', color: '#0d9488' },
 ];
 
 export default function EmergencyScreen() {
