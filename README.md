@@ -11,9 +11,10 @@
 By leveraging Artificial Intelligence (Google Gemini 2.0 Flash), real-time data analytics, and a multi-channel approach (Web + Telegram + Voice), Aanchal AI ensures no mother or child is left behind.
 
 ![Status](https://img.shields.io/badge/Status-Production_Ready-success)
-![Version](https://img.shields.io/badge/Version-1.2.0-blue)
+![Version](https://img.shields.io/badge/Version-2.0.0-blue)
 ![License](https://img.shields.io/badge/License-MIT-purple)
 ![Stack](https://img.shields.io/badge/Stack-FastAPI%20|%20React%20|%20Supabase%20|%20Gemini-orange)
+![PWA](https://img.shields.io/badge/PWA-Offline_Ready-brightgreen)
 
 ---
 
@@ -26,6 +27,8 @@ By leveraging Artificial Intelligence (Google Gemini 2.0 Flash), real-time data 
 * **Profile Completion Flow**: Intelligent flow for new social logins to capture critical medical/role details.
 * **Admin Approval Strategy**: Strict verification process for healthcare professionals (ID & Certificate checks).
 * **Sanitized Error Responses**: All API errors are sanitized to prevent internal detail leakage.
+* **API Rate Limiting**: Global rate limiting (100 req/min) via `slowapi` to prevent abuse and DDoS.
+* **Fernet Password Encryption**: Registration passwords are encrypted with a cryptographically secure Fernet key.
 
 ### 🤖 Intelligent AI Agent Swarm (Powered by Gemini)
 
@@ -57,27 +60,43 @@ The system employs **10 specialized agents** orchestrated to handle specific hea
 * **Voice-First Interface**:
   * **Speech-to-Text**: Users can send voice notes which are transcribed by Gemini.
   * **Text-to-Speech**: AI replies with audio messages (with language detection) for accessibility.
-* **Document Analysis**: Upload medical reports (PDF/Images) directly in chat for instant AI summarization and risk flagging.
+* **Document Analysis**: Upload medical reports (PDF/Images) directly in chat for instant AI summarization and risk flagging via **Gemini 2.0 Flash Vision**.
 * **Multi-Profile Management**: ASHAs can manage multiple mothers from a single Telegram account.
 * **Postnatal Context**: Bot automatically includes child data (vaccinations, growth, assessments) for delivered mothers.
+* **Global Query Caching**: Identical questions from different mothers are served instantly from an in-memory TTL cache, cutting Gemini API costs.
+* **Daily User Throttling**: 20-message-per-day rate limit per user to prevent abuse.
 
 ### 📊 Comprehensive Dashboards
 
 * **Admin Panel**:
-  * **Mothers Tab**: Track delivery status, risk levels, and due dates.
+  * **Overview**: Quick summary stats — fully assigned, needs assignment, active doctors/ASHAs.
+  * **📈 Analytics Tab**: AI Token usage estimates, USD cost tracker, and a **Word Cloud** of common risk topics from case discussions.
+  * **Mothers Tab**: Track delivery status, risk levels, and due dates with inline ASHA/Doctor assignment.
   * **Children Tab**: Manage pediatric records, growth charts, and vaccinations.
   * **User Management**: Approve/Reject doctor and ASHA registrations.
-  * **Analytics**: Overview stats on total registered patients and high-risk cases.
 * **ASHA Dashboard**:
   * **Vaccination Calendar**: IAP 2023 schedule with Mark Done tracking per child.
   * **Postnatal Assessments**: Record mother & child health check-ins.
   * **Growth Monitoring**: Record weight/height/HC with WHO z-score calculations.
 
+### 🤖 Proactive AI & Automation
+
+* **APScheduler Background Cron Jobs**: Automated daily and weekly AI-driven tasks integrated into the FastAPI lifespan:
+  * **Weekly Assessments** — Monday 09:00 AM
+  * **Milestone Reminders** — Daily 10:00 AM
+  * **Vaccination Reminders** — Daily 09:30 AM
+  * **Daily Check-in Reminders** — Daily 08:00 AM
+* **Async Document Processing**: Medical report analysis runs via FastAPI `BackgroundTasks` so the main thread stays responsive.
+
+### 📱 Progressive Web App (PWA)
+
+* **Installable**: Rural ASHA workers can "Add to Home Screen" on any mobile device for a native-app-like experience.
+* **Offline Support**: Service Worker caches static assets so the dashboard remains accessible even without internet.
+* **Accessible**: ADA-compliant ARIA labels on all navigation elements for screen reader support.
+
 ---
 
 ## 🏗️ System Architecture
-
-Aanchal AI acts as the central brain, orchestrating data flow between users and intelligent services.
 
 ```mermaid
 graph TD
@@ -89,15 +108,16 @@ graph TD
     end
 
     subgraph "Frontend Layer"
-        WebPC["React Web Portal"]
+        WebPC["React PWA (Offline-Ready)"]
         Telegram["Telegram Bot (Voice/Chat)"]
     end
 
     subgraph "Aanchal AI Core"
-        API["FastAPI Gateway"]
+        API["FastAPI Gateway + Rate Limiting"]
         Orch["Agent Orchestrator"]
         Memory["Conversation Memory (pgvector)"]
         Validator["Response Validator"]
+        Scheduler["APScheduler (Cron Jobs)"]
         
         subgraph "AI Agents (10)"
             Maternal["MatruRaksha Agents (6)"]
@@ -109,6 +129,7 @@ graph TD
         DB[("Supabase PostgreSQL")]
         Gemini["Google Gemini 2.0 Flash"]
         Vapi["Vapi.ai (Voice Calls)"]
+        Cache["In-Memory Cache + LRU"]
     end
 
     %% Flows
@@ -132,6 +153,8 @@ graph TD
     API --> DB
     Memory --> DB
     Orch --> Vapi
+    Scheduler --> API
+    API --> Cache
 ```
 
 ---
@@ -142,11 +165,14 @@ graph TD
 |-----------|------------|-------------|
 | **AI Core** | **Google Gemini 2.0 Flash** | Multimodal LLM for reasoning, voice, and vision |
 | **Backend** | Python 3.12, FastAPI | High-performance async API with Pydantic validation |
-| **Frontend** | React 18, Vite | Responsive dashboards with Recharts for data viz |
-| **Database** | Supabase (PostgreSQL + pgvector) | Managed DB with Auth, Storage, and Vector capabilities |
+| **Frontend** | React 18, Vite | Responsive PWA dashboards with Recharts |
+| **Database** | Supabase (PostgreSQL + pgvector) | Managed DB with Auth, Storage, and Vector search |
 | **Messaging** | Telegram Bot API | Accessible interface for rural adoption |
 | **Voice** | gTTS / Vapi.ai | Voice synthesis and telephony integration |
 | **Caching** | Redis (optional) + In-memory LRU | API response caching and classification cache |
+| **Rate Limiting** | slowapi | Global 100 req/min protection against abuse |
+| **Scheduling** | APScheduler | Background cron jobs for automated AI check-ins |
+| **Security** | Fernet (cryptography) | Password encryption with proper key management |
 
 ---
 
@@ -154,7 +180,7 @@ graph TD
 
 ### 1. Requirements
 
-- Python 3.12+
+* Python 3.12+
 * Node.js 18+
 * Supabase Account
 * Google Gemini API Key
@@ -162,14 +188,32 @@ graph TD
 ### 2. Environment Setup
 
 Create `.env` files in `backend/` and `frontend/` directories.
+
 **Backend (.env):**
 
 ```env
 SUPABASE_URL=your_url
 SUPABASE_KEY=your_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 GEMINI_API_KEY=your_gemini_key
 TELEGRAM_BOT_TOKEN=your_bot_token
-PASSWORD_ENCRYPTION_KEY=your_encryption_key
+PASSWORD_ENCRYPTION_KEY=your_fernet_key
+BACKEND_URL=https://your-app.onrender.com
+USE_TELEGRAM_WEBHOOK=true
+```
+
+> **Tip:** Generate a proper Fernet key with:
+>
+> ```bash
+> python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+> ```
+
+**Frontend (.env):**
+
+```env
+VITE_API_URL=http://localhost:8000
+VITE_SUPABASE_URL=your_url
+VITE_SUPABASE_ANON_KEY=your_anon_key
 ```
 
 ### 3. Database Setup
@@ -199,40 +243,42 @@ npm install
 npm run dev
 ```
 
-**Scheduler (Optional):**
-To run the background scheduler for reminders:
-
-```bash
-cd backend
-python scheduler.py
-```
+The APScheduler cron jobs (daily reminders, vaccination alerts, weekly assessments) start automatically with the FastAPI server.
 
 ### 5. Running Tests
-
-**Unit Tests:**
 
 ```bash
 pytest backend/tests/
 ```
 
-**Integration/Script Tests:**
-
-```bash
-pytest backend/scripts/test_*.py
-```
-
 ### 6. Utility Scripts
 
-Useful maintenance scripts are located in `backend/scripts/`:
-* `check_users.py`: Verify user roles.
-* `fix_approved_users.py`: Fix approval status issues.
-* `verify_setup.py`: Check system configuration.
+Useful maintenance scripts in `backend/scripts/`:
+
+* `check_users.py` — Verify user roles
+* `fix_approved_users.py` — Fix approval status issues
+* `verify_setup.py` — Check system configuration
+* `reset_password.py` — Reset user passwords
+
+---
+
+## 🔒 Security
+
+| Feature | Implementation |
+|---------|---------------|
+| **API Rate Limiting** | `slowapi` — 100 requests/minute globally |
+| **CORS** | Scoped to known frontend origins only |
+| **Admin Auth** | All `/admin/*` routes guarded by `require_admin` dependency |
+| **Password Encryption** | Fernet symmetric encryption (not plaintext) |
+| **Error Sanitization** | No internal stack traces leaked to clients |
+| **Input Validation** | Pydantic models for all request bodies |
+| **Response Validation** | Clinical safety checks on all AI outputs |
 
 ---
 
 ## 📚 Documentation
 
-- [API Specification](docs/API_SPECIFICATION.md)
+* [API Specification](docs/API_SPECIFICATION.md)
 * [SantanRaksha (Child Health) Details](docs/SANTANRAKSHA.md)
 * [Architecture](docs/architecture.md)
 
