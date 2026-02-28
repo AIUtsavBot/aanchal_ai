@@ -150,15 +150,16 @@ export { cacheUser, getCachedUser, updateActivity, IDLE_TIMEOUT_MS, waitForSupab
  */
 class AuthService {
   _composeUser(base, profile) {
-    const metaRole = base?.user_metadata?.role || base?.app_metadata?.role
-    const resolvedRole = (profile?.role || metaRole || null)
+    const metaRole = base?.user_metadata?.role || base?.app_metadata?.role || null
+    const profileRole = profile?.role || null
+    const resolvedRole = profileRole || metaRole
     const normalizedRole = resolvedRole
       ? String(resolvedRole).toUpperCase()
       : null
 
     const composed = {
-      id: base?.id,
-      email: base?.email,
+      id: base?.id || null,
+      email: base?.email || profile?.email || null,
       role: normalizedRole,
       full_name: profile?.full_name || base?.user_metadata?.full_name || null,
       phone: profile?.phone || null,

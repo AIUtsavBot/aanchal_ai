@@ -131,6 +131,7 @@ class AuthService:
             import base64
             import hashlib
             
+
             # Use a dedicated encryption key for password storage
             # This MUST be set in environment variables - no hardcoded default
             key_source = os.getenv("PASSWORD_ENCRYPTION_KEY")
@@ -138,8 +139,10 @@ class AuthService:
                 raise ValueError("PASSWORD_ENCRYPTION_KEY environment variable is required for password encryption")
             key = base64.urlsafe_b64encode(hashlib.sha256(key_source.encode()).digest())
             fernet = Fernet(key)
-            encrypted_password = fernet.encrypt(password.encode()).decode()
-            logger.info(f"Password encrypted successfully for {email}")
+            encrypted_password = None
+            if password:
+                encrypted_password = fernet.encrypt(password.encode()).decode()
+                logger.info(f"Password encrypted successfully for {email}")
 
             payload = {
                 "email": email,
