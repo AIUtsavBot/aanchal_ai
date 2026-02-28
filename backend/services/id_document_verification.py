@@ -110,7 +110,26 @@ class IDDocumentVerificationService:
             if Image is None:
                 raise ImportError("PIL not installed")
             
-            image = Image.open(io.BytesIO(file_bytes))
+            # Check if this is a PDF by magic bytes or filename
+            is_pdf = filename.lower().endswith('.pdf') or file_bytes.startswith(b'%PDF')
+            
+            if is_pdf:
+                try:
+                    import fitz  # PyMuPDF
+                    # Open the PDF with PyMuPDF
+                    doc = fitz.open(stream=file_bytes, filetype="pdf")
+                    if doc.page_count == 0:
+                        raise ValueError("PDF is empty")
+                    # Render the first page to an image
+                    page = doc.load_page(0)
+                    pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
+                    img_bytes = pix.tobytes("png")
+                    image = Image.open(io.BytesIO(img_bytes))
+                except ImportError:
+                    logger.warning("PyMuPDF not found. Falling back to treating as generic image, which may fail.")
+                    image = Image.open(io.BytesIO(file_bytes))
+            else:
+                image = Image.open(io.BytesIO(file_bytes))
             
             # Multilingual ID parsing prompt
             prompt = """You are an expert document parser. Analyze this ID document image.

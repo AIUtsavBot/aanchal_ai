@@ -89,10 +89,7 @@ export const VaccinationCalendar = ({ ashaWorkerId, doctorId }) => {
             await postnatalAPI.recordVaccination({
                 child_id: selectedChild,
                 vaccine_name: vaccineName,
-                dose_number: 1, // Defaulting to 1 for now, logic needed for multi-dose
-                scheduled_date: today, // Should be actual scheduled date, but using today for now
-                administered_date: today,
-                status: 'completed',
+                given_date: today,
                 notes: 'Marked manually'
             });
 

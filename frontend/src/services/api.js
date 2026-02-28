@@ -603,7 +603,7 @@ export const postnatalAPI = {
    * @param {object} data
    */
   recordVaccination: async (data) => {
-    const response = await api.post('/api/postnatal/vaccinations', data);
+    const response = await api.post('/api/santanraksha/vaccination/mark-done', data);
     return response.data;
   },
 

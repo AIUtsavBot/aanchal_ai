@@ -737,6 +737,8 @@ async def get_child_growth_records(
             "latest": records[0] if records else None
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error fetching growth records: {e}")
         raise HTTPException(status_code=500, detail=str(e))

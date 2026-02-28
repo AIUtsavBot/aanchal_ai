@@ -105,6 +105,16 @@ async def get_authorized_mothers(
             
             return result.data or []
         
+        elif user_role == "MOTHER":
+            # Assume user_id from auth maps to mother's id
+            query = supabase_client.table("mothers").select("*").eq("id", user_id)
+            if mother_id:
+                query = query.eq("id", mother_id)
+            result = query.execute()
+            if mother_id and not result.data:
+                raise HTTPException(status_code=403, detail="You can only access your own records")
+            return result.data or []
+            
         else:
             raise HTTPException(
                 status_code=403,
