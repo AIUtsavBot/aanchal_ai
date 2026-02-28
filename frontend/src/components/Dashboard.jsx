@@ -34,7 +34,7 @@ export default function Dashboard({ data = {} }) {
   ]
 
   const colorClasses = {
-    blue: 'border-l-4 border-blue-500',
+    blue: 'border-l-4 border-teal-500',
     red: 'border-l-4 border-red-500',
     yellow: 'border-l-4 border-yellow-500',
     green: 'border-l-4 border-green-500'

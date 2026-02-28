@@ -437,7 +437,7 @@ export default function ConsultationForm({ motherId, doctorId, doctorName, onSav
         return (
             <div className="flex items-center justify-center h-full">
                 <div className="text-center">
-                    <Loader className="w-8 h-8 animate-spin mx-auto text-blue-600 mb-3" />
+                    <Loader className="w-8 h-8 animate-spin mx-auto text-teal-600 mb-3" />
                     <p className="text-gray-600">Loading consultation data...</p>
                 </div>
             </div>
@@ -500,7 +500,7 @@ export default function ConsultationForm({ motherId, doctorId, doctorName, onSav
                                     placeholder="Systolic"
                                     min="60"
                                     max="250"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
                                 />
                                 <span className="text-gray-500 font-bold">/</span>
                                 <input
@@ -510,7 +510,7 @@ export default function ConsultationForm({ motherId, doctorId, doctorName, onSav
                                     placeholder="Diastolic"
                                     min="40"
                                     max="150"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
                                 />
                             </div>
                         </div>
@@ -528,7 +528,7 @@ export default function ConsultationForm({ motherId, doctorId, doctorName, onSav
                                 placeholder="e.g., 72"
                                 min="40"
                                 max="200"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
                             />
                         </div>
 
@@ -546,7 +546,7 @@ export default function ConsultationForm({ motherId, doctorId, doctorName, onSav
                                 min="20"
                                 max="600"
                                 step="0.1"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
                             />
                         </div>
 
@@ -564,14 +564,14 @@ export default function ConsultationForm({ motherId, doctorId, doctorName, onSav
                                 min="4"
                                 max="20"
                                 step="0.1"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
                             />
                         </div>
 
                         {/* Weight */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
-                                <Scale className="w-4 h-4 text-blue-500" />
+                                <Scale className="w-4 h-4 text-teal-500" />
                                 Weight (kg)
                             </label>
                             <input
@@ -582,7 +582,7 @@ export default function ConsultationForm({ motherId, doctorId, doctorName, onSav
                                 min="30"
                                 max="200"
                                 step="0.1"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
                             />
                         </div>
                     </div>
@@ -599,14 +599,14 @@ export default function ConsultationForm({ motherId, doctorId, doctorName, onSav
                         onChange={(e) => setHealthStatus(e.target.value)}
                         placeholder="Enter patient's current health status, observations, symptoms, concerns, and clinical notes..."
                         rows={4}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-gray-900"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none text-gray-900"
                     />
                 </div>
 
                 {/* Next Consultation Section */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                     <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                        <Calendar className="w-5 h-5 text-blue-500" />
+                        <Calendar className="w-5 h-5 text-teal-500" />
                         Next Consultation Schedule
                     </h3>
                     <div className="grid grid-cols-2 gap-4">
@@ -617,7 +617,7 @@ export default function ConsultationForm({ motherId, doctorId, doctorName, onSav
                                 value={nextConsultationDate}
                                 onChange={(e) => setNextConsultationDate(e.target.value)}
                                 min={new Date().toISOString().split('T')[0]}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                             />
                         </div>
                         <div>
@@ -628,7 +628,7 @@ export default function ConsultationForm({ motherId, doctorId, doctorName, onSav
                                     type="time"
                                     value={nextConsultationTime}
                                     onChange={(e) => setNextConsultationTime(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                                 />
                             </div>
                         </div>
@@ -646,7 +646,7 @@ export default function ConsultationForm({ motherId, doctorId, doctorName, onSav
                         <select
                             value={trimester}
                             onChange={(e) => setTrimester(Number(e.target.value))}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                         >
                             <option value={1}>First Trimester (Week 1-12)</option>
                             <option value={2}>Second Trimester (Week 13-26)</option>
@@ -658,7 +658,7 @@ export default function ConsultationForm({ motherId, doctorId, doctorName, onSav
                         onChange={(e) => setNutritionPlan(e.target.value)}
                         placeholder="Enter dietary recommendations, foods to include, foods to avoid, supplements..."
                         rows={5}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-gray-900"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none text-gray-900"
                     />
                 </div>
 
@@ -750,15 +750,15 @@ export default function ConsultationForm({ motherId, doctorId, doctorName, onSav
                 {consultationHistory.length > 0 && (
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                         <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                            <Calendar className="w-5 h-5 text-blue-500" />
+                            <Calendar className="w-5 h-5 text-teal-500" />
                             Previous Consultation History
                         </h3>
                         <div className="space-y-4">
                             {consultationHistory.map((record, idx) => (
-                                <div key={record.id || idx} className="bg-gradient-to-r from-blue-50 to-teal-50 p-4 rounded-lg border border-blue-100">
+                                <div key={record.id || idx} className="bg-gradient-to-r from-teal-50 to-teal-50 p-4 rounded-lg border border-teal-100">
                                     <div className="flex justify-between items-start mb-3">
                                         <div className="flex items-center gap-2">
-                                            <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                                            <span className="bg-teal-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
                                                 Consultation #{consultationHistory.length - idx}
                                             </span>
                                             <span className="text-sm font-medium text-gray-700">
@@ -826,7 +826,7 @@ export default function ConsultationForm({ motherId, doctorId, doctorName, onSav
 
                                     {/* Next Consultation if recorded */}
                                     {record.event_data?.next_consultation && (
-                                        <div className="mt-2 text-xs text-blue-600">
+                                        <div className="mt-2 text-xs text-teal-600">
                                             <span className="font-medium">📅 Next Appointment:</span> {new Date(record.event_data.next_consultation).toLocaleDateString('en-IN', {
                                                 day: 'numeric',
                                                 month: 'short',
@@ -921,10 +921,10 @@ export default function ConsultationForm({ motherId, doctorId, doctorName, onSav
                                 </thead>
                                 <tbody>
                                     {allVitalsHistory.map((vital, idx) => (
-                                        <tr key={vital.id || idx} className={`border-b ${idx === 0 ? 'bg-blue-50' : ''}`}>
+                                        <tr key={vital.id || idx} className={`border-b ${idx === 0 ? 'bg-teal-50' : ''}`}>
                                             <td className="px-3 py-2 text-gray-700">
                                                 <div className="flex items-center gap-1">
-                                                    {idx === 0 && <span className="text-xs text-blue-600 font-semibold">(Latest)</span>}
+                                                    {idx === 0 && <span className="text-xs text-teal-600 font-semibold">(Latest)</span>}
                                                     📅 {vital.measured_at || vital.created_at ? new Date(vital.measured_at || vital.created_at).toLocaleDateString('en-IN', {
                                                         day: 'numeric',
                                                         month: 'short',
@@ -953,7 +953,7 @@ export default function ConsultationForm({ motherId, doctorId, doctorName, onSav
                                             </td>
                                             <td className="px-3 py-2 text-center">
                                                 {vital.weight_kg ? (
-                                                    <span className="font-medium text-blue-700">{vital.weight_kg}</span>
+                                                    <span className="font-medium text-teal-700">{vital.weight_kg}</span>
                                                 ) : '-'}
                                             </td>
                                             <td className="px-3 py-2 text-gray-600 max-w-xs truncate" title={vital.notes || ''}>

@@ -118,15 +118,15 @@ export default function AdminApprovals() {
     if (isDoctor) {
       // Doctor Certificate Details
       return (
-        <div className="mt-4 p-4 bg-blue-500/10 rounded-lg border border-blue-100">
-          <h4 className="font-semibold text-blue-700 mb-3 flex items-center gap-2">
+        <div className="mt-4 p-4 bg-teal-500/10 rounded-lg border border-teal-100">
+          <h4 className="font-semibold text-teal-700 mb-3 flex items-center gap-2">
             <FileText className="w-4 h-4" /> Doctor Certificate Details
           </h4>
 
           {/* Name Verification Status */}
           {metadata.name_verified !== undefined && (
             <div className={`mb-3 p-2 rounded-lg flex items-center gap-2 ${metadata.name_verified
-                ? 'bg-blue-500/100/15 text-blue-700'
+                ? 'bg-teal-500/100/15 text-teal-700'
                 : 'bg-yellow-500/100/15 text-yellow-700'
               }`}>
               {metadata.name_verified ? (
@@ -144,32 +144,32 @@ export default function AdminApprovals() {
           )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
             <div className="flex items-center gap-2">
-              <User className="w-4 h-4 text-blue-600" />
+              <User className="w-4 h-4 text-teal-600" />
               <span className="text-slate-500">Name:</span>
               <span className="font-medium">{request.full_name || 'Not provided'}</span>
             </div>
             <div className="flex items-center gap-2">
-              <Mail className="w-4 h-4 text-blue-600" />
+              <Mail className="w-4 h-4 text-teal-600" />
               <span className="text-slate-500">Email:</span>
               <span className="font-medium">{request.email}</span>
             </div>
             <div className="flex items-center gap-2">
-              <Phone className="w-4 h-4 text-blue-600" />
+              <Phone className="w-4 h-4 text-teal-600" />
               <span className="text-slate-500">Phone:</span>
               <span className="font-medium">{request.phone || 'Not provided'}</span>
             </div>
             <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-blue-600" />
+              <MapPin className="w-4 h-4 text-teal-600" />
               <span className="text-slate-500">Area:</span>
               <span className="font-medium">{request.assigned_area || 'Not specified'}</span>
             </div>
             <div className="flex items-center gap-2">
-              <Building className="w-4 h-4 text-blue-600" />
+              <Building className="w-4 h-4 text-teal-600" />
               <span className="text-slate-500">Registration:</span>
               <span className="font-medium">{metadata.registration_number || 'Pending verification'}</span>
             </div>
             <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-blue-600" />
+              <Calendar className="w-4 h-4 text-teal-600" />
               <span className="text-slate-500">Applied:</span>
               <span className="font-medium">{new Date(request.created_at).toLocaleDateString('en-IN', {
                 day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
@@ -177,15 +177,15 @@ export default function AdminApprovals() {
             </div>
           </div>
           {metadata.qualification && (
-            <div className="mt-3 p-2 bg-white/60 backdrop-blur-xl rounded border border-blue-100">
+            <div className="mt-3 p-2 bg-white/60 backdrop-blur-xl rounded border border-teal-100">
               <span className="text-slate-500 text-sm">Qualification:</span>
-              <span className="ml-2 font-medium text-blue-600">{metadata.qualification}</span>
+              <span className="ml-2 font-medium text-teal-600">{metadata.qualification}</span>
             </div>
           )}
           {metadata.council && (
-            <div className="mt-2 p-2 bg-white/60 backdrop-blur-xl rounded border border-blue-100">
+            <div className="mt-2 p-2 bg-white/60 backdrop-blur-xl rounded border border-teal-100">
               <span className="text-slate-500 text-sm">Medical Council:</span>
-              <span className="ml-2 font-medium text-blue-600">{metadata.council}</span>
+              <span className="ml-2 font-medium text-teal-600">{metadata.council}</span>
             </div>
           )}
         </div>
@@ -327,7 +327,7 @@ export default function AdminApprovals() {
   const totalPending = pendingRequestsCount + pendingUsersCount + pendingRoleRequestsCount
 
   return (
-    <div className="min-h-screen bg-blue-50/50 p-6">
+    <div className="min-h-screen bg-teal-50/50 p-6">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="bg-white/60 backdrop-blur-xl rounded-xl shadow-sm p-6 mb-6">
@@ -383,7 +383,7 @@ export default function AdminApprovals() {
                               {req.full_name || req.email?.split('@')[0]}
                             </span>
                             <span className={`text-sm px-3 py-1 rounded-full font-medium ${req.role_requested === 'DOCTOR'
-                              ? 'bg-blue-500/100/15 text-blue-600'
+                              ? 'bg-teal-500/100/15 text-teal-600'
                               : 'bg-emerald-500/15 text-emerald-600'
                               }`}>
                               {req.role_requested === 'DOCTOR' ? '👨‍⚕️ Doctor' : '👩‍⚕️ ASHA Worker'}
@@ -402,7 +402,7 @@ export default function AdminApprovals() {
                                   href={req.degree_cert_url}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/10 text-blue-600 rounded-lg hover:bg-blue-500/100/15 transition-colors text-sm font-medium"
+                                  className="inline-flex items-center gap-2 px-4 py-2 bg-teal-500/10 text-teal-600 rounded-lg hover:bg-teal-500/100/15 transition-colors text-sm font-medium"
                                 >
                                   <FileText className="w-4 h-4" />
                                   View Registration Certificate
@@ -485,7 +485,7 @@ export default function AdminApprovals() {
                         <div className="flex items-center gap-2">
                           <select
                             id={`role-${user.id}`}
-                            className="px-3 py-2 border border-blue-200/50 rounded-lg text-sm"
+                            className="px-3 py-2 border border-teal-200/50 rounded-lg text-sm"
                             defaultValue=""
                           >
                             <option value="" disabled>Select Role</option>

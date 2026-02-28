@@ -256,7 +256,7 @@ export default function AuthCallback() {
   // Role Selection Screen
   if (stage === "role_selection") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 via-pink-50 to-blue-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 via-pink-50 to-teal-50">
         <div className="max-w-lg w-full mx-4">
           <div className="bg-white rounded-2xl shadow-xl p-8">
             <div className="text-center mb-8">
@@ -279,10 +279,10 @@ export default function AuthCallback() {
               {/* Doctor Option */}
               <button
                 onClick={() => handleRoleSelect("DOCTOR")}
-                className="w-full p-6 rounded-xl border-2 border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition-all group text-left"
+                className="w-full p-6 rounded-xl border-2 border-gray-200 hover:border-teal-500 hover:bg-teal-50 transition-all group text-left"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                  <div className="w-14 h-14 bg-teal-100 rounded-xl flex items-center justify-center group-hover:bg-teal-200 transition-colors">
                     <span className="text-3xl">👨‍⚕️</span>
                   </div>
                   <div>
@@ -334,11 +334,11 @@ export default function AuthCallback() {
   // Doctor Document Upload Screen
   if (stage === "doctor_upload") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-teal-50 to-pink-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 via-teal-50 to-pink-50">
         <div className="max-w-lg w-full mx-4">
           <div className="bg-white rounded-2xl shadow-xl p-8">
             <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-3xl">👨‍⚕️</span>
               </div>
               <h2 className="text-2xl font-bold text-gray-900">
@@ -402,11 +402,11 @@ export default function AuthCallback() {
             </div>
 
             {/* Info Box */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <h4 className="font-semibold text-blue-800 mb-2">
+            <div className="bg-teal-50 border border-teal-200 rounded-lg p-4 mb-6">
+              <h4 className="font-semibold text-teal-800 mb-2">
                 📋 Accepted Documents:
               </h4>
-              <ul className="text-sm text-blue-700 space-y-1">
+              <ul className="text-sm text-teal-700 space-y-1">
                 <li>• Medical Council Registration Certificate</li>
                 <li>• MBBS/MD Degree Certificate</li>
                 <li>• State Medical Council License</li>
@@ -418,7 +418,7 @@ export default function AuthCallback() {
               <button
                 onClick={() => handleSubmitRole("DOCTOR", uploadedFile)}
                 disabled={!uploadedFile || isSubmitting}
-                className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full py-3 px-4 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isSubmitting ? "Submitting..." : "Submit for Verification"}
               </button>

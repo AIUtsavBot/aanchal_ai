@@ -41,7 +41,7 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 via-white to-blue-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 via-white to-teal-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <h1 className="text-4xl font-bold text-teal-600 mb-2">🤰 Aanchal AI</h1>
@@ -107,7 +107,7 @@ const Login = () => {
           </button>
 
           <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-blue-200/40"></div></div>
+            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-teal-200/40"></div></div>
             <div className="relative flex justify-center text-sm">
               <span className="px-3 bg-white/60 backdrop-blur-sm rounded-full text-slate-400 text-xs">Or continue with</span>
             </div>

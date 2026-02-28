@@ -324,7 +324,7 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-blue-50/50">
+      <div className="min-h-screen flex items-center justify-center bg-teal-50/50">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-500"></div>
           <p className="mt-4 text-gray-600">Loading admin dashboard...</p>
@@ -334,7 +334,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-blue-50/50 p-6">
+    <div className="min-h-screen bg-teal-50/50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -528,11 +528,11 @@ export default function AdminDashboard() {
                       </p>
                       <p className="text-xs text-emerald-600">Both Assigned</p>
                     </div>
-                    <div className="text-center p-3 bg-blue-500/10 rounded-lg">
-                      <p className="text-2xl font-bold text-blue-600">
+                    <div className="text-center p-3 bg-teal-500/10 rounded-lg">
+                      <p className="text-2xl font-bold text-teal-600">
                         {mothers.filter(m => m.doctor_id && !m.asha_worker_id).length}
                       </p>
-                      <p className="text-xs text-blue-600">Doctor Only</p>
+                      <p className="text-xs text-teal-600">Doctor Only</p>
                     </div>
                     <div className="text-center p-3 bg-teal-50 rounded-lg">
                       <p className="text-2xl font-bold text-teal-600">
@@ -550,7 +550,7 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* Quick Actions */}
-                <div className="bg-blue-50/50 rounded-lg p-4">
+                <div className="bg-teal-50/50 rounded-lg p-4">
                   <h4 className="font-semibold text-slate-800 mb-3">🚀 Quick Actions</h4>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <Link
@@ -569,10 +569,10 @@ export default function AdminDashboard() {
                     </button>
                     <button
                       onClick={loadData}
-                      className="p-4 bg-blue-500/100/15 border border-blue-300 rounded-lg hover:bg-blue-200 transition-colors text-left"
+                      className="p-4 bg-teal-500/100/15 border border-teal-300 rounded-lg hover:bg-teal-200 transition-colors text-left"
                     >
-                      <h5 className="font-semibold text-blue-700">Refresh Data</h5>
-                      <p className="text-sm text-blue-600">Sync latest information</p>
+                      <h5 className="font-semibold text-teal-700">Refresh Data</h5>
+                      <p className="text-sm text-teal-600">Sync latest information</p>
                     </button>
                   </div>
                 </div>
@@ -609,7 +609,7 @@ export default function AdminDashboard() {
                 {/* Word Cloud */}
                 <div className="bg-white/60 backdrop-blur-xl border rounded-lg p-4 mt-6">
                   <h4 className="font-semibold text-slate-800 mb-3">🗣️ Common Risk Topics (Word Cloud)</h4>
-                  <div className="flex flex-wrap gap-2 p-4 bg-blue-50/50 rounded-lg min-h-[200px] items-center justify-center">
+                  <div className="flex flex-wrap gap-2 p-4 bg-teal-50/50 rounded-lg min-h-[200px] items-center justify-center">
                     {!metrics?.word_cloud || !Array.isArray(metrics.word_cloud) ? (
                       <p className="text-slate-400">No word data available</p>
                     ) : (
@@ -701,7 +701,7 @@ export default function AdminDashboard() {
                                   href={d.degree_cert_url}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="mt-2 inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-700"
+                                  className="mt-2 inline-flex items-center gap-1.5 text-xs text-teal-600 hover:text-teal-700"
                                 >
                                   <FileText className="w-3.5 h-3.5" />
                                   View Certificate
@@ -883,7 +883,7 @@ export default function AdminDashboard() {
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
-                      <thead className="bg-blue-50/50">
+                      <thead className="bg-teal-50/50">
                         <tr>
                           <th className="px-4 py-3 text-left font-semibold">Name</th>
                           <th className="px-4 py-3 text-left font-semibold">Phone</th>
@@ -902,7 +902,7 @@ export default function AdminDashboard() {
                           const hasChanges = pendingChanges[mother.id]
 
                           return (
-                            <tr key={mother.id} className={`border-b hover:bg-blue-50/50 ${hasChanges ? 'bg-yellow-500/10' : ''}`}>
+                            <tr key={mother.id} className={`border-b hover:bg-teal-50/50 ${hasChanges ? 'bg-yellow-500/10' : ''}`}>
                               <td className="px-4 py-3 font-medium">
                                 {mother.name}
                                 {hasChanges && <span className="ml-2 text-yellow-600 text-xs">*</span>}
@@ -994,7 +994,7 @@ export default function AdminDashboard() {
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
-                      <thead className="bg-blue-50/50">
+                      <thead className="bg-teal-50/50">
                         <tr>
                           <th className="px-4 py-3 text-left font-semibold">Child Name</th>
                           <th className="px-4 py-3 text-left font-semibold">Age</th>
@@ -1007,7 +1007,7 @@ export default function AdminDashboard() {
                       </thead>
                       <tbody>
                         {filteredChildren.map(child => (
-                          <tr key={child.id} className="border-b hover:bg-blue-50/50">
+                          <tr key={child.id} className="border-b hover:bg-teal-50/50">
                             {editingId === `child-${child.id}` ? (
                               // Edit mode
                               <>

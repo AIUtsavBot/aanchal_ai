@@ -134,9 +134,9 @@ export const DeliveryCompletionModal = ({ mother, onClose, onComplete }) => {
 
                 <div className="space-y-5 max-h-[60vh] overflow-y-auto pr-2">
                     {/* Delivery Information Section */}
-                    <div className="bg-blue-50 p-4 rounded-lg">
+                    <div className="bg-teal-50 p-4 rounded-lg">
                         <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                            <Hospital className="w-5 h-5 text-blue-600" />
+                            <Hospital className="w-5 h-5 text-teal-600" />
                             Delivery Information
                         </h3>
 
@@ -151,7 +151,7 @@ export const DeliveryCompletionModal = ({ mother, onClose, onComplete }) => {
                                     value={formData.delivery_date}
                                     onChange={e => setFormData({ ...formData, delivery_date: e.target.value })}
                                     max={new Date().toISOString().split('T')[0]}
-                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                                     required
                                 />
                             </div>
@@ -163,7 +163,7 @@ export const DeliveryCompletionModal = ({ mother, onClose, onComplete }) => {
                                 <select
                                     value={formData.delivery_type}
                                     onChange={e => setFormData({ ...formData, delivery_type: e.target.value })}
-                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                                     required
                                 >
                                     <option value="normal">Normal Delivery</option>
@@ -181,7 +181,7 @@ export const DeliveryCompletionModal = ({ mother, onClose, onComplete }) => {
                                     value={formData.delivery_hospital}
                                     onChange={e => setFormData({ ...formData, delivery_hospital: e.target.value })}
                                     placeholder="Hospital name (optional)"
-                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                                 />
                             </div>
 
@@ -196,7 +196,7 @@ export const DeliveryCompletionModal = ({ mother, onClose, onComplete }) => {
                                     min="20"
                                     max="45"
                                     placeholder="40"
-                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                                 />
                             </div>
                         </div>

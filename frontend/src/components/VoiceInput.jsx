@@ -115,7 +115,7 @@ export default function VoiceInput({ onDataReceived }) {
             {/* Status Text when Active */}
             {(isListening || isProcessing) && (
                 <div className={`text-sm font-medium animate-in fade-in slide-in-from-right-2
-                    ${isListening ? 'text-red-600' : 'text-blue-600'}
+                    ${isListening ? 'text-red-600' : 'text-teal-600'}
                 `}>
                     {isListening ? "Listening..." : "Analysis via AI..."}
                 </div>
@@ -130,8 +130,8 @@ export default function VoiceInput({ onDataReceived }) {
                     ${isListening
                         ? 'bg-red-500 text-white hover:bg-red-600 scale-110 ring-4 ring-red-100'
                         : isProcessing
-                            ? 'bg-blue-100 text-blue-500 cursor-wait'
-                            : 'bg-gradient-to-r from-blue-600 to-teal-600 text-white hover:shadow-xl hover:-translate-y-1'
+                            ? 'bg-teal-100 text-teal-500 cursor-wait'
+                            : 'bg-gradient-to-r from-teal-600 to-teal-600 text-white hover:shadow-xl hover:-translate-y-1'
                     }
                 `}
                 title="Use Voice Entry"

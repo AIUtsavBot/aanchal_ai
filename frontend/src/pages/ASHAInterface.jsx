@@ -663,9 +663,9 @@ export default function ASHAInterface() {
   }
 
   return (
-    <div className="flex h-screen bg-blue-50/50">
+    <div className="flex h-screen bg-teal-50/50">
       {/* Sidebar - Mothers List */}
-      <div className="w-80 bg-white/60 backdrop-blur-xl border-r flex flex-col shadow-xl shadow-blue-500/10">
+      <div className="w-80 bg-white/60 backdrop-blur-xl border-r flex flex-col shadow-xl shadow-teal-500/10">
         {/* Header */}
         <div className="bg-gradient-to-br from-green-600 to-green-800 text-slate-800 px-5 py-4">
           <div className="flex items-center gap-3">
@@ -793,7 +793,7 @@ export default function ASHAInterface() {
                   tabIndex={0}
                   className={`p-3 rounded-lg border cursor-pointer transition-all ${selected?.id === m.id
                     ? "border-emerald-500 bg-emerald-500/10"
-                    : "border-blue-200/40 hover:border-emerald-300"
+                    : "border-teal-200/40 hover:border-emerald-300"
                     }`}
                 >
                   <div className="flex items-center justify-between">
@@ -897,11 +897,11 @@ export default function ASHAInterface() {
                 </div>
 
                 {nextVisit && (
-                  <div className="mt-4 p-3 bg-blue-500/10 border border-blue-100 rounded-lg">
-                    <p className="text-xs text-blue-600 font-semibold mb-1 flex items-center gap-1">
+                  <div className="mt-4 p-3 bg-teal-500/10 border border-teal-100 rounded-lg">
+                    <p className="text-xs text-teal-600 font-semibold mb-1 flex items-center gap-1">
                       <Calendar className="w-3 h-3" /> Next Checkup
                     </p>
-                    <p className="font-bold text-blue-900">
+                    <p className="font-bold text-teal-900">
                       {new Date(nextVisit).toLocaleDateString()}
                     </p>
                   </div>
@@ -1071,7 +1071,7 @@ export default function ASHAInterface() {
         {mainView === "assess" && (
           <div className="flex-1 overflow-y-auto p-8">
             <div className="max-w-2xl mx-auto">
-              <div className="bg-white/60 backdrop-blur-xl rounded-xl shadow-xl shadow-blue-500/10 p-6">
+              <div className="bg-white/60 backdrop-blur-xl rounded-xl shadow-xl shadow-teal-500/10 p-6">
                 <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
                   <ClipboardCheck className="w-6 h-6 text-emerald-600" />
                   Risk Assessment
@@ -1192,7 +1192,7 @@ export default function ASHAInterface() {
                     />
                   </div>
 
-                  <div className="bg-blue-50/50 p-4 rounded-lg">
+                  <div className="bg-teal-50/50 p-4 rounded-lg">
                     <p className="text-sm font-semibold text-slate-600 mb-3">
                       Clinical Symptoms
                     </p>
@@ -1270,7 +1270,7 @@ export default function ASHAInterface() {
                       </div>
                     )}
                     {riskResult.telegram_sent && (
-                      <p className="mt-3 text-sm bg-blue-500/100/15 text-blue-700 p-2 rounded">
+                      <p className="mt-3 text-sm bg-teal-500/100/15 text-teal-700 p-2 rounded">
                         📱 Report sent to mother via Telegram!
                       </p>
                     )}
@@ -1294,8 +1294,8 @@ export default function ASHAInterface() {
                 <div className="space-y-6">
                   {/* Stats Cards */}
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="bg-white/60 backdrop-blur-xl p-5 rounded-xl shadow border-l-4 border-blue-500">
-                      <p className="text-3xl font-bold text-blue-600">
+                    <div className="bg-white/60 backdrop-blur-xl p-5 rounded-xl shadow border-l-4 border-teal-500">
+                      <p className="text-3xl font-bold text-teal-600">
                         {analytics.total_mothers}
                       </p>
                       <p className="text-sm text-slate-500">Assigned Mothers</p>
@@ -1369,7 +1369,7 @@ export default function ASHAInterface() {
                               }}
                               role="button"
                               tabIndex={0}
-                              className="p-3 bg-blue-50/50 rounded-lg cursor-pointer hover:bg-white/600 flex justify-between items-center"
+                              className="p-3 bg-teal-50/50 rounded-lg cursor-pointer hover:bg-white/600 flex justify-between items-center"
                             >
                               <div>
                                 <p className="font-semibold text-sm">
@@ -1422,7 +1422,7 @@ export default function ASHAInterface() {
                 <ChevronLeft className="w-5 h-5" /> Back to Stats
               </button>
 
-              <div className="bg-white/60 backdrop-blur-xl rounded-xl shadow-xl shadow-blue-500/10 p-6">
+              <div className="bg-white/60 backdrop-blur-xl rounded-xl shadow-xl shadow-teal-500/10 p-6">
                 <div className="flex items-center gap-4 mb-6 pb-6 border-b">
                   <span className="text-4xl">
                     {getRiskIcon(selectedAssessment.risk_level)}

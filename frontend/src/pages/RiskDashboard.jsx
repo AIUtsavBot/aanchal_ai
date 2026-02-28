@@ -520,8 +520,8 @@ export default function RiskDashboard() {
         </div>
 
         {message && (
-          <div className={`fixed top-5 right-5 rounded-lg shadow-xl shadow-blue-500/10 text-sm max-w-sm px-5 py-4 animate-fade-in ${message.type === 'success' ? 'bg-emerald-500/15 text-green-900 border border-emerald-200' :
-            message.type === 'error' ? 'bg-red-500/100/15 text-red-900 border border-red-200' : 'bg-blue-500/100/15 text-blue-900 border border-blue-200'
+          <div className={`fixed top-5 right-5 rounded-lg shadow-xl shadow-teal-500/10 text-sm max-w-sm px-5 py-4 animate-fade-in ${message.type === 'success' ? 'bg-emerald-500/15 text-green-900 border border-emerald-200' :
+            message.type === 'error' ? 'bg-red-500/100/15 text-red-900 border border-red-200' : 'bg-teal-500/100/15 text-teal-900 border border-teal-200'
             }`}>
             {message.text}
           </div>
@@ -578,9 +578,9 @@ export default function RiskDashboard() {
                   <div className="text-4xl font-bold text-emerald-600">{analytics.lowRiskCount}</div>
                 </div>
 
-                <div className="bg-white/60 backdrop-blur-xl p-5 rounded-lg border-l-4 border-blue-500 shadow">
+                <div className="bg-white/60 backdrop-blur-xl p-5 rounded-lg border-l-4 border-teal-500 shadow">
                   <div className="text-xs text-slate-500 font-semibold mb-3">📋 {t('total_assessments')}</div>
-                  <div className="text-4xl font-bold text-blue-600">{analytics.totalAssessments}</div>
+                  <div className="text-4xl font-bold text-teal-600">{analytics.totalAssessments}</div>
                 </div>
               </div>
             </div>
@@ -807,7 +807,7 @@ export default function RiskDashboard() {
 
               <div className="mb-4">
                 <h4 className="text-slate-800 mb-3 font-semibold">{t('clinical_symptoms_optional')}</h4>
-                <div className="grid [grid-template-columns:repeat(auto-fit,minmax(200px,1fr))] gap-3 bg-blue-50/50 p-3 rounded-lg">
+                <div className="grid [grid-template-columns:repeat(auto-fit,minmax(200px,1fr))] gap-3 bg-teal-50/50 p-3 rounded-lg">
                   {[
                     { key: 'proteinuria', label: t('proteinuria') },
                     { key: 'edema', label: t('edema') },
@@ -855,7 +855,7 @@ export default function RiskDashboard() {
                   <p><strong>{t('risk_level')}:</strong> <span className="font-bold">{riskResult.risk_level}</span></p>
                   <p><strong>{t('risk_factors')}:</strong> {riskResult.risk_factors?.join(', ') || t('none')}</p>
                   {riskResult.telegram_sent && (
-                    <p className="mt-3 p-2 bg-blue-500/100/15 rounded text-blue-700">
+                    <p className="mt-3 p-2 bg-teal-500/100/15 rounded text-teal-700">
                       📱 <strong>Summary sent to mother via Telegram!</strong>
                     </p>
                   )}

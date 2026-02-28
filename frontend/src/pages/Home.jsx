@@ -53,12 +53,12 @@ function AudienceCard({ title, desc, icon: Icon, color }) {
   const colorMap = {
     'text-pink-600': 'text-pink-500',
     'text-green-600': 'text-emerald-500',
-    'text-teal-600': 'text-blue-500'
+    'text-teal-600': 'text-teal-500'
   }
   return (
     <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
       <div className="flex items-center gap-3 mb-2">
-        <Icon className={`w-6 h-6 ${colorMap[color] || 'text-blue-500'}`} />
+        <Icon className={`w-6 h-6 ${colorMap[color] || 'text-teal-500'}`} />
         <h3 className="text-lg font-semibold text-slate-800">{title}</h3>
       </div>
       <p className="text-slate-500 text-sm leading-relaxed">{desc}</p>
@@ -174,7 +174,7 @@ export default function Home() {
         </div>
       </section>
 
-      <footer id="contact" className="bg-white/40 backdrop-blur-xl border-t border-blue-200/30">
+      <footer id="contact" className="bg-white/40 backdrop-blur-xl border-t border-teal-200/30">
         <div className="max-w-7xl mx-auto px-6 py-12">
           <div className="flex flex-col items-center text-center gap-4">
             <div className="flex items-center gap-2">

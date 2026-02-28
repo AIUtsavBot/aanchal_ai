@@ -104,7 +104,7 @@ export default function CaseChat({ motherId, userRole = 'DOCTOR', userName = 'Do
 
   const getRoleColor = (role) => {
     switch (role?.toUpperCase()) {
-      case 'DOCTOR': return 'bg-blue-50 border-blue-200'
+      case 'DOCTOR': return 'bg-teal-50 border-teal-200'
       case 'ASHA': return 'bg-green-50 border-green-200'
       case 'ADMIN': return 'bg-teal-50 border-teal-200'
       case 'MOTHER': return 'bg-pink-50 border-pink-200'
@@ -114,7 +114,7 @@ export default function CaseChat({ motherId, userRole = 'DOCTOR', userName = 'Do
 
   const getRoleTextColor = (role) => {
     switch (role?.toUpperCase()) {
-      case 'DOCTOR': return 'text-blue-700'
+      case 'DOCTOR': return 'text-teal-700'
       case 'ASHA': return 'text-green-700'
       case 'ADMIN': return 'text-teal-700'
       case 'MOTHER': return 'text-pink-700'
@@ -132,7 +132,7 @@ export default function CaseChat({ motherId, userRole = 'DOCTOR', userName = 'Do
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
-              <Loader className="w-8 h-8 animate-spin mx-auto mb-2 text-blue-600" />
+              <Loader className="w-8 h-8 animate-spin mx-auto mb-2 text-teal-600" />
               <p className="text-gray-600">Loading messages...</p>
             </div>
           </div>
@@ -181,12 +181,12 @@ export default function CaseChat({ motherId, userRole = 'DOCTOR', userName = 'Do
             onChange={e => setInput(e.target.value)}
             placeholder="Type your message..."
             disabled={sending}
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
           />
           <button
             type="submit"
             disabled={sending || !input.trim()}
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2 transition-colors disabled:cursor-not-allowed"
+            className="bg-teal-600 hover:bg-teal-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2 transition-colors disabled:cursor-not-allowed"
           >
             {sending ? (
               <>

@@ -394,8 +394,8 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
 
         // Type-based styling
         const typeColor = type === 'mother' ? 'teal' : 'blue';
-        const typeBg = type === 'mother' ? 'bg-teal-50' : 'bg-blue-50';
-        const typeBorder = type === 'mother' ? 'border-teal-100' : 'border-blue-100';
+        const typeBg = type === 'mother' ? 'bg-teal-50' : 'bg-teal-50';
+        const typeBorder = type === 'mother' ? 'border-teal-100' : 'border-teal-100';
 
         // Risk still overrides border if high/critical
         let borderClass = typeBorder;
@@ -404,14 +404,14 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
         else borderClass = `${typeBorder} ${typeBg}`;
 
         return (
-            <div key={a.id || Math.random()} className={`mb-4 p-4 rounded-lg border ${borderClass} shadow-sm transition-all hover:shadow-md shadow-blue-500/5`}>
+            <div key={a.id || Math.random()} className={`mb-4 p-4 rounded-lg border ${borderClass} shadow-sm transition-all hover:shadow-md shadow-teal-500/5`}>
                 {/* Header */}
                 <div className="flex justify-between items-start mb-3">
                     <div>
                         <p className="text-xs text-slate-500 flex items-center gap-2">
                             <span className="flex items-center gap-1"><Calendar size={12} /> {new Date(a.assessment_date).toLocaleDateString()}</span>
-                            {type === 'mother' && <span className="bg-white/50 px-1.5 rounded border border-blue-200/40">Day {a.days_postpartum !== undefined && a.days_postpartum !== null ? a.days_postpartum : '?'}</span>}
-                            {type === 'child' && <span className="bg-white/50 px-1.5 rounded border border-blue-200/40">Age: {a.age_days !== undefined && a.age_days !== null ? a.age_days : '?'} days</span>}
+                            {type === 'mother' && <span className="bg-white/50 px-1.5 rounded border border-teal-200/40">Day {a.days_postpartum !== undefined && a.days_postpartum !== null ? a.days_postpartum : '?'}</span>}
+                            {type === 'child' && <span className="bg-white/50 px-1.5 rounded border border-teal-200/40">Age: {a.age_days !== undefined && a.age_days !== null ? a.age_days : '?'} days</span>}
                         </p>
                         <p className="text-xs text-teal-700 font-medium mt-1 flex items-center gap-1">
                             {a.assessor_role === 'doctor' ? '👨‍⚕️' : '👩‍⚕️'} {a.assessor_role === 'doctor' ? 'Doctor Checked' : 'ASHA Checked'}
@@ -509,7 +509,7 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
                 )}
 
                 {/* Plan Section */}
-                <div className="space-y-2 border-t border-blue-200/40/50 pt-2">
+                <div className="space-y-2 border-t border-teal-200/40/50 pt-2">
                     {/* Medications */}
                     {a.medications && (
                         <div className="bg-teal-50 p-2 rounded text-xs">
@@ -526,7 +526,7 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
                     )}
                     {/* Notes */}
                     {a.notes && (
-                        <div className="bg-blue-50/30 p-2 rounded text-xs">
+                        <div className="bg-teal-50/30 p-2 rounded text-xs">
                             <p className="font-bold text-slate-600 mb-1">📝 Notes</p>
                             <p className="text-slate-500">{a.notes}</p>
                         </div>
@@ -535,7 +535,7 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
                     {a.next_visit_date && (
                         <div className="bg-sky-50/50 p-2 rounded text-xs flex justify-between items-center">
                             <span className="font-bold text-sky-700">📅 Next Visit:</span>
-                            <span className="text-blue-900 font-medium">
+                            <span className="text-teal-900 font-medium">
                                 {new Date(a.next_visit_date).toLocaleDateString()}
                             </span>
                         </div>
@@ -614,7 +614,7 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
     );
 
     const renderClinicalProfile = (mother) => (
-        <div className="bg-white/60 backdrop-blur-lg rounded-xl shadow-md shadow-blue-500/5 border border-blue-200/40 p-5 overflow-y-auto mb-4 flex-shrink-0" style={{ width: '280px' }}>
+        <div className="bg-white/60 backdrop-blur-lg rounded-xl shadow-md shadow-teal-500/5 border border-teal-200/40 p-5 overflow-y-auto mb-4 flex-shrink-0" style={{ width: '280px' }}>
             <h3 className="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2">
                 <Activity className="w-5 h-5 text-sky-600" />
                 Clinical Profile
@@ -658,7 +658,7 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
 
 
     const renderChildClinicalProfile = (child) => (
-        <div className="bg-white/60 backdrop-blur-lg rounded-xl shadow-md shadow-blue-500/5 border border-blue-200/40 p-5 overflow-y-auto mb-4 flex-shrink-0" style={{ width: '280px' }}>
+        <div className="bg-white/60 backdrop-blur-lg rounded-xl shadow-md shadow-teal-500/5 border border-teal-200/40 p-5 overflow-y-auto mb-4 flex-shrink-0" style={{ width: '280px' }}>
             <h3 className="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2">
                 <Baby className="w-5 h-5 text-sky-600" />
                 Child Profile
@@ -736,7 +736,7 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
             {selectedMother && (
                 <div className="assessment-panel">
                     {/* Header */}
-                    <div className="bg-white/60 backdrop-blur-lg border-b border-blue-200/40 px-8 py-6 shadow-sm mb-6 rounded-lg">
+                    <div className="bg-white/60 backdrop-blur-lg border-b border-teal-200/40 px-8 py-6 shadow-sm mb-6 rounded-lg">
                         <div className="flex items-center justify-between">
                             <div>
                                 <div className="flex items-center gap-3">
@@ -753,7 +753,7 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
                             <div className="flex gap-2">
                                 <button
                                     onClick={() => setSelectedMother(null)}
-                                    className="px-4 py-2 rounded-lg font-semibold text-sm bg-blue-50/40 text-slate-600 flex items-center gap-2 hover:bg-blue-100/50"
+                                    className="px-4 py-2 rounded-lg font-semibold text-sm bg-teal-50/40 text-slate-600 flex items-center gap-2 hover:bg-teal-100/50"
                                 >
                                     <X size={16} /> Close
                                 </button>
@@ -763,13 +763,13 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
                         {/* Tab buttons */}
                         <div className="flex gap-3 mt-4 flex-wrap">
                             <button
-                                className={`px-4 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 ${showForm !== 'mother' ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white" : "bg-blue-50/40 text-slate-600"}`}
+                                className={`px-4 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 ${showForm !== 'mother' ? "bg-gradient-to-r from-teal-500 to-cyan-500 text-white" : "bg-teal-50/40 text-slate-600"}`}
                                 onClick={() => setShowForm(null)}
                             >
                                 <FileText className="w-4 h-4" /> Assessment History
                             </button>
                             <button
-                                className={`px-4 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 ${showForm === 'mother' ? "bg-green-600 text-white" : "bg-blue-50/40 text-slate-600"}`}
+                                className={`px-4 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 ${showForm === 'mother' ? "bg-green-600 text-white" : "bg-teal-50/40 text-slate-600"}`}
                                 onClick={() => setShowForm('mother')}
                             >
                                 <Plus className="w-4 h-4" /> New Assessment
@@ -782,7 +782,7 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
                         {renderClinicalProfile(selectedMother)}
 
                         {/* Right Panel: Content */}
-                        <div className="flex-1 min-w-0 bg-white/60 backdrop-blur-lg rounded-xl shadow-md shadow-blue-500/5 border border-blue-200/40 overflow-y-auto flex flex-col p-6">
+                        <div className="flex-1 min-w-0 bg-white/60 backdrop-blur-lg rounded-xl shadow-md shadow-teal-500/5 border border-teal-200/40 overflow-y-auto flex flex-col p-6">
                             {showForm === 'mother' ? (
                                 <div className="assessment-form">
                                     <h5>📝 Mother Postnatal Assessment Form</h5>
@@ -1022,7 +1022,7 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
                                 <div className="assessment-history">
                                     <div className="flex justify-between items-center mb-4">
                                         <h5>📜 Assessment History</h5>
-                                        <span className="text-xs text-slate-400 bg-blue-50/40 px-2 py-1 rounded">Latest on top</span>
+                                        <span className="text-xs text-slate-400 bg-teal-50/40 px-2 py-1 rounded">Latest on top</span>
                                     </div>
                                     {assessments.length === 0 ? (
                                         <div className="text-center py-8 text-slate-400">
@@ -1163,12 +1163,12 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
             {selectedChild && (
                 <div className="assessment-panel">
                     {/* Header */}
-                    <div className="bg-white/60 backdrop-blur-lg border-b border-blue-200/40 px-8 py-6 shadow-sm mb-6 rounded-lg">
+                    <div className="bg-white/60 backdrop-blur-lg border-b border-teal-200/40 px-8 py-6 shadow-sm mb-6 rounded-lg">
                         <div className="flex items-center justify-between">
                             <div>
                                 <div className="flex items-center gap-3">
                                     <h2 className="text-2xl font-bold text-slate-800">{selectedChild.name}</h2>
-                                    <span className="bg-sky-100/50 text-blue-700 px-3 py-1 rounded-full text-xs font-bold border border-blue-200 uppercase tracking-wide">
+                                    <span className="bg-sky-100/50 text-teal-700 px-3 py-1 rounded-full text-xs font-bold border border-teal-200 uppercase tracking-wide">
                                         Child
                                     </span>
                                 </div>
@@ -1179,7 +1179,7 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
                             <div className="flex gap-2">
                                 <button
                                     onClick={() => setSelectedChild(null)}
-                                    className="px-4 py-2 rounded-lg font-semibold text-sm bg-blue-50/40 text-slate-600 flex items-center gap-2 hover:bg-blue-100/50"
+                                    className="px-4 py-2 rounded-lg font-semibold text-sm bg-teal-50/40 text-slate-600 flex items-center gap-2 hover:bg-teal-100/50"
                                 >
                                     <X size={16} /> Close
                                 </button>
@@ -1189,13 +1189,13 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
                         {/* Tabs */}
                         <div className="flex gap-3 mt-4 flex-wrap">
                             <button
-                                className={`px-4 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 ${showForm !== 'child' ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white" : "bg-blue-50/40 text-slate-600"}`}
+                                className={`px-4 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 ${showForm !== 'child' ? "bg-gradient-to-r from-teal-500 to-cyan-500 text-white" : "bg-teal-50/40 text-slate-600"}`}
                                 onClick={() => setShowForm(null)}
                             >
                                 <FileText className="w-4 h-4" /> Health History
                             </button>
                             <button
-                                className={`px-4 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 ${showForm === 'child' ? "bg-green-600 text-white" : "bg-blue-50/40 text-slate-600"}`}
+                                className={`px-4 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 ${showForm === 'child' ? "bg-green-600 text-white" : "bg-teal-50/40 text-slate-600"}`}
                                 onClick={() => setShowForm('child')}
                             >
                                 <Plus className="w-4 h-4" /> New Health Check
@@ -1208,7 +1208,7 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
                         {renderChildClinicalProfile(selectedChild)}
 
                         {/* Right: Content */}
-                        <div className="flex-1 min-w-0 bg-white/60 backdrop-blur-lg rounded-xl shadow-md shadow-blue-500/5 border border-blue-200/40 overflow-y-auto flex flex-col p-6">
+                        <div className="flex-1 min-w-0 bg-white/60 backdrop-blur-lg rounded-xl shadow-md shadow-teal-500/5 border border-teal-200/40 overflow-y-auto flex flex-col p-6">
                             {showForm === 'child' ? (
                                 <div className="assessment-form">
                                     <h5>📝 Child Health Check Form</h5>
@@ -1534,7 +1534,7 @@ export const PostnatalAssessments = ({ ashaWorkerId, doctorId, userRole, onUpdat
                                 <div className="assessment-history">
                                     <div className="flex justify-between items-center mb-4">
                                         <h5>📜 Health Check History</h5>
-                                        <span className="text-xs text-slate-400 bg-blue-50/40 px-2 py-1 rounded">Latest on top</span>
+                                        <span className="text-xs text-slate-400 bg-teal-50/40 px-2 py-1 rounded">Latest on top</span>
                                     </div>
                                     {assessments.length === 0 ? (
                                         <div className="text-center py-8 text-slate-400">

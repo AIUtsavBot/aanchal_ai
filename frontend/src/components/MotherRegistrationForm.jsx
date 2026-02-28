@@ -224,9 +224,9 @@ export default function MotherRegistrationForm({ onSuccess, assignerId, assigner
                 </div>
 
                 {/* Medical Information */}
-                <div className="bg-blue-50 p-4 rounded-lg space-y-4">
+                <div className="bg-teal-50 p-4 rounded-lg space-y-4">
                     <h3 className="text-sm font-bold text-gray-600 uppercase flex items-center gap-2">
-                        <Activity className="w-4 h-4 text-blue-500" />
+                        <Activity className="w-4 h-4 text-teal-500" />
                         Medical Information
                     </h3>
 
@@ -244,7 +244,7 @@ export default function MotherRegistrationForm({ onSuccess, assignerId, assigner
                                 placeholder="0"
                                 min="0"
                                 max="20"
-                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                                 required
                             />
                         </div>
@@ -262,7 +262,7 @@ export default function MotherRegistrationForm({ onSuccess, assignerId, assigner
                                 placeholder="0"
                                 min="0"
                                 max="20"
-                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                                 required
                             />
                         </div>
@@ -281,7 +281,7 @@ export default function MotherRegistrationForm({ onSuccess, assignerId, assigner
                                 step="0.1"
                                 min="10"
                                 max="60"
-                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                             />
                         </div>
                     </div>
@@ -299,7 +299,7 @@ export default function MotherRegistrationForm({ onSuccess, assignerId, assigner
                                     name="due_date"
                                     value={formData.due_date}
                                     onChange={handleChange}
-                                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                                 />
                             </div>
                         </div>
@@ -312,7 +312,7 @@ export default function MotherRegistrationForm({ onSuccess, assignerId, assigner
                                 name="preferred_language"
                                 value={formData.preferred_language}
                                 onChange={handleChange}
-                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                             >
                                 <option value="en">English</option>
                                 <option value="hi">Hindi</option>

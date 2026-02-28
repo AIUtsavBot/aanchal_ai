@@ -1021,7 +1021,7 @@ const Signup = () => {
     return (
 
 
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 via-white to-blue-50 py-12 px-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 via-white to-teal-50 py-12 px-4">
 
 
         <div className="max-w-md w-full bg-white p-8 rounded-xl shadow-lg text-center">
@@ -1075,7 +1075,7 @@ const Signup = () => {
   return (
 
 
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 via-white to-blue-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 via-white to-teal-50 py-12 px-4 sm:px-6 lg:px-8">
 
 
       <div className="max-w-2xl w-full space-y-8">
@@ -1408,7 +1408,7 @@ const Signup = () => {
                 {validatingId && (
 
 
-                  <p className="mt-2 text-sm text-blue-600 flex items-center gap-2">
+                  <p className="mt-2 text-sm text-teal-600 flex items-center gap-2">
 
 
                     <span className="animate-spin">⏳</span> Validating ID document...
@@ -1537,7 +1537,7 @@ const Signup = () => {
                 {validatingCert && (
 
 
-                  <p className="mt-2 text-sm text-blue-600 flex items-center gap-2">
+                  <p className="mt-2 text-sm text-teal-600 flex items-center gap-2">
 
 
                     <span className="animate-spin">⏳</span> Analyzing certificate...

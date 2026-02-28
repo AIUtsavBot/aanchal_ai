@@ -499,9 +499,9 @@ export default function DoctorDashboard() {
   // Show loading while detecting doctor
   if (loadingProfile) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-teal-100 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-gradient-to-br from-teal-50 to-teal-100 flex items-center justify-center p-6">
         <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
-          <Loader className="w-12 h-12 animate-spin mx-auto text-blue-600 mb-4" />
+          <Loader className="w-12 h-12 animate-spin mx-auto text-teal-600 mb-4" />
           <h1 className="text-xl font-bold text-slate-800">
             Loading Doctor Portal
           </h1>
@@ -514,7 +514,7 @@ export default function DoctorDashboard() {
   // Show error if doctor not found
   if (!doctorId) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-teal-100 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-gradient-to-br from-teal-50 to-teal-100 flex items-center justify-center p-6">
         <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full">
           <div className="text-center mb-6">
             <div className="bg-red-500/100/15 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -558,23 +558,23 @@ export default function DoctorDashboard() {
   return (
     <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Sidebar */}
-      <div className="w-96 bg-white/60 backdrop-blur-xl border-r border-blue-200/40 flex flex-col shadow-xl shadow-blue-500/10">
+      <div className="w-96 bg-white/60 backdrop-blur-xl border-r border-teal-200/40 flex flex-col shadow-xl shadow-teal-500/10">
         {/* Header */}
-        <div className="bg-gradient-to-br from-blue-600 to-blue-800 text-slate-800 px-6 py-6">
+        <div className="bg-gradient-to-br from-teal-600 to-teal-800 text-slate-800 px-6 py-6">
           <div className="flex items-center gap-4">
-            <div className="bg-blue-500/100 p-3 rounded-lg">
+            <div className="bg-teal-500/100 p-3 rounded-lg">
               <Stethoscope className="w-6 h-6" />
             </div>
             <div>
               <h1 className="text-xl font-bold">Doctor Portal</h1>
-              <p className="text-blue-100 text-sm">{doctorInfo?.name || "Doctor"}</p>
+              <p className="text-teal-100 text-sm">{doctorInfo?.name || "Doctor"}</p>
             </div>
           </div>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-3 px-4 py-4 bg-blue-50/50 border-b border-blue-200/40">
-          <div className="bg-white/60 backdrop-blur-xl p-3 rounded-lg text-center border border-blue-200/40">
+        <div className="grid grid-cols-3 gap-3 px-4 py-4 bg-teal-50/50 border-b border-teal-200/40">
+          <div className="bg-white/60 backdrop-blur-xl p-3 rounded-lg text-center border border-teal-200/40">
             <div className="text-2xl font-bold text-slate-800">
               {mothers.length}
             </div>
@@ -595,14 +595,14 @@ export default function DoctorDashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="flex border-b border-blue-200/40">
+        <div className="flex border-b border-teal-200/40">
           <button
             onClick={() => {
               setMainView("patients");
               setSelected(null);
             }}
             className={`flex-1 py-3 text-xs font-semibold flex flex-col items-center gap-1 ${mainView === "patients"
-              ? "text-blue-600 bg-blue-500/10"
+              ? "text-teal-600 bg-teal-500/10"
               : "text-slate-400"
               }`}
           >
@@ -648,7 +648,7 @@ export default function DoctorDashboard() {
         )}
 
         {/* Search */}
-        <div className="px-4 py-4 border-b border-blue-200/40">
+        <div className="px-4 py-4 border-b border-teal-200/40">
           <div className="relative">
             <Search className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
             <input
@@ -656,7 +656,7 @@ export default function DoctorDashboard() {
               placeholder="Search patients..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 border border-blue-200/50 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent text-sm"
+              className="w-full pl-9 pr-4 py-2 border border-teal-200/50 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-transparent text-sm"
             />
           </div>
         </div>
@@ -665,7 +665,7 @@ export default function DoctorDashboard() {
         <div className="flex-1 overflow-y-auto p-4">
           {loading ? (
             <div className="text-center py-8">
-              <RefreshCw className="w-6 h-6 animate-spin mx-auto text-blue-600 mb-2" />
+              <RefreshCw className="w-6 h-6 animate-spin mx-auto text-teal-600 mb-2" />
               <p className="text-slate-500 text-sm">Loading patients...</p>
             </div>
           ) : sorted.length > 0 ? (
@@ -680,8 +680,8 @@ export default function DoctorDashboard() {
                     role="button"
                     tabIndex={0}
                     className={`p-4 rounded-lg border-2 cursor-pointer transition-all transform hover:scale-102 ${selected?.id === m.id
-                      ? "border-blue-600 bg-blue-500/10 shadow-md"
-                      : `border-blue-200/40 ${getRiskColor(risk)}`
+                      ? "border-teal-600 bg-teal-500/10 shadow-md"
+                      : `border-teal-200/40 ${getRiskColor(risk)}`
                       }`}
                   >
                     <div className="flex items-start justify-between">
@@ -696,7 +696,7 @@ export default function DoctorDashboard() {
                       </div>
                       {getRiskIcon(risk)}
                     </div>
-                    <div className="mt-3 pt-3 border-t border-blue-200/40 flex items-center justify-between text-xs">
+                    <div className="mt-3 pt-3 border-t border-teal-200/40 flex items-center justify-between text-xs">
                       <span
                         className={`px-2 py-1 rounded-full font-semibold ${m.delivery_status === 'delivered' || m.active_system === 'santanraksha'
                           ? "bg-teal-100 text-teal-700"
@@ -732,7 +732,7 @@ export default function DoctorDashboard() {
         {selected ? (
           <div className="flex flex-col h-full">
             {/* Patient Header */}
-            <div className="bg-white/60 backdrop-blur-xl border-b border-blue-200/40 px-8 py-6 shadow-sm">
+            <div className="bg-white/60 backdrop-blur-xl border-b border-teal-200/40 px-8 py-6 shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="flex items-center gap-3">
@@ -809,9 +809,9 @@ export default function DoctorDashboard() {
             {/* Content Grid */}
             <div className="flex-1 overflow-hidden flex gap-6 p-6">
               {/* Patient Details Card */}
-              <div className="w-80 bg-white/60 backdrop-blur-xl rounded-xl shadow-md border border-blue-200/40 p-5 overflow-y-auto">
+              <div className="w-80 bg-white/60 backdrop-blur-xl rounded-xl shadow-md border border-teal-200/40 p-5 overflow-y-auto">
                 <h3 className="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2">
-                  <Activity className="w-5 h-5 text-blue-600" />
+                  <Activity className="w-5 h-5 text-teal-600" />
                   Clinical Profile
                 </h3>
                 <div className="space-y-4 text-sm">
@@ -871,10 +871,10 @@ export default function DoctorDashboard() {
               </div>
 
               {/* Main Content Area */}
-              <div className="flex-1 bg-white/60 backdrop-blur-xl rounded-xl shadow-md border border-blue-200/40 overflow-hidden flex flex-col">
+              <div className="flex-1 bg-white/60 backdrop-blur-xl rounded-xl shadow-md border border-teal-200/40 overflow-hidden flex flex-col">
                 {activeTab === "history" ? (
                   <>
-                    <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-slate-800 px-6 py-4">
+                    <div className="bg-gradient-to-r from-teal-600 to-teal-700 text-slate-800 px-6 py-4">
                       <h3 className="text-lg font-bold flex items-center gap-2">
                         <FileText className="w-5 h-5" />
                         Assessment History ({assessments.length})
@@ -883,7 +883,7 @@ export default function DoctorDashboard() {
                     <div className="flex-1 overflow-y-auto p-5">
                       {loadingAssessments ? (
                         <div className="text-center py-8">
-                          <Loader className="w-6 h-6 animate-spin mx-auto text-blue-600" />
+                          <Loader className="w-6 h-6 animate-spin mx-auto text-teal-600" />
                         </div>
                       ) : assessments.length > 0 ? (
                         <div className="space-y-4">
@@ -979,14 +979,14 @@ export default function DoctorDashboard() {
                                   )}
                                 </div>
                                 {a.summary && (
-                                  <div className="mt-3 text-sm bg-white/500 p-2 rounded border border-blue-100/30">
+                                  <div className="mt-3 text-sm bg-white/500 p-2 rounded border border-teal-100/30">
                                     <span className="font-semibold text-slate-600">Notes: </span>
                                     <span className="text-slate-500 block mt-1">{a.summary}</span>
                                   </div>
                                 )}
 
                                 {isConsultation && a.event_data && (
-                                  <div className="mt-3 space-y-3 border-t border-blue-200/40 pt-2">
+                                  <div className="mt-3 space-y-3 border-t border-teal-200/40 pt-2">
                                     {/* Medications */}
                                     {a.event_data.medications && a.event_data.medications.length > 0 && (
                                       <div className="bg-teal-50 p-2 rounded text-xs">
@@ -1014,9 +1014,9 @@ export default function DoctorDashboard() {
 
                                     {/* Next Visit */}
                                     {a.event_data.next_consultation && (
-                                      <div className="bg-blue-500/10 p-2 rounded text-xs flex justify-between items-center">
-                                        <span className="font-bold text-blue-700">📅 Next Visit:</span>
-                                        <span className="text-blue-900 font-medium">
+                                      <div className="bg-teal-500/10 p-2 rounded text-xs flex justify-between items-center">
+                                        <span className="font-bold text-teal-700">📅 Next Visit:</span>
+                                        <span className="text-teal-900 font-medium">
                                           {typeof a.event_data.next_consultation === 'object'
                                             ? `${new Date(a.event_data.next_consultation.date).toLocaleDateString()} at ${a.event_data.next_consultation.time}`
                                             : new Date(a.event_data.next_consultation).toLocaleDateString()

@@ -232,7 +232,7 @@ export default function PatientChatHistory({
       case "PATIENT":
         return "bg-teal-50 border-teal-200";
       case "BOT":
-        return "bg-blue-50 border-blue-200";
+        return "bg-teal-50 border-teal-200";
       case "DOCTOR":
         return "bg-teal-50 border-teal-200";
       case "ASHA":
@@ -268,7 +268,7 @@ export default function PatientChatHistory({
       case "PATIENT":
         return `${baseClasses} bg-teal-100 text-teal-800`;
       case "BOT":
-        return `${baseClasses} bg-blue-100 text-blue-800`;
+        return `${baseClasses} bg-teal-100 text-teal-800`;
       case "DOCTOR":
         return `${baseClasses} bg-teal-100 text-teal-800`;
       case "ASHA":
@@ -286,7 +286,7 @@ export default function PatientChatHistory({
           <span className="flex items-center gap-1 px-2 py-1 bg-teal-100 text-teal-700 rounded-full">
             <User className="w-3 h-3" /> Patient
           </span>
-          <span className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
+          <span className="flex items-center gap-1 px-2 py-1 bg-teal-100 text-teal-700 rounded-full">
             <Bot className="w-3 h-3" /> Bot
           </span>
           <span className="flex items-center gap-1 px-2 py-1 bg-teal-100 text-teal-700 rounded-full">
@@ -303,7 +303,7 @@ export default function PatientChatHistory({
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
-              <Loader className="w-8 h-8 animate-spin mx-auto mb-2 text-blue-600" />
+              <Loader className="w-8 h-8 animate-spin mx-auto mb-2 text-teal-600" />
               <p className="text-gray-600">Loading chat history...</p>
             </div>
           </div>
@@ -378,12 +378,12 @@ export default function PatientChatHistory({
             onChange={(e) => setInput(e.target.value)}
             placeholder="Add a note or message..."
             disabled={sending}
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
           />
           <button
             type="submit"
             disabled={sending || !input.trim()}
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2 transition-colors disabled:cursor-not-allowed"
+            className="bg-teal-600 hover:bg-teal-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2 transition-colors disabled:cursor-not-allowed"
           >
             {sending ? (
               <>

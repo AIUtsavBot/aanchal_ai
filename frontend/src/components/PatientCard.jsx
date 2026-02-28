@@ -70,7 +70,7 @@ export default function PatientCard({ mother }) {
             <div className="mt-4 pt-3 border-t border-gray-100">
               <button
                 onClick={handleToggleGrowth}
-                className="flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors"
+                className="flex items-center gap-2 text-sm font-semibold text-teal-600 hover:text-teal-800 transition-colors"
               >
                 <Baby className="w-4 h-4" />
                 {showGrowth ? 'Hide Growth Charts' : 'View Child Growth'}
@@ -96,7 +96,7 @@ export default function PatientCard({ mother }) {
           ) : childrenData.length > 0 ? (
             <div className="space-y-6">
               {childrenData.map((child, idx) => (
-                <div key={idx} className="bg-blue-50 p-4 rounded-xl">
+                <div key={idx} className="bg-teal-50 p-4 rounded-xl">
                   <h4 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
                     👶 {child.name}
                     <span className="text-xs font-normal text-gray-500">({child.gender})</span>
