@@ -53,7 +53,7 @@ function AudienceCard({ title, desc, icon: Icon, color }) {
   const colorMap = {
     'text-pink-600': 'text-pink-500',
     'text-green-600': 'text-emerald-500',
-    'text-indigo-600': 'text-blue-500'
+    'text-teal-600': 'text-blue-500'
   }
   return (
     <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">

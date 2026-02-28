@@ -457,7 +457,7 @@ export default function AdminDashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Doctor Workload */}
                   <div className="bg-white/60 backdrop-blur-xl border rounded-lg p-4">
-                    <h4 className="font-semibold text-indigo-800 mb-3">👨‍⚕️ Doctor Workload</h4>
+                    <h4 className="font-semibold text-teal-800 mb-3">👨‍⚕️ Doctor Workload</h4>
                     {doctors.length === 0 ? (
                       <p className="text-slate-400 text-sm">No doctors registered</p>
                     ) : (
@@ -924,7 +924,7 @@ export default function AdminDashboard() {
                                   value={effectiveAsha || ''}
                                   onChange={e => handleAssignmentChange(mother.id, 'asha', e.target.value)}
                                   className={`text-sm border rounded px-2 py-1.5 w-36 ${hasChanges && 'asha_worker_id' in pendingChanges[mother.id] ? 'border-yellow-400 bg-yellow-50' :
-                                    effectiveAsha ? 'border-purple-300 bg-teal-50' : 'border-gray-300'
+                                    effectiveAsha ? 'border-teal-300 bg-teal-50' : 'border-gray-300'
                                     }`}
                                 >
                                   <option value="">-- Select --</option>
@@ -938,7 +938,7 @@ export default function AdminDashboard() {
                                   value={effectiveDoctor || ''}
                                   onChange={e => handleAssignmentChange(mother.id, 'doctor', e.target.value)}
                                   className={`text-sm border rounded px-2 py-1.5 w-36 ${hasChanges && 'doctor_id' in pendingChanges[mother.id] ? 'border-yellow-400 bg-yellow-50' :
-                                    effectiveDoctor ? 'border-indigo-300 bg-teal-50' : 'border-gray-300'
+                                    effectiveDoctor ? 'border-teal-300 bg-teal-50' : 'border-gray-300'
                                     }`}
                                 >
                                   <option value="">-- Select --</option>

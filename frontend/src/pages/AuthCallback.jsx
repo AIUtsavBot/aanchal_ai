@@ -357,7 +357,7 @@ export default function AuthCallback() {
                 className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all
                   ${uploadedFile
                     ? "border-green-400 bg-green-50"
-                    : "border-gray-300 hover:border-purple-400 hover:bg-teal-50"
+                    : "border-gray-300 hover:border-teal-400 hover:bg-teal-50"
                   }
                   ${uploadError ? "border-red-400 bg-red-50" : ""}
                 `}

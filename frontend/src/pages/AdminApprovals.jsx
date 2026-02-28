@@ -538,7 +538,7 @@ export default function AdminApprovals() {
                               href={req.degree_cert_url}
                               target="_blank"
                               rel="noreferrer"
-                              className="mt-2 inline-flex items-center gap-2 text-teal-600 hover:text-indigo-800 text-sm"
+                              className="mt-2 inline-flex items-center gap-2 text-teal-600 hover:text-teal-800 text-sm"
                             >
                               <FileText className="w-4 h-4" /> View Certificate
                             </a>

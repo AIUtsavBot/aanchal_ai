@@ -353,7 +353,7 @@ export default function DocumentManager({
             {documents.map((doc, idx) => (
               <div
                 key={doc.id || idx}
-                className="bg-white p-4 rounded-lg border border-gray-200 hover:border-indigo-300 transition-colors"
+                className="bg-white p-4 rounded-lg border border-gray-200 hover:border-teal-300 transition-colors"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
