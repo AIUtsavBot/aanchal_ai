@@ -198,7 +198,7 @@ export const PostnatalDashboard = ({ ashaWorkerId, doctorId, userRole }) => {
         <div className="dashboard-content">
             <div className="dashboard-header">
                 <h2>🍼 Postnatal & Child Care Dashboard</h2>
-                <p className="subtitle">SantanRaksha - Monitor mothers and children after delivery</p>
+                <p className="subtitle">Aanchal AI - Monitor mothers and children after delivery</p>
             </div>
 
             {/* Stats Grid */}
@@ -310,7 +310,7 @@ export const PostnatalDashboard = ({ ashaWorkerId, doctorId, userRole }) => {
 
             {/* Info Card */}
             <div className="info-card">
-                <h3>🎉 Welcome to SantanRaksha!</h3>
+                <h3>🎉 Welcome to Aanchal AI!</h3>
                 <p>
                     This is your postnatal and child health monitoring dashboard. Here you can:
                 </p>

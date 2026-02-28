@@ -334,7 +334,7 @@ def run_telegram_bot():
                 # DO NOT CALL updater.start_polling() here!
                 
                 bot_running = True
-                logger.info("🤖 MatruRaksha Telegram Bot is ACTIVE (webhook mode)")
+                logger.info("🤖 Aanchal AI Telegram Bot is ACTIVE (webhook mode)")
                 
                 # Keep the thread alive but do nothing (FastAPI handles requests)
                 while bot_running:
@@ -365,7 +365,7 @@ def run_telegram_bot():
 
             
             logger.info("✅ Telegram polling started")
-            logger.info("🤖 MatruRaksha Telegram Bot is ACTIVE (polling mode)")
+            logger.info("🤖 Aanchal AI Telegram Bot is ACTIVE (polling mode)")
             
             # Keep running
             loop.run_forever()

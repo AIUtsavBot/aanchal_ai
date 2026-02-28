@@ -603,14 +603,9 @@ async def create_vaccination(
     except Exception as e:
         logger.error(f"Error saving vaccination: {e}")
         raise HTTPException(status_code=500, detail="Error saving vaccination")
->>>>>>> c303068 (feat: postnatal context + vaccination fix + brain audit)
 
 
 # ==================== GROWTH ====================
-# Moved to santanraksha.py
-
-<<<<<<< HEAD
-=======
 @router.get("/children/{child_id}/growth", response_model=GrowthHistoryResponse)
 async def get_child_growth(
     child_id: str,
@@ -665,12 +660,18 @@ async def create_growth_record(
 ):
     """Record a growth measurement"""
     try:
-        data = jsonable_encoder(record.dict())
+        # Filter out None values to avoid Supabase column mismatch errors
+        raw_data = record.dict()
+        data = {k: v for k, v in raw_data.items() if v is not None}
+        
+        # Convert date objects to ISO strings for Supabase
+        for key in list(data.keys()):
+            if isinstance(data[key], date):
+                data[key] = data[key].isoformat()
+        
         data["created_at"] = datetime.utcnow().isoformat()
         if not data.get("measured_by"):
             data["measured_by"] = f"{current_user.get('role', 'User')} {current_user.get('id')}"
-            
-        # Calculate Z-scores logic could go here, or handled by frontend/AI
         
         res = supabase_admin.table("growth_records").insert(data).execute()
             
@@ -686,7 +687,7 @@ async def create_growth_record(
     except Exception as e:
         logger.error(f"Error saving growth record: {e}")
         raise HTTPException(status_code=500, detail="Error saving growth record")
->>>>>>> c303068 (feat: postnatal context + vaccination fix + brain audit)
+
 
 # ==================== ASSESSMENTS ====================
 
