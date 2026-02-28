@@ -1,11 +1,12 @@
 // Growth Charts Screen
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Dimensions, TouchableOpacity, Modal, TextInput, Alert, ActivityIndicator } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { supabase } from '../../services/auth';
+import { santanrakshaAPI } from '../../services/api';
 import { typography, spacing, borderRadius } from '../../theme';
 import { LoadingSpinner } from '../../components/shared';
 
@@ -19,6 +20,9 @@ export default function GrowthChartsScreen({ route }) {
     const { theme } = useTheme();
     const [loading, setLoading] = useState(false);
     const [dropdownOpen, setDropdownOpen] = useState(false);
+    const [recordModalVisible, setRecordModalVisible] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [measurement, setMeasurement] = useState({ weight: '', height: '' });
     const [chartData, setChartData] = useState({
         weight: { labels: ['0d'], data: [0] },
         height: { labels: ['0d'], data: [0] },
@@ -92,6 +96,39 @@ export default function GrowthChartsScreen({ route }) {
         fetchGrowthData();
     }, [childId]);
 
+    const handleRecordMeasurement = async () => {
+        if (!childId) return;
+        if (!measurement.weight || isNaN(measurement.weight)) {
+            Alert.alert('Error', 'Please enter a valid weight.');
+            return;
+        }
+
+        setSaving(true);
+        try {
+            const today = new Date().toISOString().split('T')[0];
+            await santanrakshaAPI.recordGrowth({
+                child_id: childId,
+                measurement_date: today,
+                weight_kg: parseFloat(measurement.weight),
+                height_cm: measurement.height ? parseFloat(measurement.height) : null,
+            });
+
+            Alert.alert('Success', 'Measurement recorded successfully');
+            setRecordModalVisible(false);
+            setMeasurement({ weight: '', height: '' });
+
+            // Reload the screen by clearing cache or relying on next refresh
+            // For simplicity, we can just trigger a re-fetch by toggling a state:
+            setChildId(childId + ' '); // hack to trigger effect, reversed below
+            setTimeout(() => setChildId(childId), 50);
+        } catch (err) {
+            console.error('Error saving measurement:', err);
+            Alert.alert('Error', err.response?.data?.detail || 'Failed to record measurement');
+        } finally {
+            setSaving(false);
+        }
+    };
+
     const chartConfig = {
         backgroundGradientFrom: theme.surface,
         backgroundGradientTo: theme.surface,
@@ -156,6 +193,20 @@ export default function GrowthChartsScreen({ route }) {
                     </View>
                 )}
 
+                {/* Record Button */}
+                {childId && (
+                    <TouchableOpacity
+                        style={[styles.recordButton, { backgroundColor: theme.primary }]}
+                        onPress={() => setRecordModalVisible(true)}
+                        activeOpacity={0.8}
+                    >
+                        <Ionicons name="add-circle-outline" size={20} color="#fff" />
+                        <Text style={[typography.bodyBold, { color: '#fff', marginLeft: spacing.sm }]}>
+                            Record Measurement
+                        </Text>
+                    </TouchableOpacity>
+                )}
+
                 {/* Weight Chart */}
                 <View style={[styles.chartCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
                     <View style={styles.chartHeader}>
@@ -199,6 +250,54 @@ export default function GrowthChartsScreen({ route }) {
                         Growth data is plotted against WHO Child Growth Standards. Z-scores between -2 and +2 are considered normal range.
                     </Text>
                 </View>
+
+                {/* Record Modal */}
+                <Modal visible={recordModalVisible} transparent animationType="slide">
+                    <View style={styles.modalOverlay}>
+                        <View style={[styles.modalContent, { backgroundColor: theme.background }]}>
+                            <View style={[styles.modalHeader, { borderBottomColor: theme.border }]}>
+                                <Text style={[typography.h3, { color: theme.text }]}>Record Measurement</Text>
+                                <TouchableOpacity onPress={() => setRecordModalVisible(false)}>
+                                    <Ionicons name="close" size={24} color={theme.textTertiary} />
+                                </TouchableOpacity>
+                            </View>
+                            <View style={styles.modalBody}>
+                                <Text style={[typography.smallBold, { color: theme.text, marginBottom: spacing.xs }]}>Weight (kg) *</Text>
+                                <TextInput
+                                    style={[styles.input, { backgroundColor: theme.surface, borderColor: theme.border, color: theme.text }]}
+                                    value={measurement.weight}
+                                    onChangeText={(t) => setMeasurement(p => ({ ...p, weight: t }))}
+                                    keyboardType="numeric"
+                                    placeholder="e.g. 4.5"
+                                    placeholderTextColor={theme.textTertiary}
+                                />
+
+                                <Text style={[typography.smallBold, { color: theme.text, marginBottom: spacing.xs, marginTop: spacing.md }]}>Height/Length (cm)</Text>
+                                <TextInput
+                                    style={[styles.input, { backgroundColor: theme.surface, borderColor: theme.border, color: theme.text }]}
+                                    value={measurement.height}
+                                    onChangeText={(t) => setMeasurement(p => ({ ...p, height: t }))}
+                                    keyboardType="numeric"
+                                    placeholder="e.g. 55"
+                                    placeholderTextColor={theme.textTertiary}
+                                />
+
+                                <TouchableOpacity
+                                    style={[styles.submitBtn, { backgroundColor: theme.primary, opacity: saving ? 0.7 : 1 }]}
+                                    onPress={handleRecordMeasurement}
+                                    disabled={saving}
+                                >
+                                    {saving ? <ActivityIndicator color="#fff" /> : (
+                                        <>
+                                            <Ionicons name="save-outline" size={20} color="#fff" />
+                                            <Text style={[typography.bodyBold, { color: '#fff', marginLeft: spacing.sm }]}>Save Record</Text>
+                                        </>
+                                    )}
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                </Modal>
             </View>
         </ScrollView>
     );
@@ -226,4 +325,14 @@ const styles = StyleSheet.create({
         flexDirection: 'row', alignItems: 'center', padding: spacing.md,
         borderBottomWidth: 1,
     },
+    recordButton: {
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+        paddingVertical: 12, borderRadius: borderRadius.md, marginBottom: spacing.lg,
+    },
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+    modalContent: { borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '80%' },
+    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.lg, borderBottomWidth: 1 },
+    modalBody: { padding: spacing.lg, paddingBottom: 40 },
+    input: { padding: spacing.md, borderRadius: borderRadius.md, borderWidth: 1, fontSize: 16 },
+    submitBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16, borderRadius: borderRadius.md, marginTop: spacing.xl },
 });
