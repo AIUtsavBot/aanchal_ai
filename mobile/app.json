@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "Aanchal AI",
+    "slug": "aanchal-ai",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "scheme": "aanchalai",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#7C3AED"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.aanchalai.mobile"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#7C3AED",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "package": "com.aanchalai.mobile"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-secure-store",
+      "expo-localization"
+    ]
+  }
+}
