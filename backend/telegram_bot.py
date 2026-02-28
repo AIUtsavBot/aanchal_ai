@@ -1135,6 +1135,25 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
     # Block messages during active registration
     if context.chat_data.get('registration_active'):
         return
+        
+    # --- Daily User Throttling (20 messages/day) to save API tokens ---
+    from datetime import datetime
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    
+    if context.user_data.get("throttle_date") != today_str:
+        context.user_data["throttle_date"] = today_str
+        context.user_data["message_count"] = 0
+        
+    context.user_data["message_count"] = context.user_data.get("message_count", 0) + 1
+    
+    if context.user_data["message_count"] > 20:
+        await update.message.reply_text(
+            "⚠️ You have reached your daily limit of 20 health queries. "
+            "Our AI assistants require processing time. Please come back tomorrow, "
+            "or if it's an emergency, call 108 immediately."
+        )
+        return
+    # -----------------------------------------------------------------
     
     try:
         chat_id = str(getattr(getattr(update, 'message', None), 'chat', None).id)

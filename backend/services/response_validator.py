@@ -50,18 +50,18 @@ class ClinicalRulesValidator:
     # ==================== CONTRABAND PHRASES ====================
     # Phrases that should NEVER appear in responses to mothers
     CONTRABAND_PHRASES = {
-        # Medication safety
+        # Medication safety (Pediatric)
         "aspirin for fever": "Aspirin can cause Reye's syndrome in children",
         "aspirin for child": "Aspirin can cause Reye's syndrome in children",
         "give aspirin": "Aspirin is contraindicated for children with fever",
         
-        # Feeding safety
+        # Feeding safety (Pediatric)
         "honey before 1 year": "Honey can cause infant botulism",
         "honey for infant": "Honey can cause infant botulism under 12 months",
         "honey under 12 month": "Honey is contraindicated for infants",
         "give honey to baby": "Honey can cause botulism in infants <1 year",
         
-        # Medication contraindications
+        # Medication contraindications (Pediatric)
         "cough syrup under 2": "Cough syrups are not recommended for children under 2 years",
         "cough medicine for infant": "Cough medicines are not effective for infants",
         "decongestant for baby": "Decongestants are not recommended for infants",
@@ -77,10 +77,45 @@ class ClinicalRulesValidator:
         "vaccines cause autism": "This is a debunked myth - vaccines do not cause autism",
         "don't vaccinate": "Vaccination is recommended by IAP and WHO",
         
-        # Dangerous advice
+        # Dangerous advice (General)
         "give antibiotics without doctor": "Antibiotics require medical prescription",
         "home remedy instead of hospital": "Seek medical care for emergencies",
         "wait and see for emergency": "Emergency symptoms require immediate care",
+        
+        # ==================== MATERNAL CONTRABAND ====================
+        # Sex determination (ILLEGAL under PCPNDT Act, 1994)
+        "it's a boy": "Sex determination/disclosure is illegal under PCPNDT Act, India",
+        "it's a girl": "Sex determination/disclosure is illegal under PCPNDT Act, India",
+        "gender of the baby": "Sex determination is illegal under PCPNDT Act, India",
+        "sex of the baby": "Sex determination is illegal under PCPNDT Act, India",
+        "predict baby gender": "Sex prediction is illegal under PCPNDT Act, India",
+        "boy or girl": "Sex determination/prediction is illegal under PCPNDT Act, India",
+        
+        # Unsafe home remedies for labor induction
+        "castor oil to induce": "Castor oil can cause severe diarrhea, dehydration, and fetal distress",
+        "castor oil for labor": "Castor oil is unsafe for labor induction at home",
+        "papaya to induce labor": "Unripe papaya contains papain which can cause complications",
+        "eat papaya to start labor": "Papaya for inducing labor is an unsafe myth",
+        "take misoprostol at home": "Misoprostol must ONLY be used under medical supervision",
+        "use misoprostol without doctor": "Unsupervised misoprostol use can cause uterine rupture",
+        
+        # Dangerous self-medication during pregnancy
+        "take ibuprofen during pregnancy": "NSAIDs are contraindicated especially in 3rd trimester [SOURCE: WHO]",
+        "ibuprofen is safe in pregnancy": "Ibuprofen is NOT safe during pregnancy without medical advice",
+        "stop taking iron tablets": "IFA supplementation is critical per NHM India guidelines",
+        "stop prenatal vitamins": "Prenatal vitamins are essential throughout pregnancy",
+        "don't take folic acid": "Folic acid prevents neural tube defects — it must not be stopped",
+        
+        # Anti-prenatal-care myths
+        "ultrasound harms baby": "Diagnostic ultrasound is safe and recommended per WHO",
+        "avoid hospital delivery": "Institutional delivery is safest per NHM India guidelines",
+        "don't go for checkup": "Antenatal checkups are essential — minimum 4 per WHO, 8 recommended",
+        "home birth is safer": "Institutional delivery reduces maternal mortality [SOURCE: NHM]",
+        
+        # Dangerous labor advice
+        "push before fully dilated": "Pushing before full dilation can cause cervical tears",
+        "deliver at home alone": "Unattended home delivery is extremely dangerous",
+        "cut umbilical cord yourself": "Cord management requires sterile medical equipment",
     }
     
     # ==================== CLINICAL THRESHOLDS ====================
@@ -173,9 +208,15 @@ class ClinicalRulesValidator:
         # Medical recommendations should have citations
         has_medical_advice = self._contains_medical_advice(response_lower)
         if has_medical_advice and citations_missing:
-            issues.append("Response contains medical advice without source citation")
-            if severity == ValidationSeverity.INFO:
-                severity = ValidationSeverity.WARNING
+            # Stricter enforcement for critical agent types
+            critical_agents = ['Emergency Agent', 'Medication Agent', 'emergency_agent', 'medication_agent']
+            if agent_type and agent_type in critical_agents:
+                issues.append("CRITICAL: Emergency/Medication advice without source citation")
+                severity = ValidationSeverity.CRITICAL
+            else:
+                issues.append("Response contains medical advice without source citation")
+                if severity == ValidationSeverity.INFO:
+                    severity = ValidationSeverity.WARNING
         
         # ==================== 4. THRESHOLD VALIDATION ====================
         threshold_issues = self._validate_thresholds(response, context)
@@ -271,19 +312,49 @@ class ClinicalRulesValidator:
         response_lower = response.lower()
         
         # Check fever thresholds mentioned in response
-        # Look for patterns like "fever above 38" or "temperature over 39"
         fever_pattern = r'(?:fever|temperature)\s*(?:above|over|>|greater than)\s*(\d+\.?\d*)'
         fever_matches = re.findall(fever_pattern, response_lower)
         
         for temp in fever_matches:
             temp_val = float(temp)
-            # If response says fever is safe above 39.5 for young infants, flag it
             if context:
                 age_months = context.get('age_months', 12)
                 if age_months < 3 and temp_val > 37.5:
                     issues.append(
                         f"Threshold issue: Response mentions {temp_val}°C for infant <3 months. "
                         f"IMNCI: ANY fever requires immediate care."
+                    )
+        
+        # ==================== MATERNAL THRESHOLD VALIDATION ====================
+        # Check BP thresholds — if response mentions a BP "safe" above WHO limits
+        bp_pattern = r'(?:blood pressure|bp)\s*(?:of|is|at|reading)?\s*(\d{2,3})\s*/\s*(\d{2,3})'
+        bp_matches = re.findall(bp_pattern, response_lower)
+        for systolic, diastolic in bp_matches:
+            sys_val, dia_val = int(systolic), int(diastolic)
+            if sys_val >= 160 or dia_val >= 110:
+                # Response mentions severe preeclampsia BP — ensure it flags urgency
+                if 'hospital' not in response_lower and 'emergency' not in response_lower:
+                    issues.append(
+                        f"BP {sys_val}/{dia_val} mentioned but no emergency referral. "
+                        f"WHO: ≥160/110 = severe preeclampsia, requires IMMEDIATE hospital."
+                    )
+            elif sys_val >= 140 or dia_val >= 90:
+                if 'doctor' not in response_lower and 'refer' not in response_lower:
+                    issues.append(
+                        f"BP {sys_val}/{dia_val} mentioned but no referral. "
+                        f"WHO: ≥140/90 = hypertension, requires urgent doctor visit."
+                    )
+        
+        # Check Hb thresholds — flag if response normalizes severe anaemia
+        hb_pattern = r'(?:h[ae]moglobin|hb)\s*(?:of|is|at|level|value)?\s*:?\s*(\d+\.?\d*)\s*(?:g/dl|g/l)?'
+        hb_matches = re.findall(hb_pattern, response_lower)
+        for hb_str in hb_matches:
+            hb_val = float(hb_str)
+            if hb_val < 7 and hb_val > 0:  # Severe anaemia
+                if 'hospital' not in response_lower and 'transfusion' not in response_lower:
+                    issues.append(
+                        f"Hb {hb_val} g/dL mentioned but no hospital/transfusion referral. "
+                        f"NHM India: Hb <7 = severe anaemia, requires hospital & possible transfusion."
                     )
         
         return issues
@@ -309,8 +380,10 @@ class ClinicalRulesValidator:
             "For this question, I recommend speaking directly with your healthcare provider "
             "or ASHA worker who can give you personalized guidance.\n\n"
             "📞 If this is urgent, please contact:\n"
+            "• Ambulance: 108 (free, 24/7)\n"
+            "• Maternal helpline: 102 (Janani Express)\n"
+            "• Women helpline: 181\n"
             "• Your doctor or nearest hospital\n"
-            "• Emergency: 108 (Ambulance)\n"
             "• Your assigned ASHA worker"
         )
     

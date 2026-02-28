@@ -485,7 +485,7 @@ class OrchestratorAgent:
         mother_context: Dict[str, Any],
         reports_context: List[Dict[str, Any]]
     ) -> str:
-        """Fallback response using Gemini directly — optimized prompt for fewer tokens."""
+        """Fallback response using Gemini directly — with full safety guardrails."""
         if not GEMINI_AVAILABLE or not gemini_client:
             return (
                 "⚠️ I'm sorry, I'm having trouble processing your request right now. "
@@ -522,19 +522,54 @@ class OrchestratorAgent:
             if follow_up:
                 memory_hint = f"\nConversation context: {follow_up[:300]}"
 
+            preferred_language = mother_context.get('preferred_language', 'en')
+
             prompt = (
+                f"CRITICAL SAFETY RULES — you MUST follow these:\n"
+                f"1. Strictly follow WHO and NHM India guidelines. Reply ONLY in {preferred_language}.\n"
+                f"2. NEVER prescribe medications or dosages — only a doctor can do that.\n"
+                f"3. NEVER recommend stopping prescribed medications.\n"
+                f"4. NEVER discuss or predict the sex/gender of the baby (illegal under PCPNDT Act, India).\n"
+                f"5. NEVER recommend unsafe home remedies (castor oil, papaya for induction, etc.).\n"
+                f"6. If symptoms sound urgent (bleeding, seizures, severe pain, unconsciousness), "
+                f"IMMEDIATELY advise calling 108 (ambulance) or going to the nearest hospital.\n"
+                f"7. When giving medical advice, cite the source: [SOURCE: WHO/NHM/IMNCI/IAP]\n"
+                f"8. If you are not confident about something, say so honestly and advise consulting a doctor.\n"
+                f"9. Ask 1-2 clarifying questions before giving advice.\n\n"
                 f"You are a maternal health assistant for: {context_str}.{memory_hint}\n\n"
                 f"Question: {message}\n\n"
-                "Reply empathetically in 2-3 short paragraphs. "
-                "Ask 2-3 clarifying questions before advising. "
-                "If urgent, advise consulting healthcare provider."
+                f"Reply empathetically. Include [SOURCE: guideline] for any medical advice."
             )
 
             response = gemini_client.models.generate_content(
                 model=model_name,
                 contents=prompt
             )
-            return response.text.replace('*', '').replace('_', '').replace('`', '')
+            cleaned = response.text.replace('*', '').replace('_', '').replace('`', '')
+
+            # ===== POST-VALIDATION (was previously bypassed for fallback) =====
+            try:
+                try:
+                    from backend.services.response_validator import validate_response, ValidationSeverity
+                except ImportError:
+                    from services.response_validator import validate_response, ValidationSeverity
+
+                validation_context = {
+                    'query': message,
+                    'mother_id': mother_context.get('id'),
+                    'agent_type': 'fallback'
+                }
+                result = validate_response(cleaned, validation_context, 'fallback')
+
+                if result.severity == ValidationSeverity.CRITICAL:
+                    logger.warning(f"🚨 Fallback response BLOCKED: {result.issues}")
+                    return result.modified_response
+                elif result.severity == ValidationSeverity.WARNING:
+                    cleaned = result.modified_response or cleaned
+            except Exception as ve:
+                logger.error(f"Fallback validation error: {ve}")
+
+            return cleaned
 
         except Exception as e:
             logger.error(f"Fallback response error: {e}")

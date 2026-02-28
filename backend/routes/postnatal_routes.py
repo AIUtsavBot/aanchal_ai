@@ -507,8 +507,7 @@ async def get_assessment_history(
 # ==================== VACCINATIONS ====================
 # Moved to santanraksha.py
 
-<<<<<<< HEAD
-=======
+
 @router.get("/children/{child_id}/vaccinations", response_model=VaccinationListResponse)
 async def get_child_vaccinations(
     child_id: str,

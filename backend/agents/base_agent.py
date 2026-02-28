@@ -116,6 +116,9 @@ class BaseAgent(ABC):
             context_result = await self.build_context(mother_context.get('id'))
             context_info = context_result.get('context_text', '')
             
+            # Removed RAG implementation to use built-in Google Search Grounding instead
+            rag_evidence = ""
+            
             preferred_language = language or mother_context.get('preferred_language', 'en')
             
             # Enhanced prompt with citation requirements
@@ -132,12 +135,16 @@ class BaseAgent(ABC):
             full_prompt = f"""
 CRITICAL: Strictly follow WHO and NHM India guidelines. If High Risk, recommend hospital. Reply ONLY in {preferred_language}.
 
-CITATION REQUIREMENT:
-When making clinical recommendations, you MUST cite the source guideline using format: [SOURCE: guideline_name]
-Examples:
-- "Give ORS 75ml/kg over 4 hours [SOURCE: WHO ORS Plan B]"
-- "Seek immediate care for fever in infants <3 months [SOURCE: IMNCI]"
-Valid sources: IMNCI, IAP 2023, WHO, WHO Growth Standards, WHO ORS, NHM SUMAN, WHO IYCF, EPDS, RBSK
+ABSOLUTE SAFETY RULES (NEVER VIOLATE):
+1. NEVER prescribe medications or dosages — only a doctor can do that.
+2. NEVER recommend stopping prescribed medications or IFA tablets.
+3. NEVER discuss or predict the sex/gender of the baby — this is ILLEGAL under the PCPNDT Act, 1994 (India). If asked, respond: "I cannot discuss this. Sex determination is prohibited by law in India."
+4. NEVER recommend unsafe home remedies: castor oil for labor, unripe papaya, alcohol rubs, misoprostol without doctor.
+5. If symptoms sound urgent (bleeding, seizures, severe pain, unconsciousness, high fever), IMMEDIATELY advise calling 108 (ambulance) or 102 (maternal helpline).
+
+CITATION AND WEB SEARCH REQUIREMENT:
+1. You MUST use your search tools to scrape the internet for the most accurate and up-to-date WHO, NHM, and current medical guidelines from trusted government/medical sources to answer the user's question.
+2. At the end of your response, you MUST attach the exact website source/URL from where you provided the information, so the user can verify it. Example: [Source: https://www.who.int/... ]
 {memory_section}
 QUESTIONING PROTOCOL (IMPORTANT):
 1. If past history is shown above, ACKNOWLEDGE it and ask if current issue is related
@@ -148,19 +155,32 @@ QUESTIONING PROTOCOL (IMPORTANT):
 3. If this is a recurring issue, ask if previous advice helped
 4. Gather information FIRST, then provide advice
 
+CULTURAL SENSITIVITY & BIAS PREVENTION:
+- NEVER assume dietary preferences based on the mother's name, region, or religion
+- Respect vegetarian, vegan, Jain, and halal dietary needs — always offer alternatives
+- Do NOT dismiss traditional practices outright — acknowledge them, then provide evidence-based correction if needed
+- Handle domestic violence/abuse disclosures sensitively — provide helpline 181 (Women Helpline)
+- Use inclusive, non-judgmental language
+
+CONFIDENCE & UNCERTAINTY:
+- If you are NOT confident about a medical fact, say: "I am not fully sure about this — please confirm with your doctor."
+- If the question is outside your expertise area, say: "This is outside my specialty. Let me help you find the right resource."
+- NEVER make up clinical values, drug dosages, or threshold numbers — only use values from established guidelines
+
 {system_prompt}
 
 {context_info}
 
 User Question: {query}
 
-Response (ask clarifying questions if needed, include citations for medical advice):
+Response (ask clarifying questions if needed, cite [SOURCE: guideline] for all medical advice):
 """
             
-            # Generate response using new client API
+            # Generate response using new client API with Google Search Grounding
             response = self.client.models.generate_content(
                 model=self.model_name,
-                contents=full_prompt
+                contents=full_prompt,
+                config={'tools': [{'google_search': {}}]}
             )
             
             # Clean response
