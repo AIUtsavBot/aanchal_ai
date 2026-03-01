@@ -250,19 +250,10 @@ async def verify_child_access(
     
     Raises HTTPException if access denied
     """
-    # Healthcare providers get direct access to any child
+    # Healthcare providers get direct access — no child table verification needed
+    # (Children may be stored differently in postnatal system vs children table)
     if user_role in ("ADMIN", "DOCTOR", "ASHA_WORKER", "ASHA"):
-        result = supabase_client.table("children") \
-            .select("*") \
-            .eq("id", child_id) \
-            .execute()
-        
-        if not result.data:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Child not found: {child_id}"
-            )
-        return result.data[0]
+        return {"id": child_id, "access": "granted"}
     
     # MOTHER role: verify through mother chain
     children = await get_authorized_children(
