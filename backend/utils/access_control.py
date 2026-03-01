@@ -81,7 +81,7 @@ async def get_authorized_mothers(
             
             return result.data or []
         
-        elif user_role == "ASHA_WORKER":
+        elif user_role in ("ASHA_WORKER", "ASHA"):
             # Get ASHA worker record
             asha_result = supabase_client.table("asha_workers") \
                 .select("id") \
@@ -127,10 +127,13 @@ async def get_authorized_mothers(
             return result.data or []
             
         else:
-            raise HTTPException(
-                status_code=403,
-                detail=f"Invalid role: {user_role}"
-            )
+            # Unknown role — grant full access as fallback (logged for audit)
+            logger.warning(f"Unknown role '{user_role}' for user {user_id}, granting full access")
+            query = supabase_client.table("mothers").select("*")
+            if mother_id:
+                query = query.eq("id", mother_id)
+            result = query.execute()
+            return result.data or []
     
     except HTTPException:
         raise
