@@ -388,10 +388,7 @@ Response:
 """
             
             # Generate response
-            response = self.client.models.generate_content(
-                model=self.model_name,
-                contents=full_prompt
-            )
+            response = self.model.generate_content(full_prompt)
 
             cleaned_response = response.text.strip()
 

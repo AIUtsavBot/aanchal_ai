@@ -21,21 +21,43 @@ import os
 import logging
 import time
 import hashlib
+from pathlib import Path
 from typing import Dict, Any, Optional, List
 from enum import Enum
 from functools import lru_cache
+from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
 
-# Try to import Gemini for intent classification
-gemini_client = None
-GEMINI_AVAILABLE = False
+# Explicitly load .env from the backend directory
+_env_path = Path(__file__).resolve().parent.parent / ".env"
+load_dotenv(dotenv_path=_env_path, override=True)
+
+# Use shared Gemini key rotator (auto-rotates on 429)
 try:
-    from google import genai
-    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-    if GEMINI_API_KEY:
-        gemini_client = genai.Client(api_key=GEMINI_API_KEY)
-        GEMINI_AVAILABLE = True
+    from services.gemini_rotator import gemini_rotator
+    gemini_client = gemini_rotator
+    GEMINI_AVAILABLE = gemini_rotator.is_available
+    logger.info(f"✅ Orchestrator using GeminiKeyRotator ({len(gemini_rotator._keys)} key(s))")
+except ImportError:
+    try:
+        from backend.services.gemini_rotator import gemini_rotator
+        gemini_client = gemini_rotator
+        GEMINI_AVAILABLE = gemini_rotator.is_available
+    except ImportError:
+        gemini_client = None
+        GEMINI_AVAILABLE = False
+
+# Try to import Groq for intent classification/fallback
+groq_client = None
+GROQ_AVAILABLE = False
+try:
+    from groq import Groq
+    GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+    if GROQ_API_KEY and GROQ_API_KEY != "gsk_your_groq_api_key_here":
+        groq_client = Groq(api_key=GROQ_API_KEY)
+        GROQ_AVAILABLE = True
+        logger.info(f"✅ Orchestrator using Groq key: ...{GROQ_API_KEY[-6:]}")
 except Exception:
     pass
 
@@ -222,7 +244,7 @@ class OrchestratorAgent:
             return AgentType.EMERGENCY
 
         # Priority 2: AI Zero-Shot Classification (Native language handling)
-        if GEMINI_AVAILABLE:
+        if GROQ_AVAILABLE or GEMINI_AVAILABLE:
             try:
                 ai_agent = self._ai_classify(message, is_postnatal)
                 if ai_agent:
@@ -239,32 +261,44 @@ class OrchestratorAgent:
 
     def _ai_classify(self, message: str, is_postnatal: bool = False) -> Optional[AgentType]:
         """
-        Use Gemini AI for intent classification.
+        Use Groq (or fallback to Gemini) AI for intent classification.
         Optimized prompt to minimize token usage (~100 input tokens).
         """
         try:
-            if not gemini_client:
+            if not groq_client and not gemini_client:
                 return None
 
             # Compact prompt to save tokens
             if is_postnatal:
                 prompt = (
-                    "Classify into ONE: EMERGENCY/POSTNATAL/PEDIATRIC/VACCINE/GROWTH\n"
+                    "Classify into ONE of these words: EMERGENCY, POSTNATAL, PEDIATRIC, VACCINE, GROWTH\n"
                     f"Message: \"{message[:300]}\"\n"
-                    "Reply with ONE word only."
+                    "Reply with ONLY ONE WORD from the list above. No explanations."
                 )
             else:
                 prompt = (
-                    "Classify into ONE: EMERGENCY/MEDICATION/NUTRITION/RISK/ASHA/CARE\n"
+                    "Classify into ONE of these words: EMERGENCY, MEDICATION, NUTRITION, RISK, ASHA, CARE\n"
                     f"Message: \"{message[:300]}\"\n"
-                    "Reply with ONE word only."
+                    "Reply with ONLY ONE WORD from the list above. No explanations."
                 )
 
-            response = gemini_client.models.generate_content(
-                model='gemini-2.0-flash',  # Cheaper, faster model for classification
-                contents=prompt
-            )
-            category = response.text.strip().upper()
+            # Use Groq for classification to save tokens & latency
+            if GROQ_AVAILABLE and groq_client:
+                classify_model = os.getenv('GROQ_MODEL_NAME_FAST', 'llama-3.1-8b-instant')
+                response = groq_client.chat.completions.create(
+                    model=classify_model,
+                    messages=[{"role": "user", "content": prompt}],
+                    temperature=0.1,
+                    max_tokens=10,
+                )
+                category = response.choices[0].message.content.strip().upper()
+            else:
+                classify_model = os.getenv('GEMINI_MODEL_NAME', 'gemini-2.0-flash-lite')
+                response = gemini_client.models.generate_content(
+                    model=classify_model,
+                    contents=prompt
+                )
+                category = response.text.strip().upper()
 
             # Map to AgentType
             category_map = {
@@ -280,11 +314,13 @@ class OrchestratorAgent:
                 'GROWTH': AgentType.GROWTH,
             }
 
-            result = category_map.get(category)
-            if result:
-                logger.info(f"🤖 AI classified: {result.value}")
-                return result
+            # Robust matching: find the first keyword that appears in the response
+            for key, agent in category_map.items():
+                if key in category:
+                    logger.info(f"🤖 AI classified: {agent.value}")
+                    return agent
 
+            logger.warning(f"⚠️ Unmapped AI classification category: '{category}'")
             return AgentType.POSTNATAL if is_postnatal else AgentType.CARE
 
         except Exception as e:
@@ -339,20 +375,14 @@ class OrchestratorAgent:
         mother_context: Dict[str, Any],
         reports_context: List[Dict[str, Any]]
     ) -> str:
-        """Fallback response using Gemini directly — with full safety guardrails."""
-        if not GEMINI_AVAILABLE or not gemini_client:
+        """Fallback response using Groq/Gemini directly — with full safety guardrails."""
+        if not GROQ_AVAILABLE and not GEMINI_AVAILABLE:
             return (
                 "⚠️ I'm sorry, I'm having trouble processing your request right now. "
                 "Please try again in a moment or contact your healthcare provider if urgent."
             )
 
         try:
-            model_name = (
-                os.getenv('GEMINI_SFT_MODEL')
-                or os.getenv('GEMINI_MODEL_NAME')
-                or 'gemini-2.0-flash'
-            )
-
             # Compact context — only include non-null fields to save tokens
             context_parts = []
             name = mother_context.get('name')
@@ -378,7 +408,7 @@ class OrchestratorAgent:
 
             preferred_language = mother_context.get('preferred_language', 'en')
 
-            prompt = (
+            system_prompt = (
                 f"CRITICAL SAFETY RULES — you MUST follow these:\n"
                 f"1. Strictly follow WHO and NHM India guidelines. Reply ONLY in {preferred_language}.\n"
                 f"2. NEVER prescribe medications or dosages — only a doctor can do that.\n"
@@ -391,15 +421,47 @@ class OrchestratorAgent:
                 f"8. If you are not confident about something, say so honestly and advise consulting a doctor.\n"
                 f"9. Ask 1-2 clarifying questions before giving advice.\n\n"
                 f"You are a maternal health assistant for: {context_str}.{memory_hint}\n\n"
-                f"Question: {message}\n\n"
                 f"Reply empathetically. Include [SOURCE: guideline] for any medical advice."
             )
 
-            response = gemini_client.models.generate_content(
-                model=model_name,
-                contents=prompt
-            )
-            cleaned = response.text.replace('*', '').replace('_', '').replace('`', '')
+            if GROQ_AVAILABLE and groq_client:
+                model_name = os.getenv('GROQ_MODEL_NAME_SMART', 'llama-3.3-70b-versatile')
+                response = groq_client.chat.completions.create(
+                    model=model_name,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": message}
+                    ],
+                    temperature=0.3,
+                    max_tokens=1024,
+                )
+                import re
+                raw = response.choices[0].message.content
+                cleaned = re.sub(r'\*{1,3}|_{1,3}|`{1,3}', '', raw)
+                cleaned = re.sub(r'^#{1,6}\s*', '', cleaned, flags=re.MULTILINE)
+                cleaned = re.sub(r'^\|.*\|$', '', cleaned, flags=re.MULTILINE)
+                cleaned = re.sub(r'^-{3,}\s*$', '', cleaned, flags=re.MULTILINE)
+                cleaned = re.sub(r'\n{3,}', '\n\n', cleaned).strip()
+            elif GEMINI_AVAILABLE and gemini_client:
+                model_name = (
+                    os.getenv('GEMINI_SFT_MODEL')
+                    or os.getenv('GEMINI_MODEL_NAME')
+                    or 'gemini-2.0-flash'
+                )
+                full_prompt = system_prompt + f"\n\nQuestion: {message}"
+                response = gemini_client.models.generate_content(
+                    model=model_name,
+                    contents=full_prompt
+                )
+                import re
+                raw = response.text
+                cleaned = re.sub(r'\*{1,3}|_{1,3}|`{1,3}', '', raw)
+                cleaned = re.sub(r'^#{1,6}\s*', '', cleaned, flags=re.MULTILINE)
+                cleaned = re.sub(r'^\|.*\|$', '', cleaned, flags=re.MULTILINE)
+                cleaned = re.sub(r'^-{3,}\s*$', '', cleaned, flags=re.MULTILINE)
+                cleaned = re.sub(r'\n{3,}', '\n\n', cleaned).strip()
+            else:
+                return "AI service is unavailable."
 
             # ===== POST-VALIDATION (was previously bypassed for fallback) =====
             try:

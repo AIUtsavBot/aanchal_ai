@@ -177,7 +177,7 @@ RESPONSE FORMAT:
 4. Give practical guidance (next vaccine, side effect management)
 5. Encourage adherence to schedule
 
-Always respond in the parent's preferred language (Hindi/Marathi/English).
+Respond strictly in the parent's preferred language. DO NOT MIX English and Hindi/Marathi in the same response.
 Be patient, non-judgmental, and supportive."""
     
     

@@ -49,10 +49,10 @@ async def get_pregnancy_history_context(mother_id: str) -> Dict[str, Any]:
         
         # 2. Get ANC reports (risk assessments, complications)
         try:
-            reports_result = supabase.table('user_reports')\
+            reports_result = supabase.table('medical_reports')\
                 .select('*')\
                 .eq('mother_id', mother_id)\
-                .order('report_date', desc=True)\
+                .order('uploaded_at', desc=True)\
                 .limit(15)\
                 .execute()
             reports = reports_result.data or []
@@ -63,17 +63,14 @@ async def get_pregnancy_history_context(mother_id: str) -> Dict[str, Any]:
         # 3. Get recent chat history for pregnancy concerns (optional)
         pregnancy_concerns = []
         try:
-            # Get conversation IDs from pregnancy period
-            chats_result = supabase.table('chat_logs')\
-                .select('conversation_id, created_at')\
+            chats_result = supabase.table('telegram_logs')\
+                .select('id, created_at')\
                 .eq('mother_id', mother_id)\
                 .order('created_at', desc=True)\
                 .limit(10)\
                 .execute()
             
             if chats_result.data:
-                # Could extract themes from chat history here
-                # For now, just note that conversations exist
                 pregnancy_concerns.append({
                     'count': len(chats_result.data),
                     'last_date': chats_result.data[0].get('created_at') if chats_result.data else None

@@ -18,13 +18,21 @@ from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
 
-# Initialize clients
+# Use shared Gemini key rotator (auto-rotates on 429)
 try:
-    from google import genai
-    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-    gemini_client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
+    from services.gemini_rotator import gemini_rotator as gemini_client
 except ImportError:
-    gemini_client = None
+    try:
+        from backend.services.gemini_rotator import gemini_rotator as gemini_client
+    except ImportError:
+        gemini_client = None
+
+try:
+    from groq import Groq
+    GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+    groq_client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY and GROQ_API_KEY != "gsk_your_groq_api_key_here" else None
+except ImportError:
+    groq_client = None
 
 try:
     from supabase import create_client
@@ -55,15 +63,16 @@ class ConversationMemoryService:
     def __init__(self):
         self.db = supabase
         self.gemini = gemini_client
-        self.embedding_model = "text-embedding-004"  # Gemini embedding model
+        self.groq = groq_client
+        self.embedding_model = "text-embedding-004"  # Gemini embedding model (v1 API)
         self.embedding_dimensions = 768
         
     async def extract_topics_and_symptoms(self, message: str, language: str = "auto") -> Dict[str, Any]:
         """
-        Use Gemini to extract symptoms, topics, and intent from a message.
+        Use Groq (or fallback to Gemini) to extract symptoms, topics, and intent from a message.
         Works with Hindi, Marathi, and English.
         """
-        if not self.gemini:
+        if not self.groq and not self.gemini:
             return {"topics": [], "symptoms": [], "intent": "general", "severity": "low"}
         
         try:
@@ -84,13 +93,24 @@ Return ONLY valid JSON:
     "food_mentioned": ["any foods/drinks mentioned"]
 }}
 """
-            response = self.gemini.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=prompt,
-                config={'response_mime_type': 'application/json'}
-            )
+            if self.groq:
+                model_name = os.getenv('GROQ_MODEL_NAME_FAST', 'llama-3.1-8b-instant')
+                response = self.groq.chat.completions.create(
+                    model=model_name,
+                    messages=[{"role": "user", "content": prompt}],
+                    response_format={"type": "json_object"},
+                    temperature=0.1
+                )
+                result_text = response.choices[0].message.content.strip()
+            else:
+                response = self.gemini.models.generate_content(
+                    model="gemini-2.5-flash",
+                    contents=prompt,
+                    config={'response_mime_type': 'application/json'}
+                )
+                result_text = response.text.strip()
             
-            result = json.loads(response.text.strip())
+            result = json.loads(result_text)
             logger.info(f"📊 Extracted topics: {result.get('topics', [])}")
             return result
             
@@ -106,10 +126,10 @@ Return ONLY valid JSON:
             return None
             
         try:
-            # Use Gemini's embedding API
+            # Use Gemini's embedding API (v1 compatible format)
             response = self.gemini.models.embed_content(
                 model=self.embedding_model,
-                contents=text
+                contents=[text]
             )
             
             # Extract embedding from response

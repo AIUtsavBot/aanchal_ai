@@ -85,6 +85,22 @@ MAX_TIMELINE_EVENTS = 5
 MAX_MEMORIES = 5
 MAX_REPORTS = 5
 
+import re as _re
+
+def clean_for_telegram(text: str) -> str:
+    """Strip ALL markdown symbols before sending to Telegram so it renders as clean plain text."""
+    if not text:
+        return text
+    text = _re.sub(r'\*{1,3}', '', text)                          # remove *, **, ***
+    text = _re.sub(r'_{1,3}([^_\n]+)_{1,3}', r'\1', text)        # remove _italic_ / __bold__
+    text = _re.sub(r'^#{1,6}\s*', '', text, flags=_re.MULTILINE)  # remove ## headers
+    text = _re.sub(r'`{1,3}', '', text)                           # remove backticks
+    text = _re.sub(r'^-{3,}\s*$', '', text, flags=_re.MULTILINE)  # remove --- dividers
+    text = _re.sub(r'^\|.*\|\s*$', '', text, flags=_re.MULTILINE) # remove | table | rows
+    text = _re.sub(r'\[([^\]]+)\]\((https?://[^)]+)\)', r'\1: \2', text)  # [label](url) -> label: url
+    text = _re.sub(r'\n{3,}', '\n\n', text)                       # collapse excess blank lines
+    return text.strip()
+
 # Language mapping for user input and callback codes
 LANG_MAP = {
     # Text inputs
@@ -1316,7 +1332,7 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
                     try:
                         supabase.table("case_discussions").insert({
                             "mother_id": str(mother_id),
-                            "sender_role": "MOTHER",
+                            "sender_role": "mother",
                             "sender_name": mother.get('name', 'Mother'),
                             "message": text,
                         }).execute()
@@ -1335,7 +1351,7 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
         try:
             supabase.table("case_discussions").insert({
                 "mother_id": str(mother_id),
-                "sender_role": "MOTHER",
+                "sender_role": "mother",
                 "sender_name": mother.get('name', 'Mother') if mother else 'Mother',
                 "message": text,
             }).execute()
@@ -1436,7 +1452,7 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
         reply = f"I'm having trouble processing that right now. Please try again."
     
     try:
-        await update.message.reply_text(reply)
+        await update.message.reply_text(clean_for_telegram(reply))
         try:
             await save_chat_history(mother_id, "agent_response", reply, telegram_chat_id=chat_id)
         except Exception:

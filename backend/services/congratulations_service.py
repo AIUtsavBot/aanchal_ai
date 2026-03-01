@@ -9,19 +9,19 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-# Try to import Gemini
-gemini_client = None
+# Try to import Groq
+groq_client = None
 try:
-    from google import genai
-    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-    if GEMINI_API_KEY:
-        gemini_client = genai.Client(api_key=GEMINI_API_KEY)
-        GEMINI_AVAILABLE = True
+    from groq import Groq
+    GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+    if GROQ_API_KEY and GROQ_API_KEY != "gsk_your_groq_api_key_here":
+        groq_client = Groq(api_key=GROQ_API_KEY)
+        GROQ_AVAILABLE = True
     else:
-        GEMINI_AVAILABLE = False
+        GROQ_AVAILABLE = False
 except Exception as e:
-    logger.warning(f"Gemini not available: {e}")
-    GEMINI_AVAILABLE = False
+    logger.warning(f"Groq not available: {e}")
+    GROQ_AVAILABLE = False
 
 
 async def generate_congratulations_message(
@@ -44,8 +44,8 @@ async def generate_congratulations_message(
     Returns:
         Personalized congratulations message
     """
-    if not GEMINI_AVAILABLE or not gemini_client:
-        logger.info("Gemini not available, using default message")
+    if not GROQ_AVAILABLE or not groq_client:
+        logger.info("Groq not available, using default message")
         return get_default_congratulations(mother_name, language)
     
     try:
@@ -70,14 +70,8 @@ async def generate_congratulations_message(
         else:
             lang_instruction = "Respond in English."
         
-        prompt = f"""
-You are a caring maternal health assistant. Generate a warm, heartfelt 
-congratulations message for {mother_name} who just delivered her baby.
-
-Child: {child_desc}
-Delivery: {delivery_desc}
-
-{lang_instruction}
+        system_prompt = """
+You are a caring maternal health assistant. Generate a warm, heartfelt congratulations message for the mother who just delivered her baby.
 
 Include these 4 elements (keep brief, warm, supportive):
 1. 🎉 Warm congratulations (1-2 sentences)
@@ -88,13 +82,27 @@ Include these 4 elements (keep brief, warm, supportive):
 Keep it to 3-4 short paragraphs. Be warm and encouraging but concise.
 Use emojis appropriately (🎉👶💚).
 """
+        
+        user_prompt = f"""
+Mother Name: {mother_name}
+Child: {child_desc}
+Delivery: {delivery_desc}
 
-        response = gemini_client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=prompt
+{lang_instruction}
+"""
+
+        model_name = os.getenv('GROQ_MODEL_NAME_SMART', 'llama-3.3-70b-versatile')
+        response = groq_client.chat.completions.create(
+            model=model_name,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            temperature=0.5,
+            max_tokens=300
         )
         
-        message = response.text.strip()
+        message = response.choices[0].message.content.strip()
         logger.info(f"✅ Generated congratulations message for {mother_name}")
         return message
         

@@ -199,7 +199,7 @@ class HybridRAGService:
         
         try:
             result = gemini_client.models.embed_content(
-                model="text-embedding-004",
+                model="models/text-embedding-004",
                 contents=text
             )
             return result.embeddings[0].values
@@ -219,7 +219,7 @@ class HybridRAGService:
             batch = texts[i:i + batch_size]
             try:
                 result = gemini_client.models.embed_content(
-                    model="text-embedding-004",
+                    model="models/text-embedding-004",
                     contents=batch
                 )
                 for emb in result.embeddings:
@@ -259,7 +259,7 @@ class HybridRAGService:
             logger.warning("⚠️ Cannot populate embeddings: Gemini not available")
             return
         
-        logger.info("🔄 Generating embeddings with Gemini (text-embedding-004)...")
+        logger.info("🔄 Generating embeddings with Gemini (models/text-embedding-004)...")
         embeddings = self._get_gemini_embeddings_batch(self.documents)
         
         # Batch insert

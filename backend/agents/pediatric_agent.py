@@ -142,7 +142,7 @@ RESPONSE FORMAT:
 4. Offer practical tips
 5. Escalate if danger signs present
 
-Always respond in the parent's preferred language (Hindi/Marathi/English).
+Respond strictly in the parent's preferred language. DO NOT MIX English and Hindi/Marathi in the same response.
 Use simple, actionable language.
 Empower parents while ensuring child safety."""
     

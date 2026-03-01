@@ -7,26 +7,51 @@ import os
 import logging
 from typing import Dict, Any, List
 from abc import ABC, abstractmethod
+from pathlib import Path
 from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
 
-load_dotenv()
+# Explicitly load .env from the backend directory
+_env_path = Path(__file__).resolve().parent.parent / ".env"
+load_dotenv(dotenv_path=_env_path, override=True)
 
-# Import Gemini
-gemini_client = None
+# Use shared Gemini key rotator (supports up to 3 API keys)
 try:
-    from google import genai
-    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-    if GEMINI_API_KEY:
-        gemini_client = genai.Client(api_key=GEMINI_API_KEY)
-        GEMINI_AVAILABLE = True
-    else:
+    from services.gemini_rotator import gemini_rotator
+    gemini_client = gemini_rotator  # keep same variable name for compatibility
+    GEMINI_AVAILABLE = gemini_rotator.is_available
+    GEMINI_MODEL_NAME = os.getenv('GEMINI_SFT_MODEL') or os.getenv('GEMINI_MODEL_NAME') or 'gemini-2.0-flash'
+except ImportError:
+    try:
+        from backend.services.gemini_rotator import gemini_rotator
+        gemini_client = gemini_rotator
+        GEMINI_AVAILABLE = gemini_rotator.is_available
+        GEMINI_MODEL_NAME = os.getenv('GEMINI_SFT_MODEL') or os.getenv('GEMINI_MODEL_NAME') or 'gemini-2.0-flash'
+    except ImportError:
+        gemini_client = None
         GEMINI_AVAILABLE = False
-except Exception:
-    GEMINI_AVAILABLE = False
+        GEMINI_MODEL_NAME = 'gemini-2.0-flash'
 
-# Select model via env hook (supports fine-tuned model names)
+# Import Groq
+groq_client = None
+try:
+    from groq import Groq
+    GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+    if GROQ_API_KEY and GROQ_API_KEY != "gsk_your_groq_api_key_here":
+        groq_client = Groq(api_key=GROQ_API_KEY)
+        GROQ_AVAILABLE = True
+    else:
+        GROQ_AVAILABLE = False
+except Exception:
+    GROQ_AVAILABLE = False
+
+# Select model via env hook
+GROQ_MODEL_NAME = (
+    os.getenv("GROQ_MODEL_NAME_SMART")
+    or "llama-3.3-70b-versatile"
+)
+
 GEMINI_MODEL_NAME = (
     os.getenv("GEMINI_SFT_MODEL")
     or os.getenv("GEMINI_MODEL_NAME")
@@ -49,6 +74,38 @@ class _GeminiModelWrapper:
         )
 
 
+class _GroqModelWrapper:
+    """Wrapper for Groq API to mimic Gemini's generate_content interface"""
+
+    def __init__(self, client, model_name: str):
+        self._client = client
+        self._model_name = model_name
+
+    def generate_content(self, prompt: str):
+        # Split prompt into system + user parts at the User Question separator if present
+        if "\nUser Question:" in prompt:
+            parts = prompt.split("\nUser Question:", 1)
+            system_content = parts[0].strip()
+            user_content = "User Question:" + parts[1].strip()
+        else:
+            system_content = "You are a helpful maternal and child health assistant."
+            user_content = prompt
+
+        response = self._client.chat.completions.create(
+            model=self._model_name,
+            messages=[
+                {"role": "system", "content": system_content},
+                {"role": "user", "content": user_content}
+            ],
+            temperature=0.3,
+            max_tokens=1024,
+        )
+        class CompatResponse:
+            def __init__(self, text):
+                self.text = text
+        return CompatResponse(response.choices[0].message.content)
+
+
 class BaseAgent(ABC):
     """Base class for all specialized agents"""
     
@@ -56,17 +113,28 @@ class BaseAgent(ABC):
         self.agent_name = agent_name
         self.agent_role = agent_role
         self.client = None
-        self.model = None  # For backwards compatibility with agents using self.model
-        self.model_name = GEMINI_MODEL_NAME
+        self.model = None
+        self.model_name = GROQ_MODEL_NAME  # Default to Groq
 
-        if GEMINI_AVAILABLE and gemini_client:
+        # Prefer Groq for text generation (faster, no quota issues)
+        if GROQ_AVAILABLE and groq_client:
+            try:
+                self.client = groq_client
+                self.model = _GroqModelWrapper(groq_client, GROQ_MODEL_NAME)
+                self.model_name = GROQ_MODEL_NAME
+                logger.info(f"✅ {agent_name} initialized with Groq model: {GROQ_MODEL_NAME}")
+            except Exception as e:
+                logger.error(f"❌ {agent_name} failed to initialize Groq: {e}")
+
+        # Fallback to Gemini only if Groq is unavailable
+        if not self.client and GEMINI_AVAILABLE and gemini_client:
             try:
                 self.client = gemini_client
-                # Create a model wrapper for agents that use self.model directly
                 self.model = _GeminiModelWrapper(gemini_client, GEMINI_MODEL_NAME)
-                logger.info(f"✅ {agent_name} initialized with Gemini model: {GEMINI_MODEL_NAME}")
+                self.model_name = GEMINI_MODEL_NAME
+                logger.info(f"✅ {agent_name} initialized with fallback Gemini model: {GEMINI_MODEL_NAME}")
             except Exception as e:
-                logger.error(f"❌ {agent_name} failed to initialize: {e}")
+                logger.error(f"❌ {agent_name} failed to initialize Gemini: {e}")
 
     @abstractmethod
     def get_system_prompt(self) -> str:
@@ -132,60 +200,64 @@ class BaseAgent(ABC):
             elif past_symptoms:
                 memory_section = f"\n⚠️ PAST HISTORY: This mother previously reported: {', '.join(past_symptoms[:5])}\n"
             
-            full_prompt = f"""
-CRITICAL: Strictly follow WHO and NHM India guidelines. If High Risk, recommend hospital. Reply ONLY in {preferred_language}.
+            system_message_content = f"""
+You are a specialized maternal and child health assistant for the SantanRaksha / MatruRaksha system.
+Reply EXCLUSIVELY in {preferred_language}. DO NOT mix languages.
 
 ABSOLUTE SAFETY RULES (NEVER VIOLATE):
-1. NEVER prescribe medications or dosages — only a doctor can do that.
-2. NEVER recommend stopping prescribed medications or IFA tablets.
-3. NEVER discuss or predict the sex/gender of the baby — this is ILLEGAL under the PCPNDT Act, 1994 (India). If asked, respond: "I cannot discuss this. Sex determination is prohibited by law in India."
-4. NEVER recommend unsafe home remedies: castor oil for labor, unripe papaya, alcohol rubs, misoprostol without doctor.
-5. If symptoms sound urgent (bleeding, seizures, severe pain, unconsciousness, high fever), IMMEDIATELY advise calling 108 (ambulance) or 102 (maternal helpline).
+1. NEVER prescribe specific medication doses — only a doctor can do that.
+2. NEVER recommend stopping prescribed medications.
+3. NEVER discuss baby's sex/gender — illegal under PCPNDT Act, India.
+4. NEVER suggest unsafe home remedies (castor oil, unripe papaya, alcohol rubs).
+5. For URGENT symptoms (heavy bleeding, seizures, high fever, unconscious) — immediately advise calling 108 or going to the nearest hospital.
+6. NEVER hallucinate data — if child vaccination dates/weights/ages exist in the records below, use those EXACT values. If data is missing, say so clearly.
 
-CITATION AND WEB SEARCH REQUIREMENT:
-1. You MUST use your search tools to scrape the internet for the most accurate and up-to-date WHO, NHM, and current medical guidelines from trusted government/medical sources to answer the user's question.
-2. At the end of your response, you MUST attach the exact website source/URL from where you provided the information, so the user can verify it. Example: [Source: https://www.who.int/... ]
+ANSWER FORMAT RULES (STRICTLY FOLLOW):
+- Be CONCISE and SPECIFIC. Do not pad with generic health advice.
+- Write in short paragraphs (2-4 sentences each). NO unnecessary bullet-point lists.
+- Use CAPITAL LETTERS or plain words for emphasis (e.g. 38.5 C, 6 months, OPV-2). Do NOT use asterisks, underscores, hashes, or any other markdown formatting.
+- If you give numbered steps, keep them short (max 4-5 items).
+- End EVERY response with a Sources line and a disclaimer, like this:
+
+  Sources:
+  - [WHO](https://www.who.int/)
+  - [NHM India](https://nhm.gov.in/)
+
+  Note: This guidance is for informational purposes. Always consult your healthcare provider for personalized advice. Clinical guidelines referenced: IMNCI, WHO, IAP 2023.
+
+- DO NOT ask multiple clarifying questions. If you absolutely need one, ask only ONE short question at the end.
 {memory_section}
-QUESTIONING PROTOCOL (IMPORTANT):
-1. If past history is shown above, ACKNOWLEDGE it and ask if current issue is related
-2. MANDATORY: Whether this is a NEW topic or RECURRING, you MUST ask 1-2 clarifying questions before giving advice:
-   - Duration: "कितने दिन से?" / "किती दिवसांपासून?"
-   - Severity: "कितना तेज़?" / "किती तीव्र?"
-   - Triggers: What makes it better/worse?
-3. If this is a recurring issue, ask if previous advice helped
-4. Gather information FIRST, then provide advice
-
-CULTURAL SENSITIVITY & BIAS PREVENTION:
-- NEVER assume dietary preferences based on the mother's name, region, or religion
-- Respect vegetarian, vegan, Jain, and halal dietary needs — always offer alternatives
-- Do NOT dismiss traditional practices outright — acknowledge them, then provide evidence-based correction if needed
-- Handle domestic violence/abuse disclosures sensitively — provide helpline 181 (Women Helpline)
-- Use inclusive, non-judgmental language
-
-CONFIDENCE & UNCERTAINTY:
-- If you are NOT confident about a medical fact, say: "I am not fully sure about this — please confirm with your doctor."
-- If the question is outside your expertise area, say: "This is outside my specialty. Let me help you find the right resource."
-- NEVER make up clinical values, drug dosages, or threshold numbers — only use values from established guidelines
+CULTURAL SENSITIVITY:
+- Never assume dietary preferences based on name/region/religion.
+- Handle sensitive disclosures (violence, abuse) with care — provide helpline 181.
+- Acknowledge traditional practices respectfully, then give evidence-based guidance.
 
 {system_prompt}
 
+=== PATIENT DATABASE RECORDS (USE THESE — DO NOT GUESS OR HALLUCINATE) ===
 {context_info}
+=== END OF RECORDS ===
 
-User Question: {query}
-
-Response (ask clarifying questions if needed, cite [SOURCE: guideline] for all medical advice):
+IMPORTANT: If the records contain specific child vaccination dates, growth measurements, or pending vaccines — you MUST cite those EXACT values in your response.
+If a specific record does NOT exist, answer generically and say data is not yet available.
 """
-            
-            # Generate response using new client API with Google Search Grounding
-            response = self.client.models.generate_content(
-                model=self.model_name,
-                contents=full_prompt,
-                config={'tools': [{'google_search': {}}]}
-            )
-            
-            # Clean response
-            cleaned_response = response.text.strip()
-            
+            full_prompt = system_message_content + f"\nUser Question: {query}\n\nResponse (ask clarifying questions if needed, cite [SOURCE: guideline] for all medical advice):"
+            response = self.model.generate_content(full_prompt)
+            raw_response = response.text.strip()
+
+            # Strip ALL markdown symbols so Telegram shows clean plain text
+            import re
+            def clean_markdown(text: str) -> str:
+                text = re.sub(r'\*{1,3}', '', text)          # remove *, **, ***
+                text = re.sub(r'_{1,3}', '', text)           # remove _, __, ___
+                text = re.sub(r'^#{1,6}\s*', '', text, flags=re.MULTILINE)  # remove ### headers
+                text = re.sub(r'`{1,3}', '', text)           # remove backticks
+                text = re.sub(r'^-{3,}\s*$', '', text, flags=re.MULTILINE)  # remove --- dividers
+                text = re.sub(r'^\|.*\|$', '', text, flags=re.MULTILINE)    # remove markdown tables
+                text = re.sub(r'\n{3,}', '\n\n', text)      # collapse excess blank lines
+                return text.strip()
+
+            cleaned_response = clean_markdown(raw_response)
             # ==================== POST-VALIDATION ====================
             # Validate response against clinical rules before returning
             try:

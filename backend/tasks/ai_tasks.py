@@ -75,16 +75,16 @@ def analyze_risk_async(self, mother_id: str, assessment_data: Dict[str, Any]) ->
 
 
 def _perform_risk_analysis(data: Dict[str, Any]) -> Dict[str, Any]:
-    """Perform AI risk analysis using Gemini"""
+    """Perform AI risk analysis using Groq"""
     try:
-        # Try to use Gemini for analysis
-        from google import genai
+        # Try to use Groq for analysis
+        from groq import Groq
         
-        gemini_key = os.getenv("GEMINI_API_KEY")
-        if not gemini_key:
+        groq_key = os.getenv("GROQ_API_KEY")
+        if not groq_key or groq_key == "gsk_your_groq_api_key_here":
             return _fallback_risk_analysis(data)
         
-        client = genai.Client(api_key=gemini_key)
+        client = Groq(api_key=groq_key)
         
         prompt = f"""Analyze this maternal health data and provide a risk assessment:
         
@@ -97,24 +97,28 @@ def _perform_risk_analysis(data: Dict[str, Any]) -> Dict[str, Any]:
         - confidence: confidence score 0-100
         """
         
-        response = client.models.generate_content(
-            model="gemini-2.5-flash-preview-04-17",
-            contents=prompt
+        model_name = os.getenv("GROQ_MODEL_NAME_SMART", "llama-3.3-70b-versatile")
+        response = client.chat.completions.create(
+            model=model_name,
+            messages=[{"role": "user", "content": prompt}],
+            response_format={"type": "json_object"}
         )
         
         # Parse response
-        text = response.text
+        text = response.choices[0].message.content
         
         # Try to extract JSON from response
         import re
         json_match = re.search(r'\{[^{}]*\}', text, re.DOTALL)
         if json_match:
             return json.loads(json_match.group())
+        elif text.strip().startswith('{'):
+            return json.loads(text)
         
         return _fallback_risk_analysis(data)
         
     except Exception as e:
-        logger.warning(f"⚠️ Gemini analysis failed, using fallback: {e}")
+        logger.warning(f"⚠️ Groq analysis failed, using fallback: {e}")
         return _fallback_risk_analysis(data)
 
 

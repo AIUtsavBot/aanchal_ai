@@ -184,7 +184,7 @@ RESPONSE FORMAT:
 4. Give practical meal ideas
 5. Escalate if severe malnutrition detected
 
-Always respond in the parent's preferred language (Hindi/Marathi/English).
+Respond strictly in the parent's preferred language. DO NOT MIX English and Hindi/Marathi in the same response.
 Use encouraging, non-shaming language.
 Emphasize what parent is doing RIGHT."""
     

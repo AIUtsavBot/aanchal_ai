@@ -243,19 +243,20 @@ async def _get_ai_response(query: str, mother_id: Optional[str]) -> str:
             context = {"mother_id": mother_id} if mother_id else {}
             return orchestrator.process_query(query, context, "stream_session")
         
-        # Fallback to Gemini direct
-        from google import genai
+        # Fallback to Groq direct
+        from groq import Groq
         
-        gemini_key = os.getenv("GEMINI_API_KEY")
-        if not gemini_key:
-            return "AI service not configured. Please set GEMINI_API_KEY."
+        groq_key = os.getenv("GROQ_API_KEY")
+        if not groq_key or groq_key == "gsk_your_groq_api_key_here":
+            return "AI service not configured. Please set GROQ_API_KEY."
         
-        client = genai.Client(api_key=gemini_key)
-        response = client.models.generate_content(
-            model="gemini-2.5-flash-preview-04-17",
-            contents=query
+        client = Groq(api_key=groq_key)
+        model_name = os.getenv('GROQ_MODEL_NAME_FAST', 'llama-3.1-8b-instant')
+        response = client.chat.completions.create(
+            model=model_name,
+            messages=[{"role": "user", "content": query}]
         )
-        return response.text
+        return response.choices[0].message.content
         
     except Exception as e:
         logger.error(f"❌ AI response error: {e}")
