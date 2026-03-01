@@ -163,9 +163,10 @@ graph TD
 
 | Component | Technology | Description |
 |-----------|------------|-------------|
-| **AI Core** | **Google Gemini 2.0 Flash** | Multimodal LLM for reasoning, voice, and vision |
-| **Backend** | Python 3.12, FastAPI | High-performance async API with Pydantic validation |
+| **AI Core** | **Google Gemini 2.0 Flash** | Multimodal LLM for reasoning, voice, and vision. **Includes auto-rotation across multiple API keys on rate limits.** |
+| **Backend** | Python 3.12, FastAPI | High-performance async API with dynamic multi-CORS origin support. |
 | **Frontend** | React 18, Vite | Responsive PWA dashboards with Recharts |
+| **Mobile App** | Expo (React Native) | Unified mobile app deployable to iOS, Android, and Vercel (PWA) |
 | **Database** | Supabase (PostgreSQL + pgvector) | Managed DB with Auth, Storage, and Vector search |
 | **Messaging** | Telegram Bot API | Accessible interface for rural adoption |
 | **Voice** | gTTS / Vapi.ai | Voice synthesis and telephony integration |
@@ -195,10 +196,15 @@ Create `.env` files in `backend/` and `frontend/` directories.
 SUPABASE_URL=your_url
 SUPABASE_KEY=your_key
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+# You can supply up to 3 Gemini keys. Auto-rotates if one hits a 429 rate limit.
 GEMINI_API_KEY=your_gemini_key
+GEMINI_API_KEY_2=your_gemini_key_2
+GEMINI_API_KEY_3=your_gemini_key_3
 TELEGRAM_BOT_TOKEN=your_bot_token
 PASSWORD_ENCRYPTION_KEY=your_fernet_key
 BACKEND_URL=https://your-app.onrender.com
+# Accepts comma-separated URLs for multi-origin support
+FRONTEND_URL=https://your-website.vercel.app,https://your-mobile-app.vercel.app
 USE_TELEGRAM_WEBHOOK=true
 ```
 
@@ -241,6 +247,15 @@ python main.py
 cd frontend
 npm install
 npm run dev
+```
+
+**Mobile (Expo):**
+```bash
+cd mobile
+npm install
+npx expo start --web  # Run locally in browser
+# OR
+npx expo start        # Run in Expo Go on physical device
 ```
 
 The APScheduler cron jobs (daily reminders, vaccination alerts, weekly assessments) start automatically with the FastAPI server.
