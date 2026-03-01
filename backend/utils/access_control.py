@@ -245,8 +245,26 @@ async def verify_child_access(
     """
     Verify user has access to a specific child and return child data
     
+    ADMIN, DOCTOR, ASHA_WORKER, ASHA: direct access to any child
+    MOTHER: only children linked through their mother record
+    
     Raises HTTPException if access denied
     """
+    # Healthcare providers get direct access to any child
+    if user_role in ("ADMIN", "DOCTOR", "ASHA_WORKER", "ASHA"):
+        result = supabase_client.table("children") \
+            .select("*") \
+            .eq("id", child_id) \
+            .execute()
+        
+        if not result.data:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Child not found: {child_id}"
+            )
+        return result.data[0]
+    
+    # MOTHER role: verify through mother chain
     children = await get_authorized_children(
         supabase_client=supabase_client,
         user_id=user_id,
@@ -261,3 +279,4 @@ async def verify_child_access(
         )
     
     return children[0]
+
