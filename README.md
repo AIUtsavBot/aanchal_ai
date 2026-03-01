@@ -10,6 +10,10 @@
 
 By leveraging Artificial Intelligence (Google Gemini 2.0 Flash), real-time data analytics, and a multi-channel approach (Web + Telegram + Voice), Aanchal AI ensures no mother or child is left behind.
 
+### 🌐 Live Demos
+* **Doctor & ASHA Web Portal**: [aanchal-ai.vercel.app](https://aanchal-ai.vercel.app)
+* **Mobile Web App (PWA)**: [aanchal-ai-app.vercel.app](https://aanchal-ai-app.vercel.app)
+
 ![Status](https://img.shields.io/badge/Status-Production_Ready-success)
 ![Version](https://img.shields.io/badge/Version-2.0.0-blue)
 ![License](https://img.shields.io/badge/License-MIT-purple)
