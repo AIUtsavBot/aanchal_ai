@@ -201,14 +201,20 @@ async def sign_in(request: SignInRequest, req: Request = None):
 
 
 @router.post("/signin/google")
-async def sign_in_with_google():
+async def sign_in_with_google(request: Request):
     """
     Sign in with Google OAuth
     
     Returns OAuth URL for redirection
     """
     try:
-        result = await auth_service.sign_in_with_google()
+        # Dynamically determine where to redirect based on who is asking (Mobile vs Web)
+        origin = request.headers.get("origin") or request.headers.get("referer", "").rstrip("/")
+        redirect_to = None
+        if origin:
+            redirect_to = f"{origin}/auth/callback"
+            
+        result = await auth_service.sign_in_with_google(redirect_to=redirect_to)
         
         return result
     

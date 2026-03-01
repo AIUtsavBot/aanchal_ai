@@ -392,17 +392,21 @@ class AuthService:
             raise Exception("Sign in failed. Please check your credentials.")
     
     @staticmethod
-    async def sign_in_with_google() -> Dict[str, Any]:
+    async def sign_in_with_google(redirect_to: Optional[str] = None) -> Dict[str, Any]:
         """
         Sign in with Google OAuth
         Returns the OAuth URL for redirection
         """
         try:
+            options = {}
+            if redirect_to:
+                options["redirect_to"] = redirect_to
+            elif os.getenv("OAUTH_REDIRECT_URL"):
+                options["redirect_to"] = os.getenv("OAUTH_REDIRECT_URL")
+                
             response = supabase_client.auth.sign_in_with_oauth({
                 "provider": "google",
-                "options": {
-                    "redirect_to": os.getenv("OAUTH_REDIRECT_URL", "http://localhost:5173/auth/callback")
-                }
+                "options": options
             })
             
             return {

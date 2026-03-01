@@ -680,19 +680,22 @@ except ImportError as e:
     logger.warning(f"⚠️  Rate limiting not available: {e}")
 
 # ==================== CORS SETUP (MUST BE LAST) ====================
-# Configure CORS to explicitly allow the frontend origin
+# Configure CORS to explicitly allow multiple frontend origins (web and mobile)
 # IMPORTANT: Add CORS middleware LAST so it executes FIRST (middleware runs in reverse)
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173").strip().rstrip("/")
-ALLOWED_ORIGINS = [
-    FRONTEND_URL,
+
+# Support comma-separated FRONTEND_URL string for multiple deployments
+env_frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+frontend_urls = [u.strip().rstrip("/") for u in env_frontend_url.split(",") if u.strip()]
+
+ALLOWED_ORIGINS = frontend_urls + [
     "http://127.0.0.1:5173",
     "http://localhost:5174",
     "http://127.0.0.1:5174",
-    # Production URLs
+    # Known production defaults
     "https://matru-raksha-ai-event.vercel.app",
     "https://matruraksha-ai-event.onrender.com",
     "https://aanchal-ai.vercel.app",
-    "https://aanchal-ai.vercel.app/",
+    "https://aanchal-ai-app.vercel.app"
 ]
 
 app.add_middleware(
