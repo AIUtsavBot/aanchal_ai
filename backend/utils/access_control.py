@@ -61,18 +61,20 @@ async def get_authorized_mothers(
                 result = query.execute()
                 return result.data or []
             
-            doctor_id = doctor_result.data[0]["id"]
+            # Collect ALL doctor IDs (user may have multiple doctor records)
+            doctor_ids = [d["id"] for d in doctor_result.data]
+            logger.info(f"🔐 Doctor IDs for user: {doctor_ids}")
             
-            # Get mothers assigned to this doctor
+            # Get mothers assigned to ANY of this user's doctor records
             query = supabase_client.table("mothers") \
                 .select("*") \
-                .eq("doctor_id", doctor_id)
+                .in_("doctor_id", doctor_ids)
             
             if mother_id:
                 query = query.eq("id", mother_id)
             
             result = query.execute()
-            logger.info(f"🔐 Mothers for doctor_id={doctor_id}: found {len(result.data or [])} mothers")
+            logger.info(f"🔐 Mothers for doctor_ids={doctor_ids}: found {len(result.data or [])} mothers")
             if mother_id and not result.data:
                 raise HTTPException(
                     status_code=403,
