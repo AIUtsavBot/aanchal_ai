@@ -165,8 +165,7 @@ class AuthService {
       phone: profile?.phone || null,
       assigned_area: profile?.assigned_area || null,
       avatar_url: profile?.avatar_url || null,
-      is_active: profile?.is_active ?? true,
-      asha_worker_id: profile?.asha_worker_id || null  // Include ASHA worker ID if linked
+      is_active: profile?.is_active ?? true
     }
     return composed
   }
@@ -338,7 +337,7 @@ class AuthService {
     try {
       const { data, error } = await supabase
         .from('user_profiles')
-        .select('id,full_name,role,phone,assigned_area,avatar_url,is_active,asha_worker_id')
+        .select('id,full_name,role,phone,assigned_area,avatar_url,is_active')
         .eq('id', userId)
         .single()
 

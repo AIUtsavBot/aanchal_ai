@@ -32,6 +32,8 @@ async def get_authorized_mothers(
         HTTPException: If user has no access or mother not found
     """
     try:
+        logger.info(f"🔐 get_authorized_mothers: user_id={user_id}, role={user_role}, mother_id={mother_id}")
+        
         # Admins can access all mothers
         if user_role == "ADMIN":
             query = supabase_client.table("mothers").select("*")
@@ -48,10 +50,12 @@ async def get_authorized_mothers(
                 .eq("user_profile_id", user_id) \
                 .execute()
             
+            logger.info(f"🔐 Doctor lookup for user_profile_id={user_id}: {doctor_result.data}")
+            
             if not doctor_result.data:
                 raise HTTPException(
                     status_code=403,
-                    detail="Doctor profile not found for this user"
+                    detail=f"Doctor profile not found for user_profile_id: {user_id}"
                 )
             
             doctor_id = doctor_result.data[0]["id"]
@@ -65,6 +69,7 @@ async def get_authorized_mothers(
                 query = query.eq("id", mother_id)
             
             result = query.execute()
+            logger.info(f"🔐 Mothers for doctor_id={doctor_id}: found {len(result.data or [])} mothers")
             if mother_id and not result.data:
                 raise HTTPException(
                     status_code=403,
@@ -161,9 +166,11 @@ async def get_authorized_children(
         )
         
         if not authorized_mothers:
+            logger.warning(f"🔐 No authorized mothers for user {user_id} (role={user_role})")
             return []
         
         authorized_mother_ids = [m["id"] for m in authorized_mothers]
+        logger.info(f"🔐 Authorized mother IDs: {authorized_mother_ids}")
         
         # Get children belonging to authorized mothers
         query = supabase_client.table("children") \
@@ -174,11 +181,12 @@ async def get_authorized_children(
             query = query.eq("id", child_id)
         
         result = query.execute()
+        logger.info(f"🔐 Children query result: found {len(result.data or [])} children (child_id filter={child_id})")
         
         if child_id and not result.data:
             raise HTTPException(
                 status_code=403,
-                detail="You don't have access to this child's records"
+                detail=f"Child {child_id} not found among mothers {authorized_mother_ids}"
             )
         
         return result.data or []

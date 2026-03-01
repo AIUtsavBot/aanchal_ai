@@ -197,10 +197,17 @@ export const MilestonesTracker = ({ ashaWorkerId }) => {
         setTogglingMilestone(key);
 
         try {
+            // Get auth token from Supabase session
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
+
             // Use the new API endpoint
-            const response = await fetch(`${API_URL}/api/postnatal/milestone/toggle`, {
+            const response = await fetch(`${API_URL}/api/santanraksha/milestone/toggle`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                },
                 body: JSON.stringify({
                     child_id: childId,
                     milestone_name: milestone.name,

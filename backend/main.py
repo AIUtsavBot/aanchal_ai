@@ -622,6 +622,14 @@ except Exception as e:
 
 
 
+# Mount Postnatal Care routes (mothers, children, assessments, vaccinations, growth)
+try:
+    from routes.postnatal_routes import router as postnatal_router
+    app.include_router(postnatal_router, prefix="/api")
+    logger.info("✅ Postnatal care routes loaded (mothers, children, assessments, vaccinations, growth)")
+except Exception as e:
+    logger.warning(f"⚠️  Postnatal routes not available: {e}")
+
 # Mount SantanRaksha child health routes (vaccinations, growth, milestones)
 try:
     from routes.santanraksha import router as santanraksha_router
@@ -674,7 +682,7 @@ except ImportError as e:
 # ==================== CORS SETUP (MUST BE LAST) ====================
 # Configure CORS to explicitly allow the frontend origin
 # IMPORTANT: Add CORS middleware LAST so it executes FIRST (middleware runs in reverse)
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173").strip()
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173").strip().rstrip("/")
 ALLOWED_ORIGINS = [
     FRONTEND_URL,
     "http://127.0.0.1:5173",

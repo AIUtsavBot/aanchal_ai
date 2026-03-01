@@ -379,8 +379,10 @@ async def mark_vaccination_done(
             "administered_date": administered_date
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"❌ Error marking vaccination done: {e}")
+        logger.error(f"❌ Error marking vaccination done: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -425,8 +427,10 @@ async def get_child_vaccinations(
             
         return response
         
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Error fetching vaccinations: {e}")
+        logger.error(f"Error fetching vaccinations: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 

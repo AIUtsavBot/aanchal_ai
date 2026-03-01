@@ -32,7 +32,27 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 const apiCall = async (method, endpoint, data = null) => {
-  const options = { method, headers: { "Content-Type": "application/json" } };
+  // Get auth token from Supabase session
+  let token = null;
+  try {
+    const keys = Object.keys(localStorage).filter(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
+    if (keys.length > 0) {
+      const stored = localStorage.getItem(keys[0]);
+      if (stored) token = JSON.parse(stored)?.access_token;
+    }
+    if (!token) {
+      const { data: { session } } = await supabase.auth.getSession();
+      token = session?.access_token;
+    }
+  } catch (e) { /* proceed without token */ }
+
+  const options = {
+    method,
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { "Authorization": `Bearer ${token}` } : {})
+    }
+  };
   if (data) options.body = JSON.stringify(data);
   const response = await fetch(`${API_URL}${endpoint}`, options);
   if (!response.ok) {
