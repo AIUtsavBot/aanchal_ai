@@ -372,6 +372,12 @@ async def mark_vaccination_done(
             
             logger.info(f"✅ Created new vaccination record")
         
+        # Invalidate cache so next GET returns fresh data
+        if CACHE_AVAILABLE and cache:
+            cache_key = f"santanraksha:vaccination:{data.child_id}"
+            cache.delete(cache_key)
+            logger.info(f"🗑️ Cache invalidated for {cache_key}")
+        
         return {
             "success": True,
             "message": f"Vaccine '{data.vaccine_name}' marked as completed",
